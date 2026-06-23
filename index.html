@@ -12572,15 +12572,19 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
 
   // Tra 1 chuỗi: nếu trùng nguyên cụm thì trả về; nếu không, tách từng chữ và ghép kết quả.
   // ---- Cache CC-CEDICT (tầng 2) trong localStorage để lần sau dùng offline ----
-  // Toàn bộ CC-CEDICT (~115k từ) tải MỘT LẦN rồi cache vào IndexedDB.
-  // Sau lần đầu, tra cứu hoàn toàn trong RAM -> tức thì, chạy offline.
+  // ====== TỪ ĐIỂN CC-CEDICT — nạp MỘT LẦN, tra ĐỒNG BỘ tức thì ======
+  // Thứ tự nạp: (1) file nhúng sẵn cạnh index.html (nhanh nhất, offline),
+  // (2) cache IndexedDB, (3) tải từ CDN rồi cache.
+  // Sau khi nạp, CEDICT_MAP nằm trong RAM -> mỗi lần bôi chọn tra tức thì.
+  var CEDICT_LOCAL_URLS = ['hsk-dict.json', './hsk-dict.json'];
   var CEDICT_BULK_URLS = [
     'https://cdn.jsdelivr.net/gh/krmanik/cedict-json@master/cedict.json',
     'https://cdn.jsdelivr.net/gh/krmanik/cedict-json/cedict.json',
     'https://raw.githubusercontent.com/krmanik/cedict-json/master/cedict.json'
   ];
-  var CEDICT_MAP = null;        // Map: chữ giản thể -> entry {py,en}
-  var CEDICT_LOADING = null;    // promise đang tải
+  var CEDICT_MAP = null;        // Map: chữ giản thể -> {py,en}
+  var CEDICT_READY = false;     // true khi Map đã sẵn sàng (tra đồng bộ được)
+  var CEDICT_LOADING = null;    // promise đang nạp
   var CEDICT_DB_NAME = 'hsk_cedict_db';
   var CEDICT_STORE = 'kv';
 
@@ -12615,42 +12619,61 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     });
   }
 
-  // Dựng Map từ mảng entry thô của cedict.json
-  function buildCedictMap(arr){
+  // Chấp nhận cả 2 định dạng:
+  //  A) Mảng entry thô: [{simplified, pinyin, definitions}, ...]
+  //  B) Object gọn đã build sẵn: { "你好": {py, en}, ... }  (định dạng nhúng sẵn của app)
+  function buildCedictMap(data){
     var m = new Map();
-    for(var i=0;i<arr.length;i++){
-      var d = arr[i];
+    if(!data) return m;
+    if(!Array.isArray(data) && typeof data === 'object'){
+      // Định dạng B: object {zh: {py,en}} -> nạp thẳng, rất nhanh
+      var keys = Object.keys(data);
+      for(var x=0;x<keys.length;x++){ var k=keys[x]; var v=data[k]; m.set(k, {py:v.py||'', en:v.en||''}); }
+      return m;
+    }
+    // Định dạng A: mảng thô
+    for(var i=0;i<data.length;i++){
+      var d = data[i];
       if(!d || !d.simplified) continue;
-      if(m.has(d.simplified)) continue; // giữ nghĩa đầu tiên (thường phổ biến nhất)
-      var py = '';
-      if(Array.isArray(d.pinyin)) py = d.pinyin.join(' ');
-      else if(typeof d.pinyin === 'string') py = d.pinyin;
+      if(m.has(d.simplified)) continue;
+      var py = Array.isArray(d.pinyin) ? d.pinyin.join(' ') : (typeof d.pinyin==='string'?d.pinyin:'');
       var en = '';
       if(Array.isArray(d.definitions)) en = d.definitions.join('; ');
-      else if(d.definitions && typeof d.definitions === 'object'){
-        var parts = []; for(var k in d.definitions){ parts.push(d.definitions[k]); } en = parts.join('; ');
-      } else en = String(d.definitions||'');
-      m.set(d.simplified, { py: py, en: en });
+      else if(d.definitions && typeof d.definitions==='object'){ var parts=[]; for(var kk in d.definitions){ parts.push(d.definitions[kk]); } en = parts.join('; '); }
+      else en = String(d.definitions||'');
+      m.set(d.simplified, {py:py, en:en});
     }
     return m;
   }
 
-  // Tải CC-CEDICT (ưu tiên IndexedDB cache, nếu chưa có thì tải từ CDN rồi cache).
   function ensureCedictLoaded(){
-    if(CEDICT_MAP) return Promise.resolve(CEDICT_MAP);
+    if(CEDICT_READY) return Promise.resolve(CEDICT_MAP);
     if(CEDICT_LOADING) return CEDICT_LOADING;
-    CEDICT_LOADING = idbGet('cedict_raw').then(function(cached){
-      if(cached && cached.length){
-        CEDICT_MAP = buildCedictMap(cached);
-        return CEDICT_MAP;
-      }
-      return fetchFirstOk(CEDICT_BULK_URLS)
-        .then(function(arr){
-          CEDICT_MAP = buildCedictMap(arr);
-          idbSet('cedict_raw', arr).catch(function(){});
-          return CEDICT_MAP;
-        });
-    }).catch(function(e){ console.warn('CC-CEDICT load error', e); CEDICT_MAP = new Map(); return CEDICT_MAP; });
+    CEDICT_LOADING = (
+      // 1) Thử file nhúng sẵn cạnh index.html
+      fetchFirstOk(CEDICT_LOCAL_URLS)
+        .then(function(data){ return data; })
+        .catch(function(){
+          // 2) Thử cache IndexedDB (object gọn đã build)
+          return idbGet('cedict_map').then(function(cachedObj){
+            if(cachedObj) return cachedObj;
+            // 3) Tải bộ đầy đủ từ CDN, build gọn rồi cache
+            return fetchFirstOk(CEDICT_BULK_URLS).then(function(arr){
+              var m = buildCedictMap(arr);
+              var obj = {}; m.forEach(function(v,k){ obj[k]=v; });
+              idbSet('cedict_map', obj).catch(function(){});
+              return obj;
+            });
+          });
+        })
+    ).then(function(data){
+      CEDICT_MAP = buildCedictMap(data);
+      CEDICT_READY = true;
+      return CEDICT_MAP;
+    }).catch(function(e){
+      console.warn('CC-CEDICT load error', e);
+      CEDICT_MAP = new Map(); CEDICT_READY = true; return CEDICT_MAP;
+    });
     return CEDICT_LOADING;
   }
   function fetchFirstOk(urls, idx){
@@ -12659,6 +12682,11 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     return fetch(urls[idx])
       .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
       .catch(function(){ return fetchFirstOk(urls, idx+1); });
+  }
+  // Tra đồng bộ (chỉ dùng khi CEDICT_READY = true)
+  function cedictLookupSync(word){
+    if(!CEDICT_READY || !CEDICT_MAP) return null;
+    return CEDICT_MAP.get(word) || null;
   }
 
   // Chuyển pinyin số (ni3 hao3) -> có dấu (nǐ hǎo) cho dễ đọc
@@ -12693,29 +12721,29 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     });
   }
 
-  // Tầng 1 (đồng bộ): tách câu thành các từ dài nhất có trong từ vựng bài học.
-  // Trả về danh sách entry; từ nào không có trong bài -> đánh dấu need=true để tra tiếp tầng 2/3.
+  // Tách câu thành các từ dài nhất. Ưu tiên từ vựng bài học, sau đó CC-CEDICT (đồng bộ nếu đã nạp).
+  // Nếu CC-CEDICT chưa nạp xong -> đánh dấu need=true để tra bất đồng bộ.
   function lookup(raw){
     var dict = buildDict();
     var s = onlyHan(raw);
     if(!s) return null;
-    if(s.length > 16) s = s.slice(0,16);
-
-    if(dict[s]) return [Object.assign({src:'lesson'}, dict[s])];
+    if(s.length > 24) s = s.slice(0,24);
 
     var results = [], i = 0;
     while(i < s.length){
       var matched = null;
+      // thử cụm dài nhất (tối đa 4 chữ) trong: từ vựng bài học HOẶC CC-CEDICT (RAM)
       for(var len = Math.min(4, s.length - i); len >= 1; len--){
         var sub = s.substr(i, len);
         if(dict[sub]){ matched = Object.assign({src:'lesson'}, dict[sub]); i += len; break; }
+        var cd = cedictLookupSync(sub);
+        if(cd){ matched = { zh:sub, py:prettyPinyin(cd.py), en:cd.en, vi:'', type:'', src:'cedict' }; i += len; break; }
       }
       if(!matched){
-        // Lấy cụm Hán liền (tối đa 4) chưa có trong bài -> để tra CC-CEDICT
-        var take = Math.min(4, s.length - i);
-        var word = s.substr(i, take);
-        results.push({ zh: word, py:'', vi:'', en:'', type:'', need:true });
-        i += take;
+        // chữ đơn chưa tra được ngay -> đánh dấu để tra bất đồng bộ (khi map đang nạp)
+        var word = s.substr(i, 1);
+        results.push({ zh: word, py:'', vi:'', en:'', type:'', need: !CEDICT_READY });
+        i += 1;
       } else {
         results.push(matched);
       }
