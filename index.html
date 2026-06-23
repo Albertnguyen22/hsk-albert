@@ -276,6 +276,34 @@ body {
 .vocab-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
 .vocab-table tr:nth-child(even) td { background: var(--paper2); }
 .vocab-table tr:hover td { background: var(--blue-light); cursor: pointer; }
+/* Bảng "Từ vựng tự thêm": cột Từ/Pinyin hẹp, Loại rất hẹp, Nghĩa chiếm phần lớn */
+.hsk5-custom-table { table-layout: fixed; }
+.hsk5-custom-table .cv-col-zh { width: 12%; }
+.hsk5-custom-table .cv-col-py { width: 13%; }
+.hsk5-custom-table .cv-col-type { width: 7%; }
+.hsk5-custom-table .cv-col-vi { width: auto; }      /* Nghĩa: chiếm hết phần còn lại */
+.hsk5-custom-table .cv-col-status { width: 110px; }
+.hsk5-custom-table .cv-col-del { width: 56px; }
+.hsk5-custom-table td { padding: 6px 8px; }
+.hsk5-custom-table textarea {
+  width: 100%; box-sizing: border-box; border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 8px; font-family: inherit; font-size: 13px;
+  line-height: 1.5; resize: none; overflow: hidden; min-height: 36px;
+  background: #fff; outline: none; white-space: pre-wrap; word-break: break-word;
+}
+.hsk5-custom-table textarea[data-f="zh"] { font-family: 'Noto Serif SC', serif; font-size: 15px; }
+.hsk5-custom-table textarea:focus { border-color: var(--teal); }
+.hsk5-custom-table select { width: 100%; box-sizing: border-box; padding: 7px 4px; border-radius: 7px; border: 1px solid var(--border); font-family: inherit; font-size: 12px; }
+.hsk5-custom-table .cv-del-btn { padding: 6px 8px; font-size: 12px; width: 100%; }
+@media(max-width: 700px){
+  .hsk5-custom-table .cv-col-zh { width: 16%; }
+  .hsk5-custom-table .cv-col-py { width: 16%; }
+  .hsk5-custom-table .cv-col-type { width: 10%; }
+  .hsk5-custom-table .cv-col-status { width: 84px; }
+  .hsk5-custom-table .cv-col-del { width: 44px; }
+  .hsk5-custom-table td { padding: 4px 4px; }
+  .hsk5-custom-table textarea { font-size: 12px; padding: 5px; }
+}
 .vocab-zh { font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 600; }
 .vocab-type { font-size: 11px; color: var(--muted); font-style: italic; }
 .vocab-star { color: #f0a030; }
@@ -12452,22 +12480,33 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   function effectiveRows(id){var rows=localRows(id); return rows.length?rows:blankRows(5);}
   function renderHsk5CustomVocabSection(id){
     var rows=effectiveRows(id);
+    if(window.cvAutoGrowAll) setTimeout(function(){ window.cvAutoGrowAll(id); }, 30);
     return '<div class="hsk5-custom-vocab" id="hsk5-custom-vocab-'+id+'"><div class="hsk5-custom-head"><div><b>➕ Từ vựng tự thêm</b><p>Nhập thêm từ mới bạn gặp trong quá trình học bài này. Dữ liệu sẽ lưu theo bài và đồng bộ online khi đã đăng nhập.</p></div><div><button class="btn btn-outline" type="button" onclick="hsk5AddCustomVocabRows('+id+',1)">+ 1 hàng</button><button class="btn btn-outline" type="button" onclick="hsk5AddCustomVocabRows('+id+',5)">+ 5 hàng</button><button class="btn btn-outline" type="button" onclick="hsk5SaveCustomVocab('+id+',true)">Lưu</button></div></div>'
-      + '<table class="vocab-table hsk5-custom-table"><thead><tr><th>Từ & Phát âm</th><th>Pinyin</th><th>Từ loại</th><th>Nghĩa</th><th>Trạng thái</th><th></th></tr></thead><tbody id="hsk5-custom-vocab-body-'+id+'">'
+      + '<table class="vocab-table hsk5-custom-table"><colgroup><col class="cv-col-zh"><col class="cv-col-py"><col class="cv-col-type"><col class="cv-col-vi"><col class="cv-col-status"><col class="cv-col-del"></colgroup><thead><tr><th>Từ</th><th>Pinyin</th><th>Loại</th><th>Nghĩa</th><th>Trạng thái</th><th></th></tr></thead><tbody id="hsk5-custom-vocab-body-'+id+'">'
       + rows.map(function(row,i){return customRowHtml(id,i,row);}).join('')+'</tbody></table><div class="hsk5-custom-status" id="hsk5-custom-vocab-status-'+id+'">Chưa lưu</div></div>';
   }
   function customRowHtml(id,i,row){
     row=row||{};
     var statuses=['Chưa học','Đang học','Khó','Học lại','Đã thuộc'];
     return '<tr data-custom-vocab-row="'+i+'">'
-      + '<td><input data-f="zh" value="'+esc(row.zh||'')+'" placeholder="例如：缘分" oninput="hsk5CustomVocabChanged('+id+')"></td>'
-      + '<td><input data-f="py" value="'+esc(row.py||'')+'" placeholder="yuánfèn" oninput="hsk5CustomVocabChanged('+id+')"></td>'
-      + '<td><input data-f="type" value="'+esc(row.type||'')+'" placeholder="dt./đgt./tt." oninput="hsk5CustomVocabChanged('+id+')"></td>'
-      + '<td><input data-f="vi" value="'+esc(row.vi||'')+'" placeholder="nghĩa tiếng Việt" oninput="hsk5CustomVocabChanged('+id+')"></td>'
+      + '<td><textarea data-f="zh" rows="1" placeholder="例如：缘分" oninput="hsk5CustomVocabChanged('+id+');cvAutoGrow(this)">'+esc(row.zh||'')+'</textarea></td>'
+      + '<td><textarea data-f="py" rows="1" placeholder="yuánfèn" oninput="hsk5CustomVocabChanged('+id+');cvAutoGrow(this)">'+esc(row.py||'')+'</textarea></td>'
+      + '<td><textarea data-f="type" rows="1" placeholder="dt." oninput="hsk5CustomVocabChanged('+id+');cvAutoGrow(this)">'+esc(row.type||'')+'</textarea></td>'
+      + '<td><textarea data-f="vi" rows="1" placeholder="nghĩa tiếng Việt" oninput="hsk5CustomVocabChanged('+id+');cvAutoGrow(this)">'+esc(row.vi||'')+'</textarea></td>'
       + '<td><select data-f="status" onchange="hsk5CustomVocabChanged('+id+')">'+statuses.map(function(s){return '<option '+(String(row.status||'Chưa học')===s?'selected':'')+'>'+s+'</option>';}).join('')+'</select></td>'
-      + '<td><button class="btn btn-outline" type="button" onclick="hsk5RemoveCustomVocabRow('+id+','+i+')">Xóa</button></td>'
+      + '<td><button class="btn btn-outline cv-del-btn" type="button" onclick="hsk5RemoveCustomVocabRow('+id+','+i+')">Xóa</button></td>'
       + '</tr>';
   }
+  window.cvAutoGrow=function(el){
+    if(!el) return;
+    el.style.height='auto';
+    el.style.height=Math.max(36, el.scrollHeight)+'px';
+  };
+  window.cvAutoGrowAll=function(id){
+    var body=document.getElementById('hsk5-custom-vocab-body-'+id);
+    if(!body) return;
+    [].slice.call(body.querySelectorAll('textarea')).forEach(function(t){ window.cvAutoGrow(t); });
+  };
   window.hsk5ReadCustomVocabRows=function(id){
     var body=document.getElementById('hsk5-custom-vocab-body-'+id); if(!body) return localRows(id);
     return [].slice.call(body.querySelectorAll('tr')).map(function(tr){
@@ -12491,6 +12530,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   function hsk5SetCustomVocabRows(id,rows){
     localStorage.setItem(key(id),JSON.stringify(rows));
     var body=document.getElementById('hsk5-custom-vocab-body-'+id); if(body) body.innerHTML=rows.map(function(r,i){return customRowHtml(id,i,r);}).join('');
+    if(window.cvAutoGrowAll) setTimeout(function(){ window.cvAutoGrowAll(id); }, 0);
   }
   async function saveCloud(id,rows){
     if(!window.hskSupabase || !window.hskCurrentUser) return false;
