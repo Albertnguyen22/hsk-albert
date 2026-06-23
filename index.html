@@ -626,7 +626,9 @@ audio.ex-player { height:34px;border-radius:8px;outline:none;flex:1;min-width:0;
 .grade-bad { color:var(--red); text-decoration:line-through; }
 .grade-fix { color:var(--teal); font-weight:600; }
 .grade-why { font-size:12px; color:var(--muted); margin-top:3px; }
-.grade-corrected { background:var(--teal-light); color:var(--ink); padding:8px 10px; border-radius:6px; font-size:15px; }
+.grade-corrected { background:var(--teal-light); color:var(--ink); padding:8px 10px; border-radius:6px; font-size:15px; line-height:1.7; word-break:break-word; }
+.grade-box .zh { line-height:1.7; }
+.grade-bad, .grade-fix { display:inline-block; line-height:1.7; }
 .grade-comment { margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); font-size:12.5px; color:var(--ink2); font-style:italic; }
 .gpt-inline-result { margin-top:10px;display:none;border:1px solid var(--border);border-radius:10px;background:var(--blue-light);padding:12px 14px;font-size:13px;line-height:1.7;color:var(--ink); }
 .gpt-inline-result.show { display:block; }
@@ -924,7 +926,7 @@ audio.ex-player { height:34px;border-radius:8px;outline:none;flex:1;min-width:0;
   <div class="ai-panel">
     <div class="ai-panel-header" onclick="toggleChat()">
       <div class="ai-dot"></div>
-      <span>AI Albert 3.0 — chấm câu trong app</span>
+      <span>AI — chấm câu</span>
       <span style="margin-left:auto;font-size:12px;color:var(--muted)" id="chat-toggle-label">▲ Thu gọn</span>
     </div>
     <div id="quick-btns" style="padding:8px 18px 6px;display:flex;gap:6px;flex-wrap:wrap">
@@ -933,18 +935,14 @@ audio.ex-player { height:34px;border-radius:8px;outline:none;flex:1;min-width:0;
       <button class="quick-btn" onclick="askAI('Dạy tôi kỹ thuật ghi nhớ từ vựng tiếng Trung HSK 5 hiệu quả nhất. Tôi đang ở trình độ HSK 4.')">Mẹo ghi nhớ</button>
       <button class="quick-btn" onclick="askAI('Tạo 3 câu ví dụ mới dùng ngữ pháp/từ khóa bài hiện tại trong ngữ cảnh đời sống hằng ngày.')">Câu ví dụ mới</button>
     </div>
-    <div class="chatgpt-setup" id="chatgpt-setup">
-      <span style="font-size:12px;font-weight:700;color:var(--gold)">💬 AI trong app</span>
-      <span style="font-size:12px;color:var(--muted);line-height:1.6">Không cần nhập key trên giao diện: app sẽ chấm ngay. Nếu bạn chạy server kèm theo, app sẽ dùng ChatGPT thật qua server nội bộ.</span>
-    </div>
     <div id="chat-body" class="ai-chat-body">
       <div class="msg ai"><div class="msg-avatar">AI</div><div class="msg-bubble">
-        Mình sẽ chấm câu ngay trong app bằng AI Albert 3.0: kiểm tra ngữ cảnh bài, từ loại, collocation, logic mẫu câu, câu đầy đủ sau khi ghép vào đề và lỗi thường gặp HSK 5.
+        Gõ câu tiếng Trung của bạn, mình sẽ chấm: đúng bao nhiêu phần trăm, sai ở đoạn nào và đáng lẽ phải viết thế nào.
       </div></div>
     </div>
     <div class="ai-input-row">
       <input class="ai-input" id="ai-input" placeholder="Gõ câu hỏi hoặc câu tiếng Trung cần chấm → Enter..." onkeydown="if(event.key==='Enter')sendMessage()">
-      <button class="ai-send" onclick="sendMessage()" title="Gửi cho AI Albert">➤</button>
+      <button class="ai-send" onclick="sendMessage()" title="Gửi cho AI">➤</button>
     </div>
   </div>
 </div>
@@ -3605,7 +3603,7 @@ function renderGrammarTab(lesson) {
         <div style="margin-top:16px;padding:12px;background:var(--paper2);border-radius:8px;border:1px solid var(--border)">
           <div style="font-size:12px;font-weight:600;margin-bottom:6px">✏️ Tự đặt câu ví dụ với <span style="font-family:'Noto Serif SC',serif;color:var(--red)">${g.pattern}</span>:</div>
           <input placeholder="Viết câu của riêng bạn rồi nhấn Enter để AI chấm..." style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-family:'Noto Serif SC',serif;font-size:13px;outline:none" id="ex-input-${i}" onkeydown="if(event.key==='Enter')checkMyExample(${i},'${g.pattern.replace(/'/g,"\\'")}')" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--border)'">
-          <div class="ai-direct-tools" style="margin-top:8px"><button class="btn btn-outline ai-btn-local" style="font-size:12px" onclick="checkMyExampleDirect(${i},'${g.pattern.replace(/'/g,"\\'")}', 'internal')">AI trong app</button><button class="btn btn-teal ai-btn-external" style="font-size:12px" onclick="checkMyExampleDirect(${i},'${g.pattern.replace(/'/g,"\\'")}', 'external')">AI ngoài</button></div>
+          <div class="ai-direct-tools" style="margin-top:8px"><button class="btn btn-teal ai-btn-external" style="font-size:12px" onclick="checkMyExampleDirect(${i},'${g.pattern.replace(/'/g,"\\'")}', 'external')">AI chấm</button></div>
         </div>
       </div>
     </div>`).join('');
@@ -5065,7 +5063,7 @@ function renderTextbookGrammarDrills(lesson) {
     <div class="tb-drill-head"><span style="font-size:20px;color:#6C3C97">📘</span><div><div class="tb-drill-title">练一练 · 完成句子或对话</div><div class="tb-drill-sub">Chép theo dạng bài trong sách giáo trình: hoàn thành câu/đối thoại, có gợi ý ngữ pháp bên phải.</div></div></div>
     <div class="grammar-card-body">
       ${drills.map((sec,si)=>`<div class="tb-drill-section"><div class="tb-drill-section-title"><span class="zh">${tbEscape(sec.title)} · ${tbEscape(sec.subtitle || '完成句子或对话')}</span><span class="chip chip-blue">课本练习</span></div><div class="tb-drill-body">
-        ${sec.items.map((it,ii)=>`<div class="tb-drill-item"><div class="tb-drill-line"><span class="tb-drill-num">(${ii+1})</span><span></span><span class="tb-drill-hint">（${tbEscape(it.hint||sec.title)}）</span></div>${renderTbDrillText(lesson.id,si,ii,it.text)}<div class="tb-drill-tools ai-direct-tools"><button class="btn btn-outline ai-btn-local" style="font-size:12px" onclick="checkTextbookDrillDirect(${lesson.id},${si},${ii},'internal')">AI trong app</button><button class="btn btn-teal ai-btn-external" style="font-size:12px" onclick="checkTextbookDrillDirect(${lesson.id},${si},${ii},'external')">AI ngoài</button></div><div id="gpt-inline-${lesson.id}-${si}-${ii}" class="gpt-inline-result"></div></div>`).join('')}
+        ${sec.items.map((it,ii)=>`<div class="tb-drill-item"><div class="tb-drill-line"><span class="tb-drill-num">(${ii+1})</span><span></span><span class="tb-drill-hint">（${tbEscape(it.hint||sec.title)}）</span></div>${renderTbDrillText(lesson.id,si,ii,it.text)}<div class="tb-drill-tools ai-direct-tools"><button class="btn btn-teal ai-btn-external" style="font-size:12px" onclick="checkTextbookDrillDirect(${lesson.id},${si},${ii},'external')">AI chấm</button></div><div id="gpt-inline-${lesson.id}-${si}-${ii}" class="gpt-inline-result"></div></div>`).join('')}
       </div></div>`).join('')}
     </div>
   </div>`;
@@ -6162,7 +6160,7 @@ function renderNotesTab(lesson) {
     </div>
     <div style="background:white;border:1px solid var(--border);border-radius:10px;overflow:hidden">
       <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--muted)">GHI CHÉP TỰ DO</div>
-      <textarea id="lesson-note" placeholder="Ghi chú bất cứ điều gì bạn muốn nhớ về bài này..." style="width:100%;min-height:200px;padding:14px;border:none;font-family:inherit;font-size:14px;line-height:1.7;resize:vertical;background:white;outline:none" oninput="saveNote(${lesson.id})">${saved}</textarea>
+      <textarea id="lesson-note" data-lesson-id="${lesson.id}" placeholder="Ghi chú bất cứ điều gì bạn muốn nhớ về bài này..." style="width:100%;min-height:200px;padding:14px;border:none;font-family:inherit;font-size:14px;line-height:1.7;resize:vertical;background:white;outline:none" oninput="saveNote(${lesson.id})">${saved}</textarea>
     </div>
     <div style="margin-top:12px;display:flex;gap:8px">
       <button class="btn btn-outline" onclick="askAI('Tôi vừa học bài ${lesson.id} (${lesson.zh}). Hãy tạo 5 câu quiz tổng hợp kiểm tra từ vựng và ngữ pháp của bài này')">AI tổng kiểm tra bài</button>
@@ -6674,7 +6672,7 @@ async function runCurrentGPTPrompt() {
     appendChatMessage('ai', local);
     return;
   }
-  setGPTModalStatus('Đang gọi AI trong app... Nếu server ChatGPT chưa chạy, app sẽ tự chuyển sang AI nội bộ.');
+  setGPTModalStatus('Đang gọi AI...');
   setGPTModalAnswer('⏳ Đang chấm ngay trong app...\n\nBài: ' + (currentLesson ? `${currentLesson.id} · ${currentLesson.zh}` : '') + '\nEndpoint: ' + getAIEndpoint(), 'loading');
   setInlineGPTAnswer(CURRENT_GPT_INLINE_TARGET, 'Đang chấm...', '', 'local');
   try {
@@ -6728,7 +6726,7 @@ function clearChatGPTKey() { localStorage.removeItem('hsk5_openai_api_key'); ale
 async function askAI(prompt, opts={}) {
   appendChatMessage('user', prompt);
   const context = buildAIContext(prompt);
-  openGPTModal(context, opts.title || 'AI Albert', opts.inlineTarget || null, prompt);
+  openGPTModal(context, opts.title || 'AI', opts.inlineTarget || null, prompt);
 }
 
 function sendMessage() {
@@ -6736,7 +6734,7 @@ function sendMessage() {
   const text = input ? input.value.trim() : '';
   if(!text) return;
   input.value = '';
-  askAI(text, {title:'AI Albert'});
+  askAI(text, {title:'AI'});
 }
 
 function isLocalAIPrompt(text) {
@@ -6751,13 +6749,13 @@ function runAIInlineChoice(prompt, opts, mode) {
   CURRENT_GPT_INLINE_TARGET = opts && opts.inlineTarget ? opts.inlineTarget : null;
   CURRENT_GPT_TITLE = opts && opts.title ? opts.title : 'AI chấm câu';
   if(CURRENT_GPT_INLINE_TARGET) {
-    setInlineGPTAnswer(CURRENT_GPT_INLINE_TARGET, mode === 'external' ? 'Đang chấm bằng AI ngoài...' : 'Đang chấm bằng AI trong app...', 'loading', mode === 'external' ? 'chatgpt' : 'local');
+    setInlineGPTAnswer(CURRENT_GPT_INLINE_TARGET, 'Đang chấm bằng AI...', 'loading', 'chatgpt');
   } else {
     const modal = document.getElementById('gpt-modal');
     if(modal) modal.style.display = 'flex';
   }
-  if(mode === 'external') return runCurrentGPTPrompt('external');
-  return runCurrentGPTPrompt('internal');
+  // Luôn dùng AI (ngoài) — đã bỏ AI trong app.
+  return runCurrentGPTPrompt('external');
 }
 
 function checkMyExample(idx, pattern, mode='internal') {
@@ -6769,7 +6767,7 @@ function checkMyExample(idx, pattern, mode='internal') {
 2) Nghĩa của câu là gì?
 3) Nếu sai thì tại sao và sửa thế nào?
 4) Gợi ý 1 câu tự nhiên hơn.`;
-  return runAIInlineChoice(prompt, {title: mode === 'external' ? 'AI ngoài chấm' : 'AI trong app chấm', inlineTarget:`gpt-example-${idx}`}, mode);
+  return runAIInlineChoice(prompt, {title: 'AI chấm', inlineTarget:`gpt-example-${idx}`}, mode);
 }
 
 function checkTextbookDrill(lessonId, secIdx, itemIdx, mode='internal') {
@@ -6785,7 +6783,7 @@ Gợi ý trong sách: ${item?.hint || ''}
 Đáp án của tôi: ${answer}
 
 Hãy nhận xét ngắn gọn, sửa thành câu tự nhiên và giải thích vì sao. Nếu câu của tôi đúng nhưng chưa tự nhiên, hãy đưa bản tự nhiên hơn.`;
-  return runAIInlineChoice(prompt, {title: mode === 'external' ? 'AI ngoài chấm · 练一练' : 'AI trong app chấm · 练一练', inlineTarget:`gpt-inline-${lessonId}-${secIdx}-${itemIdx}`}, mode);
+  return runAIInlineChoice(prompt, {title: 'AI chấm · 练一练', inlineTarget:`gpt-inline-${lessonId}-${secIdx}-${itemIdx}`}, mode);
 }
 
 function localAIResponse(rawPrompt, context, errorObj) {
@@ -8198,8 +8196,8 @@ showPage('today');
     </div>
     <div class="gpt-modal-body">
       <div class="gpt-config-row">
-        <span class="ai-source-pill">✅ AI trong app</span>
-        <span class="gpt-status" id="gpt-modal-status">App chấm ngay trên giao diện này.</span>
+        <span class="ai-source-pill external">🤖 AI</span>
+        <span class="gpt-status" id="gpt-modal-status">App đang chấm câu...</span>
       </div>
       <div id="gpt-modal-answer" class="gpt-answer">Viết câu rồi bấm “AI chấm câu”. Kết quả sẽ hiện ở đây.</div>
       <details>
@@ -8465,19 +8463,14 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
 
   function updateModalChrome(mode) {
     var title = document.getElementById('gpt-modal-title');
-    if(title) title.textContent = 'AI trong app chấm / AI ngoài chấm';
+    if(title) title.textContent = 'AI chấm câu';
     var status = document.getElementById('gpt-modal-status');
-    if(status) {
-      if(mode === 'external') status.textContent = 'AI ngoài chấm: gọi Supabase Edge Function hsk-ai-grade rồi gọi API AI ngoài.';
-      else if(mode === 'internal') status.textContent = 'AI trong app chấm: chạy ngay trong HTML, không cần server và không mất phí.';
-      else status.textContent = 'Chọn một chế độ chấm bên dưới.';
-    }
+    if(status) status.textContent = '';
     var pill = document.querySelector('#gpt-modal .ai-source-pill');
     if(pill) {
       pill.classList.remove('local','external');
-      if(mode === 'external') { pill.classList.add('external'); pill.textContent = '🤖 AI ngoài'; }
-      else if(mode === 'internal') { pill.classList.add('local'); pill.textContent = '✅ AI trong app'; }
-      else { pill.textContent = '✅ Chọn chế độ AI'; }
+      pill.classList.add('external');
+      pill.textContent = '🤖 AI';
     }
   }
 
@@ -8489,28 +8482,15 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     if(body && !document.getElementById('ai-choice-panel')) {
       body.innerHTML = ''+
         '<div class="gpt-config-row">'+
-          '<span class="ai-source-pill">✅ Chọn chế độ AI</span>'+
-          '<span class="gpt-status" id="gpt-modal-status">Chọn một chế độ chấm bên dưới.</span>'+
+          '<span class="ai-source-pill external">🤖 AI</span>'+
+          '<span class="gpt-status" id="gpt-modal-status"></span>'+
         '</div>'+
-        '<div class="ai-choice-panel" id="ai-choice-panel">'+
-          '<div class="ai-choice-card">'+
-            '<strong>✅ AI trong app chấm</strong>'+
-            '<p>Chạy ngay trong file HTML. Không cần server, không dùng OpenAI API, không mất phí. Phù hợp chấm nhanh, độ chính xác vừa phải.</p>'+
-            '<button class="btn btn-outline" onclick="runInternalAIGrading()">AI trong app chấm</button>'+
-          '</div>'+
-          '<div class="ai-choice-card">'+
-            '<strong>🤖 AI ngoài chấm</strong>'+
-            '<p>Gọi Supabase Edge Function <b>hsk-ai-grade</b>, sau đó gọi API AI ngoài. Chấm chính xác hơn, cần đăng nhập và có API key trong Supabase Secrets.</p>'+
-            '<button class="btn btn-teal" onclick="runExternalAIGrading()">AI ngoài chấm</button>'+
-          '</div>'+
-        '</div>'+
-        '<div id="gpt-modal-answer" class="gpt-answer">Hãy chọn “AI trong app chấm” hoặc “AI ngoài chấm”.</div>'+
-        '<div class="gpt-note">Đã bỏ endpoint cũ <b>/api/check-sentence</b> vì GitHub Pages không chạy backend API. AI ngoài phải đi qua Supabase Function <b>hsk-ai-grade</b>.</div>';
+        '<div id="ai-choice-panel" style="display:none"></div>'+
+        '<div id="gpt-modal-answer" class="gpt-answer">Đang chấm...</div>';
     }
     if(foot) {
       foot.innerHTML = ''+
-        '<button class="btn btn-outline" onclick="runInternalAIGrading()">AI trong app chấm</button>'+
-        '<button class="btn btn-teal" onclick="runExternalAIGrading()">AI ngoài chấm</button>'+
+        '<button class="btn btn-teal" onclick="runExternalAIGrading()">Chấm lại</button>'+
         '<button class="btn btn-outline" onclick="closeGPTModal()">Đóng</button>';
     }
     updateModalChrome('');
@@ -8520,13 +8500,12 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     CURRENT_GPT_CONTEXT = context || '';
     CURRENT_GPT_RAW_PROMPT = rawPrompt || context || '';
     CURRENT_GPT_INLINE_TARGET = inlineTargetId || null;
-    CURRENT_GPT_TITLE = title || 'AI trong app chấm / AI ngoài chấm';
+    CURRENT_GPT_TITLE = title || 'AI';
     var modal = document.getElementById('gpt-modal');
     if(modal) modal.style.display = 'flex';
     patchAIModalContent();
-    var currentLesson = getCurrentLessonSafe();
-    setGPTModalAnswer('Chọn chế độ chấm.\n\nBài: ' + (currentLesson.id ? currentLesson.id + ' · ' + currentLesson.zh : '') + '\n\nAI trong app: miễn phí, chấm nhanh.\nAI ngoài: dùng API AI ngoài qua Supabase, chấm chính xác hơn.', '');
-    setInlineGPTAnswer(CURRENT_GPT_INLINE_TARGET, 'Đã mở khung AI. Hãy chọn AI trong app hoặc AI ngoài.', '', 'local');
+    setGPTModalAnswer('Đang chấm bằng AI...', 'loading');
+    if(typeof runExternalAIGrading === 'function') runExternalAIGrading();
   };
 
   // ============================================================
@@ -8557,7 +8536,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var p = Math.max(0, Math.min(100, Math.round(Number(result.percent)||0)));
     var col = gradeColor(p);
     var vt = vercdictSafe(result.verdict, p);
-    var srcLabel = source==='external' ? '🤖 AI ngoài (OpenRouter)' : '🧠 AI trong app';
+    var srcLabel = '🤖 AI';
     var wrong = Array.isArray(result.wrong_parts) ? result.wrong_parts : [];
 
     var wrongHTML;
@@ -8608,7 +8587,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     if(box){ box.className='gpt-inline-result show'; box.innerHTML = html; }
     if(typeof appendChatMessage==='function'){
       var p = Math.round(Number(result.percent)||0);
-      appendChatMessage('ai', (source==='external'?'AI ngoài':'AI trong app')+' chấm: '+p+'% — '+verdictText(result.verdict,p)+(result.corrected_zh?(' · Sửa: '+result.corrected_zh):''));
+      appendChatMessage('ai', 'AI chấm: '+p+'% — '+verdictText(result.verdict,p)+(result.corrected_zh?(' · Sửa: '+result.corrected_zh):''));
     }
   }
   window.showGradeResult = showGradeResult;
@@ -8658,15 +8637,15 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var currentLesson = getCurrentLessonSafe();
     if(!raw) { setGPTModalAnswer('Chưa có nội dung để chấm.', 'error'); return; }
     updateModalChrome('internal');
-    setGPTModalAnswer('⏳ AI trong app đang chấm...\n\nBài: ' + (currentLesson.id ? currentLesson.id + ' · ' + currentLesson.zh : ''), 'loading');
-    setInlineGPTAnswer(CURRENT_GPT_INLINE_TARGET, 'Đang chấm bằng AI trong app...', 'loading', 'local');
+    setGPTModalAnswer('⏳ AI đang chấm...\n\nBài: ' + (currentLesson.id ? currentLesson.id + ' · ' + currentLesson.zh : ''), 'loading');
+    setInlineGPTAnswer(CURRENT_GPT_INLINE_TARGET, 'Đang chấm bằng AI...', 'loading', 'chatgpt');
     try {
       var result = internalGradeUnified(raw);
       if(requestId !== CURRENT_AI_REQUEST_ID) return;
-      setGPTModalStatus('Đã chấm bằng AI trong app.');
+      setGPTModalStatus('Đã chấm bằng AI.');
       showGradeResult(result, 'internal');
     } catch(err) {
-      setGPTModalAnswer('AI trong app lỗi: ' + (err && err.message ? err.message : err), 'error');
+      setGPTModalAnswer('AI lỗi: ' + (err && err.message ? err.message : err), 'error');
     }
   };
 
@@ -8832,19 +8811,16 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
       showGradeResult(res.result, 'external');
     } catch(err) {
       if(requestId !== CURRENT_AI_REQUEST_ID) return;
-      var msg = 'AI ngoài lỗi, chưa dùng được API AI ngoài.\n\n' + (err && err.message ? err.message : err) + '\n\nBạn vẫn có thể bấm “AI trong app chấm” để chấm miễn phí ngay trong HTML.';
-      setGPTModalStatus('AI ngoài lỗi. Hãy kiểm tra Supabase Edge Function, API key, model hoặc quota.');
+      var msg = 'AI chưa chấm được.\n\n' + (err && err.message ? err.message : err) + '\n\nVui lòng kiểm tra kết nối mạng và đăng nhập, rồi thử lại.';
+      setGPTModalStatus('AI lỗi. Hãy kiểm tra Supabase Edge Function, API key, model hoặc quota.');
       setGPTModalAnswer(msg, 'error');
       setInlineGPTAnswer(CURRENT_GPT_INLINE_TARGET, msg, 'error', 'chatgpt');
     }
   };
 
   window.runCurrentGPTPrompt = runCurrentGPTPrompt = function(mode) {
-    if(mode === 'internal') return runInternalAIGrading();
-    if(mode === 'external') return runExternalAIGrading();
-    // Default behavior for old buttons: show the choice modal rather than auto-fallback to internal.
-    patchAIModalContent();
-    setGPTModalAnswer('Hãy chọn “AI trong app chấm” hoặc “AI ngoài chấm”.', '');
+    // Đã bỏ AI trong app — luôn dùng AI (ngoài).
+    return runExternalAIGrading();
   };
 
   window.getDefaultAIEndpoint = getDefaultAIEndpoint = function(){ return 'supabase:hsk-ai-grade'; };
@@ -8892,7 +8868,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   window.checkTextbookDrillDirect = async function(lessonId, secIdx, itemIdx, mode) {
     var data = getTbDrillData(lessonId, secIdx, itemIdx);
     if(!data.answer) { alert('Hãy điền đáp án trước!'); return; }
-    prepareDirectGrading(data.prompt, data.inlineTarget, mode === 'external' ? 'AI ngoài chấm · 练一练' : 'AI trong app chấm · 练一练');
+    prepareDirectGrading(data.prompt, data.inlineTarget, 'AI chấm · 练一练');
     if(mode === 'external') {
       if(typeof runExternalAIGrading === 'function') return runExternalAIGrading();
       alert('Chưa tìm thấy hàm AI ngoài.');
@@ -8905,7 +8881,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
       if(typeof setInlineGPTAnswer === 'function') setInlineGPTAnswer(data.inlineTarget, local, '', 'local');
       return;
     }
-    alert('Chưa tìm thấy hàm AI trong app.');
+    alert('Chưa sẵn sàng chấm. Thử lại sau.');
   };
 
   // Backward compatibility: old single AI button now defaults to internal chấm.
@@ -8918,7 +8894,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     if(!input || !input.value.trim()) { alert('Hãy viết câu trước!'); return; }
     var prompt = 'Chấm câu ví dụ của tôi với cấu trúc/từ "' + pattern + '".\n' +
       'Đáp án của tôi: ' + input.value.trim();
-    prepareDirectGrading(prompt, null, mode === 'external' ? 'AI ngoài chấm' : 'AI trong app chấm');
+    prepareDirectGrading(prompt, null, 'AI chấm');
     var modal = document.getElementById('gpt-modal');
     if(modal) modal.style.display = 'flex';
     if(mode === 'external') {
@@ -8927,7 +8903,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
       return;
     }
     if(typeof runInternalAIGrading === 'function') return runInternalAIGrading();
-    alert('Chưa tìm thấy hàm AI trong app.');
+    alert('Chưa sẵn sàng chấm. Thử lại sau.');
   };
 })();
 </script>
@@ -9050,7 +9026,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   function renderHSK1TextbookDrills(lesson){
     var drills=HSK1_TEXTBOOK_DRILLS[lesson.id]||[];
     if(!drills.length) return '';
-    return '<div class="tb-drill-card"><div class="tb-drill-head"><span style="font-size:20px;color:#6C3C97">📘</span><div><div class="tb-drill-title">课本练习 · Bài tập giáo trình HSK 1</div><div class="tb-drill-sub">Các dạng trả lời câu hỏi, hoàn thành câu và vận dụng theo sách giáo trình.</div></div></div><div class="grammar-card-body">'+drills.map(function(sec,si){return '<div class="tb-drill-section"><div class="tb-drill-section-title"><span class="zh">'+tbEscape(sec.title)+'</span><span class="chip chip-blue">HSK1</span></div><div class="tb-drill-body">'+sec.items.map(function(it,ii){return '<div class="tb-drill-item"><div class="tb-drill-line"><span class="tb-drill-num">('+(ii+1)+')</span><span></span><span class="tb-drill-hint">（'+tbEscape(it.hint||sec.title)+'）</span></div>'+renderTbDrillText(lesson.id,si,ii,it.text)+'<div class="tb-drill-tools ai-direct-tools"><button class="btn btn-outline ai-btn-local" style="font-size:12px" onclick="checkTextbookDrillDirect('+lesson.id+','+si+','+ii+',\'internal\')">AI trong app</button><button class="btn btn-teal ai-btn-external" style="font-size:12px" onclick="checkTextbookDrillDirect('+lesson.id+','+si+','+ii+',\'external\')">AI ngoài</button></div><div id="gpt-inline-'+lesson.id+'-'+si+'-'+ii+'" class="gpt-inline-result"></div></div>';}).join('')+'</div></div>';}).join('')+'</div></div>';
+    return '<div class="tb-drill-card"><div class="tb-drill-head"><span style="font-size:20px;color:#6C3C97">📘</span><div><div class="tb-drill-title">课本练习 · Bài tập giáo trình HSK 1</div><div class="tb-drill-sub">Các dạng trả lời câu hỏi, hoàn thành câu và vận dụng theo sách giáo trình.</div></div></div><div class="grammar-card-body">'+drills.map(function(sec,si){return '<div class="tb-drill-section"><div class="tb-drill-section-title"><span class="zh">'+tbEscape(sec.title)+'</span><span class="chip chip-blue">HSK1</span></div><div class="tb-drill-body">'+sec.items.map(function(it,ii){return '<div class="tb-drill-item"><div class="tb-drill-line"><span class="tb-drill-num">('+(ii+1)+')</span><span></span><span class="tb-drill-hint">（'+tbEscape(it.hint||sec.title)+'）</span></div>'+renderTbDrillText(lesson.id,si,ii,it.text)+'<div class="tb-drill-tools ai-direct-tools"><button class="btn btn-teal ai-btn-external" style="font-size:12px" onclick="checkTextbookDrillDirect('+lesson.id+','+si+','+ii+',\'external\')">AI chấm</button></div><div id="gpt-inline-'+lesson.id+'-'+si+'-'+ii+'" class="gpt-inline-result"></div></div>';}).join('')+'</div></div>';}).join('')+'</div></div>';
   }
   window.renderTextbookGrammarDrills = renderTextbookGrammarDrills = function(lesson){ return CURRENT_COURSE==='hsk1' ? renderHSK1TextbookDrills(lesson) : HSK5_RENDER_TEXTBOOK_DRILLS(lesson); };
   window.renderTextbookCourseExercises = renderTextbookCourseExercises = function(lesson){ return CURRENT_COURSE==='hsk1' ? '' : HSK5_RENDER_TEXTBOOK_COURSE(lesson); };
@@ -9060,14 +9036,14 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var words=(lesson.keyVocab||[]).map(function(w){return '<span class="word-chip">'+tbEscape(w)+'</span>';}).join('');
     return '<div class="ex-section"><div class="ex-section-header ex-header-listening">🎧 一、听力 · Phần nghe HSK1</div><div class="hsk1-workbook-note"><strong>Gợi ý làm bài:</strong> nghe theo audio sách bài tập, sau đó đối chiếu đáp án. '+tbEscape(key.listening||'')+'</div></div>'+
       '<div class="ex-section"><div class="ex-section-header ex-header-reading">📖 二、阅读 · Phần đọc HSK1</div><div class="hsk1-workbook-note"><strong>Đọc:</strong> làm các câu đúng/sai, nối câu và điền từ theo sách bài tập. '+tbEscape(key.reading||'')+'</div></div>'+
-      '<div class="ex-section"><div class="ex-section-header ex-header-writing">✍️ 三、语音/汉字/书写 · Luyện viết</div><div class="ex-part-card"><div class="ex-part-header">Tự viết câu / đoạn ngắn với từ bài '+lesson.id+'</div><div class="ex-part-body"><div class="word-chips">'+words+'</div><textarea class="ex-write-area" id="write-'+lesson.id+'" placeholder="用本课词语写句子或小短文..." oninput="countChars('+lesson.id+')"></textarea><div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap"><span style="font-size:12px;color:var(--muted)">字数：<strong id="char-count-'+lesson.id+'">0</strong></span><button class="btn btn-outline" style="font-size:12px" onclick="submitWriting('+lesson.id+')">Chấm cơ bản ✓</button><div class="writing-ai-tools"><button class="btn btn-outline ai-btn-local" onclick="gradeWritingAI('+lesson.id+',\'internal\')">AI trong app</button><button class="btn btn-teal ai-btn-external" onclick="gradeWritingAI('+lesson.id+',\'external\')">AI ngoài</button></div></div><div id="write-result-'+lesson.id+'" class="gpt-inline-result" style="margin-top:12px"></div></div></div></div>';
+      '<div class="ex-section"><div class="ex-section-header ex-header-writing">✍️ 三、语音/汉字/书写 · Luyện viết</div><div class="ex-part-card"><div class="ex-part-header">Tự viết câu / đoạn ngắn với từ bài '+lesson.id+'</div><div class="ex-part-body"><div class="word-chips">'+words+'</div><textarea class="ex-write-area" id="write-'+lesson.id+'" placeholder="用本课词语写句子或小短文..." oninput="countChars('+lesson.id+')"></textarea><div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap"><span style="font-size:12px;color:var(--muted)">字数：<strong id="char-count-'+lesson.id+'">0</strong></span><button class="btn btn-outline" style="font-size:12px" onclick="submitWriting('+lesson.id+')">Chấm cơ bản ✓</button><div class="writing-ai-tools"><button class="btn btn-teal ai-btn-external" onclick="gradeWritingAI('+lesson.id+',\'external\')">AI chấm</button></div></div><div id="write-result-'+lesson.id+'" class="gpt-inline-result" style="margin-top:12px"></div></div></div></div>';
   }
 
   window.renderExercisesTab = renderExercisesTab = function(lesson){
     if(CURRENT_COURSE==='hsk1') return renderHSK1ExercisesTab(lesson);
     var html = HSK5_RENDER_EXERCISES(lesson);
     html = html.replace(/<button class="btn btn-teal" style="font-size:12px;margin-left:auto" onclick="submitWriting\((\d+)\)">Chấm bài ✓<\/button>/g, function(m,lid){
-      return '<button class="btn btn-outline" style="font-size:12px;margin-left:auto" onclick="submitWriting('+lid+')">Chấm cơ bản ✓</button><div class="writing-ai-tools"><button class="btn btn-outline ai-btn-local" onclick="gradeWritingAI('+lid+',\'internal\')">AI trong app</button><button class="btn btn-teal ai-btn-external" onclick="gradeWritingAI('+lid+',\'external\')">AI ngoài</button></div>';
+      return '<button class="btn btn-outline" style="font-size:12px;margin-left:auto" onclick="submitWriting('+lid+')">Chấm cơ bản ✓</button><div class="writing-ai-tools"><button class="btn btn-teal ai-btn-external" onclick="gradeWritingAI('+lid+',\'external\')">AI chấm</button></div>';
     });
     return html;
   };
@@ -9080,7 +9056,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     CURRENT_GPT_CONTEXT = buildAIContext ? buildAIContext(prompt) : prompt;
     CURRENT_GPT_RAW_PROMPT = prompt;
     CURRENT_GPT_INLINE_TARGET = 'write-result-'+lid;
-    CURRENT_GPT_TITLE = mode==='external' ? 'AI ngoài chấm bài viết' : 'AI trong app chấm bài viết';
+    CURRENT_GPT_TITLE = 'AI chấm bài viết';
     var modal=document.getElementById('gpt-modal'); if(modal) modal.style.display='flex';
     if(mode==='external' && typeof runExternalAIGrading==='function') return runExternalAIGrading();
     if(typeof runInternalAIGrading==='function') return runInternalAIGrading();
@@ -9268,7 +9244,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var audio = '<div class="ex-section"><div class="ex-section-header ex-header-listening">🎧 一、听力 · MP3 luyện nghe sách bài tập</div><div class="hsk1-workbook-note"><strong>Audio người thật:</strong> bật file bài tập tương ứng trước khi làm. Với bài 1–2 là ngữ âm; từ bài 3–15 gồm nghe HSK + ngữ âm.</div><div class="hsk1-audio-list">'+renderAudioRows('bt',lesson.id,count,workbookLabels(lesson.id))+'</div></div>';
     var sections = renderHSK1WorkbookSections(lesson);
     var words=(lesson.keyVocab||[]).map(function(w){return '<span class="word-chip">'+esc(w)+'</span>';}).join('');
-    var writing = '<div class="ex-section"><div class="ex-section-header ex-header-writing">✍️ 语用/写作 · Tự đặt câu hoặc đoạn ngắn</div><div class="ex-part-card"><div class="ex-part-header">Dùng từ trong bài để viết câu</div><div class="ex-part-body"><div class="word-chips">'+words+'</div><textarea class="ex-write-area" id="write-'+lesson.id+'" placeholder="用本课词语写句子或小短文..." oninput="countChars('+lesson.id+')"></textarea><div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap"><span style="font-size:12px;color:var(--muted)">字数：<strong id="char-count-'+lesson.id+'">0</strong></span><button class="btn btn-outline" style="font-size:12px" onclick="submitWriting('+lesson.id+')">Chấm cơ bản ✓</button><div class="writing-ai-tools"><button class="btn btn-outline ai-btn-local" onclick="gradeWritingAI('+lesson.id+',\'internal\')">AI trong app</button><button class="btn btn-teal ai-btn-external" onclick="gradeWritingAI('+lesson.id+',\'external\')">AI ngoài</button></div></div><div id="write-result-'+lesson.id+'" class="gpt-inline-result" style="margin-top:12px"></div></div></div></div>';
+    var writing = '<div class="ex-section"><div class="ex-section-header ex-header-writing">✍️ 语用/写作 · Tự đặt câu hoặc đoạn ngắn</div><div class="ex-part-card"><div class="ex-part-header">Dùng từ trong bài để viết câu</div><div class="ex-part-body"><div class="word-chips">'+words+'</div><textarea class="ex-write-area" id="write-'+lesson.id+'" placeholder="用本课词语写句子或小短文..." oninput="countChars('+lesson.id+')"></textarea><div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap"><span style="font-size:12px;color:var(--muted)">字数：<strong id="char-count-'+lesson.id+'">0</strong></span><button class="btn btn-outline" style="font-size:12px" onclick="submitWriting('+lesson.id+')">Chấm cơ bản ✓</button><div class="writing-ai-tools"><button class="btn btn-teal ai-btn-external" onclick="gradeWritingAI('+lesson.id+',\'external\')">AI chấm</button></div></div><div id="write-result-'+lesson.id+'" class="gpt-inline-result" style="margin-top:12px"></div></div></div></div>';
     return audio + sections + writing;
   };
 
@@ -9445,20 +9421,20 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   }
 
   function aiTextareaTools(id, promptBase){
-    return '<div class="h1-ai-tools"><button class="btn btn-outline ai-btn-local" onclick="h1GradeTextarea(\''+id+'\',\''+esc(promptBase).replace(/&#39;/g,"\\'")+'\',\'internal\')">AI trong app</button><button class="btn btn-teal ai-btn-external" onclick="h1GradeTextarea(\''+id+'\',\''+esc(promptBase).replace(/&#39;/g,"\\'")+'\',\'external\')">AI ngoài</button></div><div id="'+id+'-result" class="gpt-inline-result"></div>';
+    return '<div class="h1-ai-tools"><button class="btn btn-teal ai-btn-external" onclick="h1GradeTextarea(\''+id+'\',\''+esc(promptBase).replace(/&#39;/g,"\\'")+'\',\'external\')">AI chấm</button></div><div id="'+id+'-result" class="gpt-inline-result"></div>';
   }
 
   window.h1GradeTextarea = async function(id, promptBase, mode){
     var el = document.getElementById(id);
     if(!el || !el.value.trim()){ alert('Hãy nhập câu trả lời trước.'); return; }
     var prompt = promptBase + '\nĐáp án của tôi: ' + el.value.trim();
-    if(typeof prepareDirectGrading === 'function') prepareDirectGrading(prompt, id+'-result', mode==='external'?'AI ngoài chấm':'AI trong app chấm');
+    if(typeof prepareDirectGrading === 'function') prepareDirectGrading(prompt, id+'-result', 'AI chấm');
     if(mode==='external'){
       if(typeof runExternalAIGrading === 'function') return runExternalAIGrading();
       alert('Chưa tìm thấy hàm AI ngoài.'); return;
     }
     if(typeof runInternalAIGrading === 'function') return runInternalAIGrading();
-    alert('Chưa tìm thấy hàm AI trong app.');
+    alert('Chưa sẵn sàng chấm. Thử lại sau.');
   };
 
   function renderH1TextbookExercises(lesson){
@@ -9751,7 +9727,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
 
   function renderTextbookQuestionBox(lesson, prompt, placeholder){
     var id = 'hsk1-tb-'+lesson.id+'-'+Math.random().toString(36).slice(2,8);
-    return '<div class="hsk1-open-task"><div class="hsk1-open-prompt zh">'+zhBlock(prompt)+'</div><textarea id="'+id+'" class="ex-write-area" placeholder="'+esc(placeholder||'Viết câu trả lời bằng tiếng Trung...')+'"></textarea><div class="hsk1-ai-row"><button class="btn btn-outline ai-btn-local" onclick="hsk1GradeOpenTask(\''+id+'\',\'internal\')">AI trong app</button><button class="btn btn-teal ai-btn-external" onclick="hsk1GradeOpenTask(\''+id+'\',\'external\')">AI ngoài</button></div><div id="'+id+'-result" class="gpt-inline-result"></div></div>';
+    return '<div class="hsk1-open-task"><div class="hsk1-open-prompt zh">'+zhBlock(prompt)+'</div><textarea id="'+id+'" class="ex-write-area" placeholder="'+esc(placeholder||'Viết câu trả lời bằng tiếng Trung...')+'"></textarea><div class="hsk1-ai-row"><button class="btn btn-teal ai-btn-external" onclick="hsk1GradeOpenTask(\''+id+'\',\'external\')">AI chấm</button></div><div id="'+id+'-result" class="gpt-inline-result"></div></div>';
   }
 
   function renderHSK1TextbookExercises(lesson){
@@ -9840,7 +9816,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     window.CURRENT_GPT_CONTEXT = prompt;
     window.CURRENT_GPT_RAW_PROMPT = prompt;
     window.CURRENT_GPT_INLINE_TARGET = resultId;
-    window.CURRENT_GPT_TITLE = mode==='external' ? 'AI ngoài chấm · HSK 1' : 'AI trong app chấm · HSK 1';
+    window.CURRENT_GPT_TITLE = 'AI chấm · HSK 1';
     if(mode==='external' && typeof runExternalAIGrading==='function') return runExternalAIGrading();
     if(mode==='internal' && typeof runInternalAIGrading==='function') return runInternalAIGrading();
     alert('Không tìm thấy hàm chấm AI tương ứng.');
@@ -10019,7 +9995,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   };
 
   function aiButtonsForTextarea(textareaId, resultId, promptPrefix){
-    return '<div class="hsk1-ai-row"><button class="btn btn-outline ai-btn-local" onclick="hsk1GradeTextarea(\''+textareaId+'\',\''+resultId+'\',\'internal\',\''+hxEsc(promptPrefix).replace(/'/g,'&#39;')+'\')">AI trong app</button><button class="btn btn-teal ai-btn-external" onclick="hsk1GradeTextarea(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+hxEsc(promptPrefix).replace(/'/g,'&#39;')+'\')">AI ngoài</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';
+    return '<div class="hsk1-ai-row"><button class="btn btn-teal ai-btn-external" onclick="hsk1GradeTextarea(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+hxEsc(promptPrefix).replace(/'/g,'&#39;')+'\')">AI chấm</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';
   }
 
   window.hsk1GradeTextarea = async function(textareaId, resultId, mode, promptPrefix){
@@ -10027,7 +10003,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     if(!ta || !ta.value.trim()){ alert('Hãy nhập câu trả lời trước.'); return; }
     var lesson = currentHsk1Lesson();
     var prompt = String(promptPrefix||'Chấm bài HSK 1') + '\nKhóa: HSK 1\nBài: '+(lesson.id||'')+' · '+(lesson.zh||'')+'\nTừ vựng trọng tâm: '+((lesson.keyVocab||[]).join('、'))+'\nĐáp án của tôi: '+ta.value.trim()+'\nYêu cầu: chấm theo trình độ HSK 1, ưu tiên phát âm/pinyin đúng nếu có, câu đơn giản tự nhiên, sửa lỗi bằng tiếng Việt.';
-    if(typeof setInlineGPTAnswer === 'function') setInlineGPTAnswer(resultId, mode==='external'?'Đang chấm bằng AI ngoài...':'Đang chấm bằng AI trong app...', '', mode==='external'?'chatgpt':'local');
+    if(typeof setInlineGPTAnswer === 'function') setInlineGPTAnswer(resultId, 'Đang chấm bằng AI...', '', mode==='external'?'chatgpt':'local');
     try{
       if(mode==='external'){
         CURRENT_GPT_INLINE_TARGET = resultId;
@@ -10040,7 +10016,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
         setInlineGPTAnswer(resultId, local, '', 'local');
       }
     } catch(err){
-      setInlineGPTAnswer(resultId, 'AI ngoài lỗi: '+(err && err.message ? err.message : err)+'\nBạn có thể dùng AI trong app để chấm miễn phí.', 'error', 'chatgpt');
+      setInlineGPTAnswer(resultId, 'AI ngoài lỗi: '+(err && err.message ? err.message : err)+'', 'error', 'chatgpt');
     }
   };
 
@@ -10346,7 +10322,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   }
   function aiButtons(textareaId,resultId,prompt){
     if(typeof window.hsk1GradeTextarea==='function'){
-      return '<div class="hsk1-ai-row h1-ai-row"><button class="btn btn-outline" onclick="hsk1GradeTextarea(\''+textareaId+'\',\''+resultId+'\',\'internal\',\''+esc(prompt).replace(/'/g,'&#39;')+'\')">AI trong app</button><button class="btn btn-teal" onclick="hsk1GradeTextarea(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+esc(prompt).replace(/'/g,'&#39;')+'\')">AI ngoài</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';
+      return '<div class="hsk1-ai-row h1-ai-row"><button class="btn btn-teal" onclick="hsk1GradeTextarea(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+esc(prompt).replace(/'/g,'&#39;')+'\')">AI chấm</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';
     }
     return '';
   }
@@ -10628,13 +10604,13 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   }
 
   function aiButtonBlock(textareaId,resultId,prefix){
-    return '<div class="hsk1-ai-row"><button class="btn btn-outline ai-btn-local" onclick="hsk1FinalGrade(\''+textareaId+'\',\''+resultId+'\',\'internal\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI trong app</button><button class="btn btn-teal ai-btn-external" onclick="hsk1FinalGrade(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI ngoài</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';
+    return '<div class="hsk1-ai-row"><button class="btn btn-teal ai-btn-external" onclick="hsk1FinalGrade(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI chấm</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';
   }
   window.hsk1FinalGrade = async function(textareaId,resultId,mode,prefix){
     var ta=document.getElementById(textareaId); if(!ta || !ta.value.trim()){ alert('Hãy nhập câu trả lời trước.'); return; }
     var lesson=getLesson();
     var prompt=(prefix||'Chấm bài HSK 1')+'\nBài: '+(lesson.id||'')+' · '+(lesson.zh||'')+'\nYêu cầu: HSK 1, chấm nhẹ nhưng chỉ rõ lỗi pinyin/chữ Hán/từ vựng, sửa bằng tiếng Việt.\nĐáp án của tôi: '+ta.value.trim();
-    if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(resultId, mode==='external'?'Đang chấm bằng AI ngoài...':'Đang chấm bằng AI trong app...', '', mode==='external'?'chatgpt':'local');
+    if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(resultId, 'Đang chấm bằng AI...', '', mode==='external'?'chatgpt':'local');
     try{
       if(mode==='external'){
         window.CURRENT_GPT_INLINE_TARGET=resultId; window.CURRENT_GPT_RAW_PROMPT=prompt; window.CURRENT_GPT_CONTEXT=prompt;
@@ -10644,7 +10620,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
         var local = typeof localAIResponse==='function' ? localAIResponse(prompt,prompt,null) : 'AI trong app: hãy kiểm tra chủ ngữ + vị ngữ, pinyin, thanh điệu và từ vựng HSK 1.';
         setInlineGPTAnswer(resultId, local, '', 'local');
       }
-    } catch(e){ setInlineGPTAnswer(resultId, 'AI ngoài lỗi: '+(e&&e.message?e.message:e)+'\nCó thể dùng AI trong app để chấm miễn phí.', 'error', 'chatgpt'); }
+    } catch(e){ setInlineGPTAnswer(resultId, 'AI ngoài lỗi: '+(e&&e.message?e.message:e)+'', 'error', 'chatgpt'); }
   };
 
   function hsk1TabsFinal(lesson){
@@ -10818,7 +10794,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
 
   function renderClassroom(lesson){var arr=lesson.id===1?['老师好！','上课！','下课！','现在休息！','请跟我读！','跟我读！']:(lesson.id===2?['打开书。','请大家读。','再读一遍。','一起读。','有问题吗？']:['请听。','请读。','请写。','请回答。']); return '<div class="h1c-note"><b>🏫 课堂用语 · Mẫu câu lớp học</b><p>Tất cả câu tiếng Hán đều có pinyin và tiếng Việt bên dưới.</p></div><div class="h1c-classroom-grid">'+arr.map(function(x){return '<div class="h1c-class-card"><div class="zh">'+esc(x)+'</div><div>'+esc(pinyinText(x,lesson))+'</div><em>'+esc(CLASSROOM_VI[x]||viText(x,lesson))+'</em></div>';}).join('')+'</div>';}
 
-  function renderTextbookExercises(lesson){return '<div class="h1c-note"><b>📘 练习 · Bài tập giáo trình</b><p>Bài nào cần đọc to thì có bảng chữ Hán + pinyin + nghĩa để con đọc theo. Phần viết có AI trong app/AI ngoài chấm ngay bên dưới.</p></div><div class="h1c-section"><h3>分角色朗读课文 · Đóng vai đọc bài khóa</h3><div class="h1c-read-table">'+String(lesson.readingText||'').split(/\n/).filter(Boolean).map(function(line,i){var clean=stripRole(line); return '<div><b>'+(i+1)+'.</b></div><div class="zh">'+esc(clean)+'</div><div>'+esc(pinyinText(clean,lesson))+'</div><div>'+esc(viText(clean,lesson))+'</div>';}).join('')+'</div></div><div class="h1c-section"><h3>用本课词语说话 · Dùng từ trong bài đặt câu</h3><div class="h1c-chip-row">'+(lesson.keyVocab||[]).slice(0,8).map(function(w){return '<span>'+esc(w)+'</span>';}).join('')+'</div><textarea id="h1c-lianxi-'+lesson.id+'" class="ex-write-area" placeholder="Viết 2–4 câu đơn giản bằng từ của bài..."></textarea>'+aiBtns('h1c-lianxi-'+lesson.id,'h1c-lianxi-res-'+lesson.id,'Chấm bài tập giáo trình HSK 1: kiểm tra câu ngắn, từ vựng bài học, pinyin nếu có.')+'</div>';}
+  function renderTextbookExercises(lesson){return '<div class="h1c-note"><b>📘 练习 · Bài tập giáo trình</b><p>Bài nào cần đọc to thì có bảng chữ Hán + pinyin + nghĩa để con đọc theo. Phần viết có AI chấm ngay bên dưới.</p></div><div class="h1c-section"><h3>分角色朗读课文 · Đóng vai đọc bài khóa</h3><div class="h1c-read-table">'+String(lesson.readingText||'').split(/\n/).filter(Boolean).map(function(line,i){var clean=stripRole(line); return '<div><b>'+(i+1)+'.</b></div><div class="zh">'+esc(clean)+'</div><div>'+esc(pinyinText(clean,lesson))+'</div><div>'+esc(viText(clean,lesson))+'</div>';}).join('')+'</div></div><div class="h1c-section"><h3>用本课词语说话 · Dùng từ trong bài đặt câu</h3><div class="h1c-chip-row">'+(lesson.keyVocab||[]).slice(0,8).map(function(w){return '<span>'+esc(w)+'</span>';}).join('')+'</div><textarea id="h1c-lianxi-'+lesson.id+'" class="ex-write-area" placeholder="Viết 2–4 câu đơn giản bằng từ của bài..."></textarea>'+aiBtns('h1c-lianxi-'+lesson.id,'h1c-lianxi-res-'+lesson.id,'Chấm bài tập giáo trình HSK 1: kiểm tra câu ngắn, từ vựng bài học, pinyin nếu có.')+'</div>';}
 
   function renderWorkbook(lesson){var id=lesson.id, bt=BT_COUNTS[id]||2; var html='<div class="h1c-note"><b>📚 练习册 · Sách bài tập</b><p>Mỗi phần nghe có audio ngay trên và bài/ô đáp án ngay dưới. Phần đọc to từ được đưa vào bảng để con nhìn và đọc theo.</p></div>';
     for(var t=1;t<=bt;t++){html+='<div class="h1c-block">'+audioBar('bt',id,t,'练习册听力 '+pad2(id)+'-'+t+' · Audio bài tập '+t,'Nghe rồi làm bài ngay dưới')+'<div class="h1c-section"><h3>'+(['一、听力 · Phần nghe','三、语音 · Phần ngữ âm','四、汉字 · Chữ Hán'][t-1]||'练习 · Bài tập')+'</h3>'; if(id<=2 || t===2){var words=(WORD_PICTURES[id]||[]).map(function(w){return w[2]+'（'+w[1]+'）';}).slice(0,20); html+='<p><b>朗读词语 · Đọc to các từ:</b></p>'+renderTableRows(words,4);} else {html+='<div class="h1c-answer-list">'+[1,2,3,4,5].map(function(n){return '<label>Câu '+n+'：<input placeholder="Đáp án / ghi chú nghe được"></label>';}).join('')+'</div>'; } html+='<textarea id="h1c-wb-'+id+'-'+t+'" class="ex-write-area" placeholder="Ghi đáp án hoặc phần con nghe được ở đây..."></textarea>'+aiBtns('h1c-wb-'+id+'-'+t,'h1c-wb-res-'+id+'-'+t,'Chấm sách bài tập HSK1 bài '+id+' audio '+t+'.')+'</div></div>';}
@@ -10836,12 +10812,12 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   function avgScores(untilId){var all=readScores(), sum=defaultScores(), count=0; Object.keys(all).forEach(function(k){if(Number(k)<=untilId){count++; SKILLS.forEach(function(s){sum[s[0]]+=(Number(all[k][s[0]])||0);});}}); SKILLS.forEach(function(s){sum[s[0]]=count?Math.round((sum[s[0]]-50)/(count)):50;}); return sum;}
   function weakest(scores){return SKILLS.map(function(s){return {key:s[0],vi:s[1],zh:s[2],v:scores[s[0]]||0};}).sort(function(a,b){return a.v-b.v;}).slice(0,3);}
   function renderCircle(skill, val){return '<div class="h1c-circle" style="--p:'+val+'"><div><b>'+val+'</b><span>'+esc(skill)+'</span></div></div>';}
-  function renderAssessment(lesson){var s=lessonScores(lesson.id), a=avgScores(lesson.id), weak=weakest(s); var html='<div class="h1c-note"><b>📊 学习评估 · Đánh giá năng lực</b><p>Theo dõi riêng từng bài và toàn bộ quá trình từ bài 1 đến bài đang học. Dữ liệu này có thể gửi cho AI đóng vai cô giáo tiếng Trung để đề xuất cách học tốt hơn.</p></div><div class="h1c-eval-grid"><div class="h1c-section"><h3>本课评估 · Đánh giá bài '+lesson.id+'</h3><div class="h1c-circles">'+SKILLS.slice(0,6).map(function(x){return renderCircle(x[1],s[x[0]]||0);}).join('')+'</div><div class="h1c-sliders">'+SKILLS.map(function(x){return '<label><span>'+x[2]+' · '+x[1]+'</span><input type="range" min="0" max="100" value="'+(s[x[0]]||0)+'" oninput="h1cUpdateScore('+lesson.id+',\''+x[0]+'\',this.value)"><b id="score-'+lesson.id+'-'+x[0]+'">'+(s[x[0]]||0)+'</b></label>';}).join('')+'</div><div class="h1c-weak"><b>Phần cần bổ trợ:</b> '+weak.map(function(w){return w.zh+' · '+w.vi+' ('+w.v+')';}).join('； ')+'</div></div><div class="h1c-section"><h3>过程评估 · Quá trình đến bài '+lesson.id+'</h3><div class="h1c-bars">'+SKILLS.map(function(x){return '<div><span>'+x[2]+' · '+x[1]+'</span><div><i style="width:'+(a[x[0]]||0)+'%"></i></div><b>'+(a[x[0]]||0)+'</b></div>';}).join('')+'</div><textarea id="h1c-ai-plan-'+lesson.id+'" class="ex-write-area" placeholder="Ghi thêm nhận xét của phụ huynh: con thích gì, hay quên gì, nghe khó ở âm nào..."></textarea><div class="h1c-ai-row"><button class="btn btn-outline" onclick="h1cAskTeacher('+lesson.id+',\'internal\')">AI trong app tư vấn</button><button class="btn btn-teal" onclick="h1cAskTeacher('+lesson.id+',\'external\')">AI ngoài tư vấn</button></div><div id="h1c-ai-plan-res-'+lesson.id+'" class="gpt-inline-result"></div></div></div>'; return html;}
+  function renderAssessment(lesson){var s=lessonScores(lesson.id), a=avgScores(lesson.id), weak=weakest(s); var html='<div class="h1c-note"><b>📊 学习评估 · Đánh giá năng lực</b><p>Theo dõi riêng từng bài và toàn bộ quá trình từ bài 1 đến bài đang học. Dữ liệu này có thể gửi cho AI đóng vai cô giáo tiếng Trung để đề xuất cách học tốt hơn.</p></div><div class="h1c-eval-grid"><div class="h1c-section"><h3>本课评估 · Đánh giá bài '+lesson.id+'</h3><div class="h1c-circles">'+SKILLS.slice(0,6).map(function(x){return renderCircle(x[1],s[x[0]]||0);}).join('')+'</div><div class="h1c-sliders">'+SKILLS.map(function(x){return '<label><span>'+x[2]+' · '+x[1]+'</span><input type="range" min="0" max="100" value="'+(s[x[0]]||0)+'" oninput="h1cUpdateScore('+lesson.id+',\''+x[0]+'\',this.value)"><b id="score-'+lesson.id+'-'+x[0]+'">'+(s[x[0]]||0)+'</b></label>';}).join('')+'</div><div class="h1c-weak"><b>Phần cần bổ trợ:</b> '+weak.map(function(w){return w.zh+' · '+w.vi+' ('+w.v+')';}).join('； ')+'</div></div><div class="h1c-section"><h3>过程评估 · Quá trình đến bài '+lesson.id+'</h3><div class="h1c-bars">'+SKILLS.map(function(x){return '<div><span>'+x[2]+' · '+x[1]+'</span><div><i style="width:'+(a[x[0]]||0)+'%"></i></div><b>'+(a[x[0]]||0)+'</b></div>';}).join('')+'</div><textarea id="h1c-ai-plan-'+lesson.id+'" class="ex-write-area" placeholder="Ghi thêm nhận xét của phụ huynh: con thích gì, hay quên gì, nghe khó ở âm nào..."></textarea><div class="h1c-ai-row"><button class="btn btn-teal" onclick="h1cAskTeacher('+lesson.id+',\'external\')">AI tư vấn</button></div><div id="h1c-ai-plan-res-'+lesson.id+'" class="gpt-inline-result"></div></div></div>'; return html;}
   window.h1cUpdateScore=function(id,key,val){var all=readScores(); all[id]=Object.assign(defaultScores(),all[id]||{}); all[id][key]=Number(val); writeScores(all); var b=document.getElementById('score-'+id+'-'+key); if(b)b.textContent=val;};
   window.h1cAskTeacher=async function(id,mode){var lesson=(Array.isArray(LESSONS)?LESSONS.find(function(l){return l.id===id;}):{}), s=lessonScores(id), a=avgScores(id), note=(document.getElementById('h1c-ai-plan-'+id)||{}).value||''; var prompt='Bạn là cô giáo tiếng Trung cho trẻ em học HSK 1. Hãy dựa vào điểm bài hiện tại và quá trình học để đề xuất kế hoạch học 7 ngày, rất cụ thể, dễ làm, vui vẻ.\nBài hiện tại: '+id+' '+(lesson.zh||'')+'\nĐiểm bài này: '+JSON.stringify(s)+'\nĐiểm quá trình: '+JSON.stringify(a)+'\nNhận xét phụ huynh: '+note; var rid='h1c-ai-plan-res-'+id; if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(rid,'Đang xin cô giáo AI tư vấn...','','chatgpt'); try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=rid; var res=await callAIBackend(prompt,{mode:'hsk1-child-plan'}); setInlineGPTAnswer(rid,res.answer||JSON.stringify(res),'','chatgpt');}else{var low=weakest(s).map(function(w){return w.vi;}).join(', '); setInlineGPTAnswer(rid,'👩‍🏫 Gợi ý của cô giáo AI trong app:\n- Mỗi ngày nghe bài khóa 5 phút, đọc theo vai A/B 2 lượt.\n- Phần cần bổ trợ: '+low+'.\n- Ngày 1-2: luyện nghe + chỉ tay theo pinyin.\n- Ngày 3-4: đọc không nhìn tiếng Việt.\n- Ngày 5: viết 3 chữ Hán khó.\n- Ngày 6: nói 5 câu ngắn.\n- Ngày 7: kiểm tra lại bằng audio và tự chấm biểu đồ.','','local');}}catch(e){setInlineGPTAnswer(rid,'AI ngoài lỗi: '+(e.message||e)+'\nCó thể dùng AI trong app tư vấn.','error','chatgpt');}};
 
-  function aiBtns(tid,rid,prefix){return '<div class="h1c-ai-row"><button class="btn btn-outline" onclick="h1cGradeText(\''+tid+'\',\''+rid+'\',\'internal\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI trong app</button><button class="btn btn-teal" onclick="h1cGradeText(\''+tid+'\',\''+rid+'\',\'external\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI ngoài</button></div><div id="'+rid+'" class="gpt-inline-result"></div>';}
-  window.h1cGradeText=async function(tid,rid,mode,prefix){var ta=document.getElementById(tid); if(!ta||!ta.value.trim()){alert('Hãy nhập câu trả lời trước.');return;} var lesson=getLesson(); var prompt=(prefix||'Chấm bài HSK1')+'\nBài '+lesson.id+': '+lesson.zh+'\nHãy đóng vai cô giáo tiếng Trung cho trẻ em, chấm nhẹ nhàng, sửa lỗi pinyin/chữ Hán/từ vựng, giải thích bằng tiếng Việt.\nĐáp án của con: '+ta.value.trim(); if(typeof setInlineGPTAnswer==='function')setInlineGPTAnswer(rid,mode==='external'?'Đang chấm bằng AI ngoài...':'Đang chấm bằng AI trong app...','','chatgpt'); try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=rid; var res=await callAIBackend(prompt,{mode:'hsk1-child'}); setInlineGPTAnswer(rid,res.answer||JSON.stringify(res),'','chatgpt');}else{setInlineGPTAnswer(rid,'✅ AI trong app nhận xét:\n- Kiểm tra xem câu có đúng mẫu HSK 1 chưa.\n- Đọc lại pinyin và thanh điệu.\n- Câu nên ngắn: chủ ngữ + vị ngữ.\n- Nếu có chữ Hán khó, hãy viết lại 3 lần.','','local');}}catch(e){setInlineGPTAnswer(rid,'AI ngoài lỗi: '+(e.message||e),'error','chatgpt');}};
+  function aiBtns(tid,rid,prefix){return '<div class="h1c-ai-row"><button class="btn btn-teal" onclick="h1cGradeText(\''+tid+'\',\''+rid+'\',\'external\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI chấm</button></div><div id="'+rid+'" class="gpt-inline-result"></div>';}
+  window.h1cGradeText=async function(tid,rid,mode,prefix){var ta=document.getElementById(tid); if(!ta||!ta.value.trim()){alert('Hãy nhập câu trả lời trước.');return;} var lesson=getLesson(); var prompt=(prefix||'Chấm bài HSK1')+'\nBài '+lesson.id+': '+lesson.zh+'\nHãy đóng vai cô giáo tiếng Trung cho trẻ em, chấm nhẹ nhàng, sửa lỗi pinyin/chữ Hán/từ vựng, giải thích bằng tiếng Việt.\nĐáp án của con: '+ta.value.trim(); if(typeof setInlineGPTAnswer==='function')setInlineGPTAnswer(rid,'Đang chấm bằng AI...','','chatgpt'); try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=rid; var res=await callAIBackend(prompt,{mode:'hsk1-child'}); setInlineGPTAnswer(rid,res.answer||JSON.stringify(res),'','chatgpt');}else{setInlineGPTAnswer(rid,'✅ AI nhận xét:\n- Kiểm tra xem câu có đúng mẫu HSK 1 chưa.\n- Đọc lại pinyin và thanh điệu.\n- Câu nên ngắn: chủ ngữ + vị ngữ.\n- Nếu có chữ Hán khó, hãy viết lại 3 lần.','','local');}}catch(e){setInlineGPTAnswer(rid,'AI ngoài lỗi: '+(e.message||e),'error','chatgpt');}};
 
   function renderWarmup(lesson){return '<div class="h1c-note"><b>🔥 热身 · Khởi động</b><p>Nhìn hình/từ trước khi học. Hình dưới đây là hình tự tạo, không sao chép từ PDF.</p></div>'+renderWordPictureGrid(lesson)+'<div class="h1c-section"><h3>说一说 · Nói thử</h3><textarea id="h1c-warm-'+lesson.id+'" class="ex-write-area" placeholder="Dùng 2–3 từ trong hình để nói câu đơn giản..."></textarea>'+aiBtns('h1c-warm-'+lesson.id,'h1c-warm-res-'+lesson.id,'Chấm khởi động HSK1 bài '+lesson.id)+'</div>';}
   function renderTabs(lesson){var tabs=[]; if(lesson.id>2)tabs.push({id:'h1c-warm',label:'🔥 热身 · Khởi động',html:renderWarmup(lesson)}); tabs.push({id:'h1c-kewen',label:'📖 课文 · Bài khóa',html:renderReading(lesson)}); tabs.push({id:'h1c-pinyin',label:'🗣️ 拼音 · Ghép âm',html:renderPinyin(lesson)}); if(lesson.id<=2)tabs.push({id:'h1c-classroom',label:'🏫 课堂用语 · Mẫu câu lớp học',html:renderClassroom(lesson)}); if(lesson.id>2)tabs.push({id:'h1c-zhushi',label:'📌 注释 · Chú thích',html:renderNotes(lesson)}); tabs.push({id:'h1c-lianxi',label:'📘 练习 · Bài tập giáo trình',html:renderTextbookExercises(lesson)}); tabs.push({id:'h1c-hanzi',label:'✍️ 汉字 · Chữ Hán',html:renderHanzi(lesson)}); tabs.push({id:'h1c-yunyong',label:'🤝 运用 · Vận dụng',html:renderUsage(lesson)}); tabs.push({id:'h1c-workbook',label:'📚 练习册 · Sách bài tập',html:renderWorkbook(lesson)}); tabs.push({id:'h1c-assess',label:'📊 评估 · Đánh giá',html:renderAssessment(lesson)}); tabs.push({id:'notes-tab',label:'🗒️ 笔记 · Ghi chép',html:(typeof renderNotesTab==='function'?renderNotesTab(lesson):'')}); return tabs;}
@@ -10994,7 +10970,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var tasks=(window.HSK1_TEXTBOOK_DRILLS&&window.HSK1_TEXTBOOK_DRILLS[lesson.id])?window.HSK1_TEXTBOOK_DRILLS[lesson.id]:[];
     var list=[]; tasks.forEach(function(s){(s.items||[]).forEach(function(it){list.push({title:s.title,text:it.text,hint:it.hint});});});
     if(!list.length) list=[{title:'练习 · Bài tập',text:'根据课文回答问题。',hint:'课文'}];
-    return '<div class="h1kid-note"><b>📘 练习 · Bài tập giáo trình</b><p>Đọc bài khóa, trả lời câu hỏi, dùng từ mới đặt câu. Có AI trong app và AI ngoài chấm ngay bên dưới.</p></div>'+list.map(function(t,i){var id='h1kid-lx-'+lesson.id+'-'+i;return '<div class="h1kid-card"><div class="h1kid-title">'+E(t.title)+' · Bài tập '+(i+1)+'</div><p class="zh h1task">'+E(t.text)+'</p><div class="h1kid-vi">Gợi ý: '+E(t.hint||'dùng từ bài học')+'</div><textarea id="'+id+'" class="ex-write-area" placeholder="Nhập câu trả lời tiếng Trung, có thể kèm pinyin..."></textarea>'+aiButtons(id,id+'-res','Chấm bài tập giáo trình HSK 1: '+E(t.text))+'</div>';}).join('');
+    return '<div class="h1kid-note"><b>📘 练习 · Bài tập giáo trình</b><p>Đọc bài khóa, trả lời câu hỏi, dùng từ mới đặt câu. Có AI chấm ngay bên dưới.</p></div>'+list.map(function(t,i){var id='h1kid-lx-'+lesson.id+'-'+i;return '<div class="h1kid-card"><div class="h1kid-title">'+E(t.title)+' · Bài tập '+(i+1)+'</div><p class="zh h1task">'+E(t.text)+'</p><div class="h1kid-vi">Gợi ý: '+E(t.hint||'dùng từ bài học')+'</div><textarea id="'+id+'" class="ex-write-area" placeholder="Nhập câu trả lời tiếng Trung, có thể kèm pinyin..."></textarea>'+aiButtons(id,id+'-res','Chấm bài tập giáo trình HSK 1: '+E(t.text))+'</div>';}).join('');
   }
   function renderYunyong(lesson){var id='h1kid-yy-'+lesson.id;return '<div class="h1kid-note"><b>🤝 运用 · Vận dụng</b><p>Dùng mẫu câu trong bài để nói thật. Có thể ghi A/B hội thoại cho AI chấm.</p></div><div class="h1kid-card"><textarea id="'+id+'" class="ex-write-area" placeholder="Viết đoạn hội thoại A/B hoặc bảng thông tin nhóm..."></textarea>'+aiButtons(id,id+'-res','Chấm phần vận dụng HSK 1: đúng mẫu câu, dễ đọc, phù hợp trẻ mới học.')+'</div>';}
   function answerGrid(prefix,nums,opts){return '<div class="h1answer-grid">'+nums.map(function(n){return '<div class="h1ans"><b>'+n+'</b><input id="'+prefix+'-'+n+'" placeholder="答案"><div>'+opts.map(function(o){return '<button type="button" onclick="document.getElementById(\''+prefix+'-'+n+'\').value=\''+o+'\'">'+o+'</button>';}).join('')+'</div></div>';}).join('')+'</div>';}
@@ -11030,9 +11006,9 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   function renderBars(data){return '<div class="h1bars">'+SKILLS.map(function(s){var v=Number(data[s[0]])||0;return '<div class="h1bar"><label>'+E(s[1])+' <small>'+E(s[2])+'</small></label><div><span style="width:'+v+'%"></span></div><b>'+v+'%</b></div>';}).join('')+'</div>';}
   function renderAssessment(lesson){var id=lesson.id,d=loadSkill(id),avg=averageTo(id);return '<div class="h1kid-note"><b>📊 成长评估 · Đánh giá tiến bộ</b><p>Cho con học HSK 1 cần theo dõi nghe, phát âm, ghép âm, đọc, chữ Hán, nói và viết. Có đánh giá từng bài và toàn quá trình đến bài hiện tại.</p></div><div class="h1dash-grid"><div class="h1kid-card"><div class="h1kid-title">Đánh giá bài '+id+' · 本课</div><div class="h1sliders">'+SKILLS.map(function(s){var v=d[s[0]]||50;return '<label>'+E(s[1])+' · '+E(s[2])+' <output id="out-'+s[0]+'">'+v+'</output>%<input type="range" min="0" max="100" value="'+v+'" oninput="document.getElementById(\'out-'+s[0]+'\').textContent=this.value" id="skill-'+s[0]+'"></label>';}).join('')+'</div><label>Phần cần bổ trợ · 需要加强<textarea id="skill-focus" class="ex-write-area" placeholder="Ví dụ: thanh 3, zh/ch/sh, nghe chưa nhận ra từ...">'+E(d.focus||'')+'</textarea></label><button class="btn btn-teal" onclick="hsk1SaveAssessment('+id+')">Lưu đánh giá bài này</button></div><div class="h1kid-card"><div class="h1kid-title">Vòng năng lực bài này</div><div class="h1score-grid">'+SKILLS.slice(0,4).map(function(s){return scoreCircle(s[1],d[s[0]]||50);}).join('')+'</div></div></div><div class="h1kid-card"><div class="h1kid-title">Quá trình từ bài 1 đến bài '+id+' · 累计进步</div>'+renderBars(avg)+'<div class="h1advice"><button class="btn btn-outline" onclick="hsk1AskTeacher('+id+',\'internal\')">Hỏi AI cô giáo trong app</button><button class="btn btn-teal" onclick="hsk1AskTeacher('+id+',\'external\')">Hỏi AI cô giáo ngoài</button></div><div id="h1-teacher-advice-'+id+'" class="gpt-inline-result"></div></div>';}
   window.hsk1SaveAssessment=function(id){var d={};SKILLS.forEach(function(s){var el=document.getElementById('skill-'+s[0]);d[s[0]]=el?Number(el.value):0;});var f=document.getElementById('skill-focus');d.focus=f?f.value:'';saveSkill(id,d);alert('Đã lưu đánh giá bài '+id); if(window.loadLesson) window.loadLesson(id);};
-  window.hsk1AskTeacher=async function(id,mode){var lesson=getLesson(id),d=loadSkill(id),avg=averageTo(id),target='h1-teacher-advice-'+id;var prompt='Bạn là cô giáo tiếng Trung cho trẻ em Việt Nam học HSK 1. Dựa vào dữ liệu học tập, hãy đưa kế hoạch cải thiện cụ thể, vui vẻ, dễ làm trong 7 ngày.\nBài hiện tại: '+id+' '+(lesson.zh||'')+' - '+(lesson.vi||'')+'\nĐánh giá bài này: '+JSON.stringify(d)+'\nTrung bình quá trình: '+JSON.stringify(avg)+'\nNội dung cần bổ trợ: '+(d.focus||'chưa ghi');if(typeof setInlineGPTAnswer==='function')setInlineGPTAnswer(target,mode==='external'?'Đang hỏi AI ngoài...':'Đang hỏi AI trong app...','','');try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=target;var r=await callAIBackend(prompt,{mode:'hsk1-teacher'});setInlineGPTAnswer(target,r.answer||JSON.stringify(r),'','chatgpt');}else{var ans='Cô giáo gợi ý: mỗi ngày 10 phút nghe lại audio bài '+id+', 5 phút đọc bảng pinyin, 5 phút viết 3 chữ Hán. Phần cần bổ trợ: '+(d.focus||'phát âm và nghe từ mới')+'. Hãy khen con sau mỗi lần đọc đúng 3 câu.';setInlineGPTAnswer(target,ans,'','local');}}catch(e){setInlineGPTAnswer(target,'AI ngoài lỗi: '+(e&&e.message?e.message:e),'error','chatgpt');}};
-  function aiButtons(textareaId,resultId,prompt){return '<div class="hsk1-ai-row"><button class="btn btn-outline" onclick="hsk1KidGrade(\''+textareaId+'\',\''+resultId+'\',\'internal\',\''+E(prompt).replace(/'/g,'&#39;')+'\')">AI trong app</button><button class="btn btn-teal" onclick="hsk1KidGrade(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+E(prompt).replace(/'/g,'&#39;')+'\')">AI ngoài</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';}
-  window.hsk1KidGrade=async function(textareaId,resultId,mode,prefix){var el=document.getElementById(textareaId);if(!el||!el.value.trim()){alert('Hãy nhập câu trả lời trước.');return;}var lesson=getLesson((window.STATE&&STATE.currentLesson)||1);var prompt=(prefix||'Chấm bài HSK 1')+'\nBài: '+lesson.id+' '+(lesson.zh||'')+'\nYêu cầu: chấm nhẹ cho trẻ, sửa lỗi bằng tiếng Việt, chú ý pinyin/thanh điệu/chữ Hán.\nĐáp án của con: '+el.value.trim();if(typeof setInlineGPTAnswer==='function')setInlineGPTAnswer(resultId,mode==='external'?'Đang chấm bằng AI ngoài...':'Đang chấm bằng AI trong app...','','');try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=resultId;var r=await callAIBackend(prompt,{mode:'hsk1-child'});setInlineGPTAnswer(resultId,r.answer||JSON.stringify(r),'','chatgpt');}else{var local=typeof localAIResponse==='function'?localAIResponse(prompt,prompt,null):'AI trong app: con đã viết câu. Hãy kiểm tra đủ chủ ngữ + vị ngữ, đúng pinyin/thanh điệu và dùng từ bài học.';setInlineGPTAnswer(resultId,local,'','local');}}catch(e){setInlineGPTAnswer(resultId,'AI ngoài lỗi: '+(e&&e.message?e.message:e)+'\nCó thể dùng AI trong app để chấm miễn phí.','error','chatgpt');}};
+  window.hsk1AskTeacher=async function(id,mode){var lesson=getLesson(id),d=loadSkill(id),avg=averageTo(id),target='h1-teacher-advice-'+id;var prompt='Bạn là cô giáo tiếng Trung cho trẻ em Việt Nam học HSK 1. Dựa vào dữ liệu học tập, hãy đưa kế hoạch cải thiện cụ thể, vui vẻ, dễ làm trong 7 ngày.\nBài hiện tại: '+id+' '+(lesson.zh||'')+' - '+(lesson.vi||'')+'\nĐánh giá bài này: '+JSON.stringify(d)+'\nTrung bình quá trình: '+JSON.stringify(avg)+'\nNội dung cần bổ trợ: '+(d.focus||'chưa ghi');if(typeof setInlineGPTAnswer==='function')setInlineGPTAnswer(target,'Đang hỏi AI...','','');try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=target;var r=await callAIBackend(prompt,{mode:'hsk1-teacher'});setInlineGPTAnswer(target,r.answer||JSON.stringify(r),'','chatgpt');}else{var ans='Cô giáo gợi ý: mỗi ngày 10 phút nghe lại audio bài '+id+', 5 phút đọc bảng pinyin, 5 phút viết 3 chữ Hán. Phần cần bổ trợ: '+(d.focus||'phát âm và nghe từ mới')+'. Hãy khen con sau mỗi lần đọc đúng 3 câu.';setInlineGPTAnswer(target,ans,'','local');}}catch(e){setInlineGPTAnswer(target,'AI ngoài lỗi: '+(e&&e.message?e.message:e),'error','chatgpt');}};
+  function aiButtons(textareaId,resultId,prompt){return '<div class="hsk1-ai-row"><button class="btn btn-teal" onclick="hsk1KidGrade(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+E(prompt).replace(/'/g,'&#39;')+'\')">AI chấm</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';}
+  window.hsk1KidGrade=async function(textareaId,resultId,mode,prefix){var el=document.getElementById(textareaId);if(!el||!el.value.trim()){alert('Hãy nhập câu trả lời trước.');return;}var lesson=getLesson((window.STATE&&STATE.currentLesson)||1);var prompt=(prefix||'Chấm bài HSK 1')+'\nBài: '+lesson.id+' '+(lesson.zh||'')+'\nYêu cầu: chấm nhẹ cho trẻ, sửa lỗi bằng tiếng Việt, chú ý pinyin/thanh điệu/chữ Hán.\nĐáp án của con: '+el.value.trim();if(typeof setInlineGPTAnswer==='function')setInlineGPTAnswer(resultId,'Đang chấm bằng AI...','','');try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=resultId;var r=await callAIBackend(prompt,{mode:'hsk1-child'});setInlineGPTAnswer(resultId,r.answer||JSON.stringify(r),'','chatgpt');}else{var local=typeof localAIResponse==='function'?localAIResponse(prompt,prompt,null):'AI trong app: con đã viết câu. Hãy kiểm tra đủ chủ ngữ + vị ngữ, đúng pinyin/thanh điệu và dùng từ bài học.';setInlineGPTAnswer(resultId,local,'','local');}}catch(e){setInlineGPTAnswer(resultId,'AI ngoài lỗi: '+(e&&e.message?e.message:e)+'','error','chatgpt');}};
   function tabs(lesson){var base=[]; if(lesson.id>2)base.push({id:'h1-warm',label:'🔥 热身 · Khởi động',html:renderWarmup(lesson)}); base.push({id:'h1-kewen',label:'📖 课文 · Bài khóa',html:renderKewen(lesson)},{id:'h1-pinyin',label:'🗣️ 拼音/语音 · Ghép âm',html:renderPinyin(lesson)}); if(lesson.id<=2)base.push({id:'h1-class',label:'🏫 课堂用语 · Mẫu câu lớp học',html:renderClassroom(lesson)}); if(lesson.id>2)base.push({id:'h1-notes',label:'📌 注释 · Chú thích',html:renderNotes(lesson)},{id:'h1-lx',label:'📘 练习 · Bài tập',html:renderLianxi(lesson)}); base.push({id:'h1-hanzi',label:'✍️ 汉字 · Chữ Hán',html:renderHanzi(lesson)}); if(lesson.id>2)base.push({id:'h1-yy',label:'🤝 运用 · Vận dụng',html:renderYunyong(lesson)}); base.push({id:'h1-wb',label:'📚 练习册 · Sách bài tập',html:renderWorkbook(lesson)},{id:'h1-assess',label:'📊 成长 · Đánh giá',html:renderAssessment(lesson)},{id:'notes-tab',label:'🗒️ 笔记 · Ghi chép',html:typeof renderNotesTab==='function'?renderNotesTab(lesson):''});return base;}
   function loadH1(id){var lesson=getLesson(id); if(!lesson.id)return; if(window.STATE)STATE.currentLesson=lesson.id;var sel=document.getElementById('lesson-selector');if(sel)sel.value=id;var title=document.getElementById('lesson-page-title');if(title)title.textContent='HSK 1 · Bài '+id+': '+lesson.zh;var sub=document.getElementById('lesson-page-sub');if(sub)sub.textContent=lesson.vi+' · bài khóa + ghép âm + đánh giá trẻ em';var list=document.getElementById('lesson-list-view');if(list)list.style.display='none';var det=document.getElementById('lesson-detail-view');if(det)det.style.display='flex';var header=document.getElementById('lesson-detail-header');if(header)header.innerHTML='<div class="lesson-num-badge">'+id+'</div><div><div class="lesson-zh">'+E(lesson.zh)+'</div><div class="lesson-vi">'+E(lesson.vi)+'</div><div class="lesson-topic">HSK 1 · chữ Hán + pinyin + tiếng Việt · có theo dõi năng lực</div></div><div style="margin-left:auto"><button class="btn" style="background:rgba(255,255,255,.15);color:white;font-size:12px" onclick="markLessonDone('+id+')">✓ Hoàn thành</button></div>';var ts=tabs(lesson);var te=document.getElementById('lesson-tabs');if(te)te.innerHTML=ts.map(function(t,i){return '<button class="tab-btn '+(i===0?'active':'')+'" onclick="switchTab(\''+t.id+'\',this)">'+t.label+'</button>';}).join('');var ce=document.getElementById('lesson-tab-content');if(ce)ce.innerHTML=ts.map(function(t,i){return '<div id="'+t.id+'" class="tab-content '+(i===0?'active':'')+'">'+t.html+'</div>';}).join('');try{if(typeof saveState==='function')saveState();}catch(e){}}
   window.loadLesson=function(id){ if(isH1())return loadH1(Number(id)); return PREV_LOAD?PREV_LOAD(Number(id)):null; };
@@ -11183,7 +11159,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   function renderClassroom(lesson){var arr= lesson.id===1 ? [['老师好！','lǎoshī hǎo','Chào thầy/cô!'],['上课！','shàng kè','Vào học!'],['下课！','xià kè','Tan học!'],['现在休息！','xiànzài xiūxi','Bây giờ nghỉ giải lao!'],['请跟我读！','qǐng gēn wǒ dú','Hãy đọc theo tôi!'],['跟我读！','gēn wǒ dú','Đọc theo tôi!']] : [['打开书。','dǎkāi shū','Mở sách ra.'],['请大声读。','qǐng dàshēng dú','Hãy đọc to lên.'],['再读一遍。','zài dú yí biàn','Đọc lại một lần nữa.'],['一起读。','yìqǐ dú','Cùng đọc.'],['有问题吗？','yǒu wèntí ma','Có thắc mắc gì không?']]; var track= lesson.id===1?9:10; return '<div class="h1-tip"><b>课堂用语 · Mẫu câu lớp học:</b> mỗi câu có chữ Hán, pinyin và tiếng Việt.</div><div class="h1-audio-card">'+audioRow('bh',lesson.id,track,'课堂用语 · Mẫu câu lớp học','Nghe và đọc thuộc')+'<div class="h1-class-grid">'+arr.map(function(x){return '<div class="h1-class-card"><b class="zh">'+esc(x[0])+'</b><span>'+esc(x[1])+'</span><em>'+esc(x[2])+'</em></div>';}).join('')+'</div></div>';}
   function renderWarmup(lesson){var words=(lesson.keyVocab||[]).concat((lesson.vocab||[]).slice(0,6).map(function(w){return w.zh;})); words=[].filter.call(words,function(v,i,a){return v&&a.indexOf(v)===i;}).slice(0,12); return '<div class="h1-tip"><b>热身 · Khởi động:</b> nhìn tranh/từ, đọc pinyin, nói nghĩa Việt, rồi đặt câu ngắn.</div>'+panel('Từ gợi ý có pinyin/nghĩa','','<div class="h1-word-grid">'+words.map(function(w){return wordPill(lesson,w);}).join('')+'</div><div class="h1-generated-pics">'+words.slice(0,6).map(function(w,i){var icons=['👤','🏫','🍵','📚','🕒','✈️','🛒','🏥']; var info=wordInfo(lesson,w)||{py:'',vi:''};return '<figure><img src="'+svgData(icons[i%icons.length],info.py||w)+'"><figcaption><b class="zh">'+esc(w)+'</b><span>'+esc(info.py||'')+'</span><em>'+esc(info.vi||'')+'</em></figcaption></figure>';}).join('')+'</div>')+'<div class="h1-card"><div class="h1-title">Tự nói 3 câu</div><textarea id="h1-warm2-'+lesson.id+'" class="ex-write-area" placeholder="Dùng từ gợi ý để viết 3 câu HSK 1..."></textarea>'+aiButtons('h1-warm2-'+lesson.id,'h1-warm2-res-'+lesson.id,'Cô giáo HSK 1 hãy chấm câu khởi động: dùng đúng từ, pinyin, ngữ pháp cơ bản và gợi ý câu tự nhiên hơn.')+'</div>';}
   function renderNotes(lesson){var cards=(lesson.grammarDetail||[]).map(function(g){return '<div class="h1-grammar"><div class="h1-title zh">'+esc(g.pattern||'')+' · '+esc(g.full||'')+'</div><p>'+esc(g.explanation||'')+'</p>'+((g.senses||[]).map(function(s){return (s.examples||[]).map(function(e){return '<div class="h1-example"><div class="zh">'+esc(e.zh)+'</div><div>'+esc(e.vi||'')+'</div></div>';}).join('');}).join(''))+'<small>'+esc(g.tip||'HSK 1: nói ngắn, đúng trật tự và đúng thanh điệu.')+'</small></div>';}).join(''); return '<div class="h1-tip"><b>注释 · Chú thích:</b> giải thích ngữ pháp có tiếng Việt, phù hợp trẻ mới bắt đầu.</div>'+cards;}
-  function renderLianxi(lesson){var prompts= lesson.id<=2?['读课文：nghe và đọc lại từng câu.','听拼音：ghi lại âm nghe được.']:['分角色朗读课文。','根据课文回答问题。','用本课词语写 3 个句子。']; return '<div class="h1-tip"><b>练习 · Bài tập giáo trình:</b> bài mở có thể được AI trong app hoặc AI ngoài chấm.</div>'+prompts.map(function(p,i){var id='h1-lx2-'+lesson.id+'-'+i; return '<div class="h1-card"><div class="h1-title zh">练习 '+(i+1)+' · '+esc(p)+'</div><textarea id="'+id+'" class="ex-write-area" placeholder="Viết câu trả lời hoặc ghi cách đọc của bé..."></textarea>'+aiButtons(id,id+'-res','Cô giáo HSK 1 hãy chấm bài tập giáo trình: '+p)+'</div>';}).join('');}
+  function renderLianxi(lesson){var prompts= lesson.id<=2?['读课文：nghe và đọc lại từng câu.','听拼音：ghi lại âm nghe được.']:['分角色朗读课文。','根据课文回答问题。','用本课词语写 3 个句子。']; return '<div class="h1-tip"><b>练习 · Bài tập giáo trình:</b> bài mở có thể được AI chấm.</div>'+prompts.map(function(p,i){var id='h1-lx2-'+lesson.id+'-'+i; return '<div class="h1-card"><div class="h1-title zh">练习 '+(i+1)+' · '+esc(p)+'</div><textarea id="'+id+'" class="ex-write-area" placeholder="Viết câu trả lời hoặc ghi cách đọc của bé..."></textarea>'+aiButtons(id,id+'-res','Cô giáo HSK 1 hãy chấm bài tập giáo trình: '+p)+'</div>';}).join('');}
   function renderYunyong(lesson){var id='h1-yy2-'+lesson.id; return '<div class="h1-tip"><b>运用 · Vận dụng:</b> nói theo cặp/nhóm, sau đó ghi lại câu của bé để AI góp ý.</div><div class="h1-card"><div class="h1-title">Mẫu hội thoại tự luyện</div><div class="h1-task-text zh">A：'+esc(lesson.readingTitle||lesson.zh)+'？<br>B：……</div><textarea id="'+id+'" class="ex-write-area" placeholder="Viết đoạn hội thoại ngắn của bé..."></textarea>'+aiButtons(id,id+'-res','Cô giáo HSK 1 hãy chấm hội thoại vận dụng: ngắn gọn, đúng mẫu câu, đúng pinyin và tự nhiên.')+'</div>';}
 
   function options(prefix,count,opts){var html=''; for(var i=1;i<=count;i++){html+='<div class="h1-answer"><span>'+i+'</span><input id="'+prefix+'-'+i+'" placeholder="答案"><div>'+opts.map(function(o){return '<button onclick="this.closest(\'.h1-answer\').querySelector(\'input\').value=\''+o+'\'" type="button">'+o+'</button>';}).join('')+'</div></div>';} return '<div class="h1-answer-grid">'+html+'</div>';}
@@ -11213,10 +11189,10 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   function chartHTML(id,p,scope){var a=avg(p); return '<div class="h1-chart-wrap"><div class="h1-donut" style="--pct:'+a+'"><span>'+a+'%</span><em>'+scope+'</em></div><div class="h1-bars">'+Object.keys(PROG_LABELS).map(function(k){return '<div class="h1-bar-row"><label>'+PROG_LABELS[k]+'</label><div><i style="width:'+p[k]+'%"></i></div><span>'+p[k]+'%</span></div>';}).join('')+'</div></div><div class="h1-support"><b>Phần cần bổ trợ:</b> '+supportList(p)+'</div>';}
   function renderProgressNumbers(id){var lesson=currentLesson(id)||{id:id}; var p=getProgress(id), o=overallProgress(id); var el=document.getElementById('h1-progress-charts-'+id); if(el) el.innerHTML=chartHTML(id,p,'Bài '+id)+chartHTML(id,o,'Tổng');}
   window.hsk1SetProgress=function(id,k,v){setProgress(id,k,v);};
-  window.hsk1AskCoach=async function(id,mode){var p=getProgress(id), o=overallProgress(id); var out=document.getElementById('h1-coach-result-'+id); var prompt='Bạn là cô giáo tiếng Trung HSK 1 dạy trẻ em. Dựa vào dữ liệu học tập, hãy đưa kế hoạch cải tiến 7 ngày thật cụ thể, vui vẻ, dễ làm.\nBài hiện tại: '+id+'\nĐánh giá bài này: '+JSON.stringify(p)+'\nQuá trình từ bài 1 đến bài '+id+': '+JSON.stringify(o)+'\nĐiểm yếu: '+supportList(p)+'\nHãy tư vấn bằng tiếng Việt, kèm mẫu luyện tiếng Trung ngắn.'; if(out) out.innerHTML='<div class="h1-coach-loading">Đang xin lời khuyên cô giáo AI...</div>'; try{ if(mode==='external' && typeof callAIBackend==='function'){ var res=await callAIBackend(prompt,{mode:'hsk1-coach'}); if(out) out.innerHTML='<pre class="h1-coach-text">'+esc(res.answer||JSON.stringify(res,null,2))+'</pre>'; } else { var weak=supportList(p); var msg='Cô giáo gợi ý: tuần này hãy ưu tiên '+weak+'. Mỗi ngày học 15 phút: 5 phút nghe, 5 phút đọc nhại, 3 phút viết chữ, 2 phút nói 3 câu. Khi phát âm sai, hãy quay lại bảng 拼音 và đọc chậm theo audio.'; if(out) out.innerHTML='<div class="h1-coach-text">'+esc(msg)+'</div>'; } } catch(e){ if(out) out.innerHTML='<div class="h1-coach-text error">AI ngoài lỗi: '+esc(e.message||e)+'. Hãy dùng AI trong app hoặc thử lại sau.</div>'; }};
-  function renderAssessment(lesson){var id=lesson.id; var p=getProgress(id); var sliders=Object.keys(PROG_LABELS).map(function(k){return '<div class="h1-slider"><label>'+PROG_LABELS[k]+' <span id="h1-'+k+'-val-'+id+'">'+p[k]+'%</span></label><input type="range" min="0" max="100" value="'+p[k]+'" oninput="hsk1SetProgress('+id+',\''+k+'\',this.value)"></div>';}).join(''); return '<div class="h1-tip"><b>📊 Đánh giá năng lực:</b> theo dõi từng bài và quá trình từ bài 1 đến bài đang học. Dữ liệu lưu trong trình duyệt.</div><div class="h1-card"><div class="h1-title">Nhập đánh giá sau khi học bài '+id+'</div>'+sliders+'</div><div id="h1-progress-charts-'+id+'">'+chartHTML(id,p,'Bài '+id)+chartHTML(id,overallProgress(id),'Tổng')+'</div><div class="h1-card"><div class="h1-title">👩‍🏫 Hỏi AI cách cải tiến</div><p>AI đóng vai cô giáo tiếng Trung và tư vấn dựa trên năng lực từng bài + quá trình học.</p><div class="hsk1-ai-row"><button class="btn btn-outline" onclick="hsk1AskCoach('+id+',\'internal\')">AI trong app tư vấn</button><button class="btn btn-teal" onclick="hsk1AskCoach('+id+',\'external\')">AI ngoài tư vấn</button></div><div id="h1-coach-result-'+id+'"></div></div>';}
+  window.hsk1AskCoach=async function(id,mode){var p=getProgress(id), o=overallProgress(id); var out=document.getElementById('h1-coach-result-'+id); var prompt='Bạn là cô giáo tiếng Trung HSK 1 dạy trẻ em. Dựa vào dữ liệu học tập, hãy đưa kế hoạch cải tiến 7 ngày thật cụ thể, vui vẻ, dễ làm.\nBài hiện tại: '+id+'\nĐánh giá bài này: '+JSON.stringify(p)+'\nQuá trình từ bài 1 đến bài '+id+': '+JSON.stringify(o)+'\nĐiểm yếu: '+supportList(p)+'\nHãy tư vấn bằng tiếng Việt, kèm mẫu luyện tiếng Trung ngắn.'; if(out) out.innerHTML='<div class="h1-coach-loading">Đang xin lời khuyên cô giáo AI...</div>'; try{ if(mode==='external' && typeof callAIBackend==='function'){ var res=await callAIBackend(prompt,{mode:'hsk1-coach'}); if(out) out.innerHTML='<pre class="h1-coach-text">'+esc(res.answer||JSON.stringify(res,null,2))+'</pre>'; } else { var weak=supportList(p); var msg='Cô giáo gợi ý: tuần này hãy ưu tiên '+weak+'. Mỗi ngày học 15 phút: 5 phút nghe, 5 phút đọc nhại, 3 phút viết chữ, 2 phút nói 3 câu. Khi phát âm sai, hãy quay lại bảng 拼音 và đọc chậm theo audio.'; if(out) out.innerHTML='<div class="h1-coach-text">'+esc(msg)+'</div>'; } } catch(e){ if(out) out.innerHTML='<div class="h1-coach-text error">AI ngoài lỗi: '+esc(e.message||e)+'. Hãy thử lại sau.</div>'; }};
+  function renderAssessment(lesson){var id=lesson.id; var p=getProgress(id); var sliders=Object.keys(PROG_LABELS).map(function(k){return '<div class="h1-slider"><label>'+PROG_LABELS[k]+' <span id="h1-'+k+'-val-'+id+'">'+p[k]+'%</span></label><input type="range" min="0" max="100" value="'+p[k]+'" oninput="hsk1SetProgress('+id+',\''+k+'\',this.value)"></div>';}).join(''); return '<div class="h1-tip"><b>📊 Đánh giá năng lực:</b> theo dõi từng bài và quá trình từ bài 1 đến bài đang học. Dữ liệu lưu trong trình duyệt.</div><div class="h1-card"><div class="h1-title">Nhập đánh giá sau khi học bài '+id+'</div>'+sliders+'</div><div id="h1-progress-charts-'+id+'">'+chartHTML(id,p,'Bài '+id)+chartHTML(id,overallProgress(id),'Tổng')+'</div><div class="h1-card"><div class="h1-title">👩‍🏫 Hỏi AI cách cải tiến</div><p>AI đóng vai cô giáo tiếng Trung và tư vấn dựa trên năng lực từng bài + quá trình học.</p><div class="hsk1-ai-row"><button class="btn btn-teal" onclick="hsk1AskCoach('+id+',\'external\')">AI tư vấn</button></div><div id="h1-coach-result-'+id+'"></div></div>';}
 
-  function aiButtons(textareaId,resultId,prefix){return '<div class="hsk1-ai-row"><button class="btn btn-outline" onclick="hsk1FinalGrade(\''+textareaId+'\',\''+resultId+'\',\'internal\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI trong app</button><button class="btn btn-teal" onclick="hsk1FinalGrade(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI ngoài</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';}
+  function aiButtons(textareaId,resultId,prefix){return '<div class="hsk1-ai-row"><button class="btn btn-teal" onclick="hsk1FinalGrade(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI chấm</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';}
   window.hsk1FinalGrade=window.hsk1FinalGrade || async function(textareaId,resultId,mode,prefix){var ta=document.getElementById(textareaId); if(!ta||!ta.value.trim()){alert('Hãy nhập câu trả lời trước.');return;} var prompt=(prefix||'Chấm HSK 1')+'\nĐáp án của tôi: '+ta.value.trim(); var res=document.getElementById(resultId); if(res)res.innerHTML='Đang chấm...'; try{ if(mode==='external'&&typeof callAIBackend==='function'){var r=await callAIBackend(prompt,{mode:'hsk1'}); if(res)res.innerHTML='<pre>'+esc(r.answer||JSON.stringify(r,null,2))+'</pre>';} else {if(res)res.innerHTML='<div>AI trong app: kiểm tra chữ Hán, pinyin, trật tự từ và nghĩa. Câu cần ngắn, đúng mẫu HSK 1.</div>';}}catch(e){if(res)res.innerHTML='<div class="error">'+esc(e.message||e)+'</div>';}};
 
   function loadEnhancedHsk1(id){
@@ -11355,7 +11331,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     return '<div class="h1fix-tip"><b>注释 · Chú thích:</b> ngữ pháp và mẫu câu có tiếng Việt để bé hiểu trước khi luyện nói.</div>'+(lesson.grammarDetail||[]).map(function(g){ return '<section class="h1fix-card"><h3 class="zh">'+esc(g.pattern)+' · '+esc(g.full||'')+'</h3><p>'+esc(g.explanation||'')+'</p>'+((g.senses||[]).map(function(s){ return (s.examples||[]).map(function(ex){ return '<div class="h1fix-example"><div class="zh">'+esc(ex.zh||'')+'</div><div>'+esc(ex.vi||'')+'</div></div>'; }).join(''); }).join(''))+'<small>'+esc(g.tip||'HSK 1: câu ngắn, đúng trật tự, đọc rõ thanh điệu.')+'</small></section>'; }).join('');
   }
   function aiButtons(textareaId, resultId, prefix){
-    return '<div class="hsk1-ai-row"><button class="btn btn-outline" onclick="hsk1SafeAI(\''+textareaId+'\',\''+resultId+'\',\'internal\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI trong app</button><button class="btn btn-teal" onclick="hsk1SafeAI(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI ngoài</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';
+    return '<div class="hsk1-ai-row"><button class="btn btn-teal" onclick="hsk1SafeAI(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI chấm</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';
   }
   window.hsk1SafeAI = async function(textareaId, resultId, mode, prefix){
     var ta=document.getElementById(textareaId), res=document.getElementById(resultId);
@@ -11373,7 +11349,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   };
   function renderPractice(lesson){
     var prompts = lesson.id <= 2 ? ['Nghe audio rồi đọc lại từng câu.','Ghi pinyin con nghe được.','Viết 1 câu chào hỏi.'] : ['分角色朗读课文 · Đọc phân vai bài khóa.','根据课文回答问题 · Trả lời câu hỏi theo bài.','用本课词语写三句话 · Dùng từ mới viết 3 câu.'];
-    return '<div class="h1fix-tip"><b>练习 · Bài tập giáo trình:</b> bài mở có thể chấm bằng AI trong app hoặc AI ngoài.</div>'+prompts.map(function(p,i){ var id='h1fix-practice-'+lesson.id+'-'+i; return '<section class="h1fix-card"><h3>'+esc(p)+'</h3><textarea id="'+id+'" class="ex-write-area" placeholder="Viết câu trả lời / câu con đọc / pinyin nghe được..."></textarea>'+aiButtons(id,id+'-res','Cô giáo HSK 1 hãy chấm bài tập: '+p)+'</section>';}).join('');
+    return '<div class="h1fix-tip"><b>练习 · Bài tập giáo trình:</b> bài mở có thể chấm bằng AI.</div>'+prompts.map(function(p,i){ var id='h1fix-practice-'+lesson.id+'-'+i; return '<section class="h1fix-card"><h3>'+esc(p)+'</h3><textarea id="'+id+'" class="ex-write-area" placeholder="Viết câu trả lời / câu con đọc / pinyin nghe được..."></textarea>'+aiButtons(id,id+'-res','Cô giáo HSK 1 hãy chấm bài tập: '+p)+'</section>';}).join('');
   }
   function renderWarmup(lesson){
     var words = ((lesson.keyVocab||[]).concat((lesson.vocab||[]).map(function(w){return w.zh;}))).filter(function(v,i,a){ return v && a.indexOf(v) === i; }).slice(0,12);
@@ -11402,7 +11378,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   function bars(p){ return '<div class="h1fix-bars">'+Object.keys(PROG_LABELS).map(function(k){ return '<div><span>'+esc(PROG_LABELS[k])+'</span><div><i style="width:'+Number(p[k]||0)+'%"></i></div><b>'+Number(p[k]||0)+'</b></div>'; }).join('')+'</div>'; }
   function renderAssessment(lesson){
     var id=lesson.id, p=fullProgress(id), avg=avgProgress(id);
-    return '<div class="h1fix-tip"><b>📊 Đánh giá:</b> theo dõi năng lực từng bài và quá trình từ bài 1 đến bài đang học. Có thể hỏi AI đóng vai cô giáo tiếng Trung để cải thiện cách học.</div><div class="h1fix-assess-grid"><section class="h1fix-card"><h3>本课评估 · Đánh giá bài '+id+'</h3><div class="h1fix-circles">'+Object.keys(PROG_LABELS).slice(0,6).map(function(k){return circle(PROG_LABELS[k],p[k]);}).join('')+'</div><div class="h1fix-sliders">'+Object.keys(PROG_LABELS).map(function(k){return '<label>'+esc(PROG_LABELS[k])+' <output id="h1fix-out-'+id+'-'+k+'">'+p[k]+'</output>%<input type="range" min="0" max="100" value="'+p[k]+'" oninput="hsk1SetProgress('+id+',\''+k+'\',this.value)"></label>';}).join('')+'</div></section><section class="h1fix-card"><h3>过程评估 · Quá trình đến bài '+id+'</h3>'+bars(avg)+'<textarea id="h1fix-coach-'+id+'" class="ex-write-area" placeholder="Ghi nhận xét của phụ huynh: con thích gì, hay quên gì, nghe khó âm nào..."></textarea><div class="hsk1-ai-row"><button class="btn btn-outline" onclick="hsk1Coach('+id+',\'internal\')">AI trong app tư vấn</button><button class="btn btn-teal" onclick="hsk1Coach('+id+',\'external\')">AI ngoài tư vấn</button></div><div id="h1fix-coach-res-'+id+'" class="gpt-inline-result"></div></section></div>';
+    return '<div class="h1fix-tip"><b>📊 Đánh giá:</b> theo dõi năng lực từng bài và quá trình từ bài 1 đến bài đang học. Có thể hỏi AI đóng vai cô giáo tiếng Trung để cải thiện cách học.</div><div class="h1fix-assess-grid"><section class="h1fix-card"><h3>本课评估 · Đánh giá bài '+id+'</h3><div class="h1fix-circles">'+Object.keys(PROG_LABELS).slice(0,6).map(function(k){return circle(PROG_LABELS[k],p[k]);}).join('')+'</div><div class="h1fix-sliders">'+Object.keys(PROG_LABELS).map(function(k){return '<label>'+esc(PROG_LABELS[k])+' <output id="h1fix-out-'+id+'-'+k+'">'+p[k]+'</output>%<input type="range" min="0" max="100" value="'+p[k]+'" oninput="hsk1SetProgress('+id+',\''+k+'\',this.value)"></label>';}).join('')+'</div></section><section class="h1fix-card"><h3>过程评估 · Quá trình đến bài '+id+'</h3>'+bars(avg)+'<textarea id="h1fix-coach-'+id+'" class="ex-write-area" placeholder="Ghi nhận xét của phụ huynh: con thích gì, hay quên gì, nghe khó âm nào..."></textarea><div class="hsk1-ai-row"><button class="btn btn-teal" onclick="hsk1Coach('+id+',\'external\')">AI tư vấn</button></div><div id="h1fix-coach-res-'+id+'" class="gpt-inline-result"></div></section></div>';
   }
   window.hsk1SetProgress = function(id,key,val){ var p=fullProgress(id); p[key]=Number(val)||0; saveProgress(id,p); var out=document.getElementById('h1fix-out-'+id+'-'+key); if(out) out.textContent=p[key]; };
   window.hsk1Coach = async function(id,mode){
@@ -11639,7 +11615,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   function renderLianxi(lesson){
     var prompts = (lesson.grammar||[]).slice(0,4);
     if(!prompts.length) prompts = ['用本课词语写句子'];
-    return '<div class="h1stable-tip"><b>练习 · Bài tập giáo trình:</b> phần nào cần viết đều có AI trong app / AI ngoài bên ngoài, không cần mở hộp chọn.</div>'+prompts.map(function(p,i){var id='h1stable-ex-'+lesson.id+'-'+i; return '<section class="h1stable-card"><h3 class="zh">'+E(p)+' · luyện tập</h3><textarea id="'+id+'" class="ex-write-area" placeholder="Viết câu trả lời HSK 1 ở đây..."></textarea>'+aiButtons(id,id+'-res','Chấm bài tập giáo trình HSK 1 với điểm ngữ pháp/từ: '+p)+'</section>';}).join('');
+    return '<div class="h1stable-tip"><b>练习 · Bài tập giáo trình:</b> phần nào cần viết đều có nút AI chấm bên dưới.</div>'+prompts.map(function(p,i){var id='h1stable-ex-'+lesson.id+'-'+i; return '<section class="h1stable-card"><h3 class="zh">'+E(p)+' · luyện tập</h3><textarea id="'+id+'" class="ex-write-area" placeholder="Viết câu trả lời HSK 1 ở đây..."></textarea>'+aiButtons(id,id+'-res','Chấm bài tập giáo trình HSK 1 với điểm ngữ pháp/từ: '+p)+'</section>';}).join('');
   }
   function renderUsage(lesson){
     var id='h1stable-use-'+lesson.id;
@@ -11667,11 +11643,11 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   function bars(obj){return '<div class="h1stable-bars">'+Object.keys(SKILLS).map(function(k){return '<div><span>'+E(SKILLS[k])+'</span><div><i style="width:'+Number(obj[k]||0)+'%"></i></div><b>'+Number(obj[k]||0)+'</b></div>';}).join('')+'</div>';}
   function renderAssessment(lesson){
     var id=Number(lesson.id)||1, p=getProgress(id), avg=avgProgress(id);
-    return '<div class="h1stable-tip"><b>📊 Đánh giá:</b> theo dõi năng lực từng bài và quá trình từ bài 1 đến bài đang học. Có thể hỏi AI đóng vai cô giáo tiếng Trung để cải tiến cách học.</div><div class="h1stable-assess-grid"><section class="h1stable-card"><h3>本课评估 · Đánh giá bài '+id+'</h3><div class="h1stable-circles">'+Object.keys(SKILLS).slice(0,6).map(function(k){return circle(SKILLS[k],p[k]);}).join('')+'</div><div class="h1stable-sliders">'+Object.keys(SKILLS).map(function(k){return '<label>'+E(SKILLS[k])+' <output id="h1stable-out-'+id+'-'+k+'">'+p[k]+'</output>%<input type="range" min="0" max="100" value="'+p[k]+'" oninput="hsk1StableSetProgress('+id+',\''+k+'\',this.value)"></label>';}).join('')+'</div></section><section class="h1stable-card"><h3>过程评估 · Quá trình đến bài '+id+'</h3>'+bars(avg)+'<textarea id="h1stable-coach-'+id+'" class="ex-write-area" placeholder="Ghi nhận xét của phụ huynh: con thích gì, hay quên gì, nghe khó âm nào..."></textarea><div class="hsk1-ai-row"><button class="btn btn-outline" onclick="hsk1StableCoach('+id+',\'internal\')">AI trong app tư vấn</button><button class="btn btn-teal" onclick="hsk1StableCoach('+id+',\'external\')">AI ngoài tư vấn</button></div><div id="h1stable-coach-res-'+id+'" class="gpt-inline-result"></div></section></div>';
+    return '<div class="h1stable-tip"><b>📊 Đánh giá:</b> theo dõi năng lực từng bài và quá trình từ bài 1 đến bài đang học. Có thể hỏi AI đóng vai cô giáo tiếng Trung để cải tiến cách học.</div><div class="h1stable-assess-grid"><section class="h1stable-card"><h3>本课评估 · Đánh giá bài '+id+'</h3><div class="h1stable-circles">'+Object.keys(SKILLS).slice(0,6).map(function(k){return circle(SKILLS[k],p[k]);}).join('')+'</div><div class="h1stable-sliders">'+Object.keys(SKILLS).map(function(k){return '<label>'+E(SKILLS[k])+' <output id="h1stable-out-'+id+'-'+k+'">'+p[k]+'</output>%<input type="range" min="0" max="100" value="'+p[k]+'" oninput="hsk1StableSetProgress('+id+',\''+k+'\',this.value)"></label>';}).join('')+'</div></section><section class="h1stable-card"><h3>过程评估 · Quá trình đến bài '+id+'</h3>'+bars(avg)+'<textarea id="h1stable-coach-'+id+'" class="ex-write-area" placeholder="Ghi nhận xét của phụ huynh: con thích gì, hay quên gì, nghe khó âm nào..."></textarea><div class="hsk1-ai-row"><button class="btn btn-teal" onclick="hsk1StableCoach('+id+',\'external\')">AI tư vấn</button></div><div id="h1stable-coach-res-'+id+'" class="gpt-inline-result"></div></section></div>';
   }
   window.hsk1StableSetProgress=function(id,k,v){var p=getProgress(id); p[k]=Number(v)||0; localStorage.setItem('hsk1_progress_'+id,JSON.stringify(p)); var out=document.getElementById('h1stable-out-'+id+'-'+k); if(out) out.textContent=p[k];};
   window.hsk1StableCoach=async function(id,mode){var p=getProgress(id), avg=avgProgress(id), extra=(document.getElementById('h1stable-coach-'+id)||{}).value||''; var prompt='Bạn là cô giáo tiếng Trung cho trẻ học HSK 1. Hãy tư vấn cách cải thiện dựa trên điểm bài '+id+' và quá trình. Điểm bài: '+JSON.stringify(p)+'. Trung bình quá trình: '+JSON.stringify(avg)+'. Ghi chú phụ huynh: '+extra; var rid='h1stable-coach-res-'+id; if(mode==='external' && typeof callAIBackend==='function'){try{CURRENT_GPT_INLINE_TARGET=rid; var r=await callAIBackend(prompt,{mode:'hsk1-coach'}); if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(rid,r.answer,'','chatgpt');}catch(e){if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(rid,'AI ngoài lỗi: '+(e.message||e),'error','chatgpt');}} else {var advice='👩‍🏫 AI trong app: Hôm nay nên nghe lại bài khóa 2 lần, đọc to pinyin 3 lượt, chọn 5 chữ Hán khó nhất để luyện. Nếu điểm phát âm dưới 70, ưu tiên thanh điệu và zh/ch/sh/z/c/s.'; if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(rid,advice,'','local'); else alert(advice);}};
-  function aiButtons(textareaId,resultId,prefix){return '<div class="hsk1-ai-row"><button class="btn btn-outline" onclick="hsk1StableGrade(\''+textareaId+'\',\''+resultId+'\',\'internal\',\''+E(prefix).replace(/'/g,'&#39;')+'\')">AI trong app</button><button class="btn btn-teal" onclick="hsk1StableGrade(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+E(prefix).replace(/'/g,'&#39;')+'\')">AI ngoài</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';}
+  function aiButtons(textareaId,resultId,prefix){return '<div class="hsk1-ai-row"><button class="btn btn-teal" onclick="hsk1StableGrade(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+E(prefix).replace(/'/g,'&#39;')+'\')">AI chấm</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';}
   window.hsk1StableGrade=async function(textareaId,resultId,mode,prefix){var ta=document.getElementById(textareaId); if(!ta || !ta.value.trim()){alert('Hãy nhập câu trả lời trước.');return;} var lesson=getLesson(getState().currentLesson||1); var prompt=String(prefix||'Chấm HSK 1')+'\nBài '+lesson.id+': '+lesson.zh+'\nĐáp án của tôi: '+ta.value.trim(); if(mode==='external' && typeof callAIBackend==='function'){try{CURRENT_GPT_INLINE_TARGET=resultId; var r=await callAIBackend(prompt,{mode:'hsk1-stable'}); if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(resultId,r.answer,'','chatgpt');}catch(e){if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(resultId,'AI ngoài lỗi: '+(e.message||e),'error','chatgpt'); else alert('AI ngoài lỗi: '+(e.message||e));}} else {var ans=typeof localAIResponse==='function'?localAIResponse(prompt,prompt,null):'AI trong app: kiểm tra câu có đúng từ HSK 1, đúng trật tự chủ ngữ-vị ngữ, pinyin/thanh điệu nếu có.'; if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(resultId,ans,'','local'); else alert(ans);}};
   function renderTabs(lesson){
     var arr=[];
@@ -11899,7 +11875,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var nowAvg=Object.keys(SKILLS).reduce(function(a,k){return a+(avg[k]||0);},0)/Object.keys(SKILLS).length;
     var prevAvg=prev?Object.keys(SKILLS).reduce(function(a,k){return a+(prev[k]||0);},0)/Object.keys(SKILLS).length:null;
     var trend=prevAvg==null?'Bắt đầu theo dõi':(nowAvg>=prevAvg?'Đang tiến bộ +' + Math.round(nowAvg-prevAvg):'Cần chú ý ' + Math.round(nowAvg-prevAvg));
-    return '<div class="h1stable-tip"><b>📊 Đánh giá:</b> gồm 2 phần riêng: <b>đánh giá từng bài</b> và <b>đánh giá quá trình từ bài 1 đến bài đang học</b>. Dữ liệu này dùng để hỏi AI như một cô giáo tiếng Trung.</div><div class="h1stable-assess-grid"><section class="h1stable-card"><h3>本课评估 · Đánh giá riêng bài '+id+'</h3><div class="h1stable-circles">'+Object.keys(SKILLS).slice(0,6).map(function(k){return circle(SKILLS[k],p[k]);}).join('')+'</div><div class="h1stable-sliders">'+Object.keys(SKILLS).map(function(k){return '<label>'+E(SKILLS[k])+' <output id="h1stable-out-'+id+'-'+k+'">'+p[k]+'</output>%<input type="range" min="0" max="100" value="'+p[k]+'" oninput="hsk1StableSetProgress('+id+',\''+k+'\',this.value)"></label>';}).join('')+'</div><div class="h1assessment-note"><b>Cần bổ trợ bài này:</b> '+weakest(p).map(function(k){return SKILLS[k]+' '+p[k]+'%';}).join(' · ')+'</div></section><section class="h1stable-card"><h3>过程评估 · Quá trình đến bài '+id+'</h3><div class="h1process-summary"><b>Xu hướng:</b> '+E(trend)+' · <b>Trung bình hiện tại:</b> '+Math.round(nowAvg)+'</div>'+bars(avg)+'<h4>学习轨迹 · Lộ trình từ bài 1 đến hiện tại</h4>'+processRows(id)+'<textarea id="h1stable-coach-'+id+'" class="ex-write-area" placeholder="Ghi nhận xét của phụ huynh: con thích gì, hay quên gì, nghe khó âm nào..."></textarea><div class="hsk1-ai-row"><button class="btn btn-outline" onclick="hsk1StableCoach('+id+',\'internal\')">AI trong app tư vấn</button><button class="btn btn-teal" onclick="hsk1StableCoach('+id+',\'external\')">AI ngoài tư vấn</button></div><div id="h1stable-coach-res-'+id+'" class="gpt-inline-result"></div></section></div>';
+    return '<div class="h1stable-tip"><b>📊 Đánh giá:</b> gồm 2 phần riêng: <b>đánh giá từng bài</b> và <b>đánh giá quá trình từ bài 1 đến bài đang học</b>. Dữ liệu này dùng để hỏi AI như một cô giáo tiếng Trung.</div><div class="h1stable-assess-grid"><section class="h1stable-card"><h3>本课评估 · Đánh giá riêng bài '+id+'</h3><div class="h1stable-circles">'+Object.keys(SKILLS).slice(0,6).map(function(k){return circle(SKILLS[k],p[k]);}).join('')+'</div><div class="h1stable-sliders">'+Object.keys(SKILLS).map(function(k){return '<label>'+E(SKILLS[k])+' <output id="h1stable-out-'+id+'-'+k+'">'+p[k]+'</output>%<input type="range" min="0" max="100" value="'+p[k]+'" oninput="hsk1StableSetProgress('+id+',\''+k+'\',this.value)"></label>';}).join('')+'</div><div class="h1assessment-note"><b>Cần bổ trợ bài này:</b> '+weakest(p).map(function(k){return SKILLS[k]+' '+p[k]+'%';}).join(' · ')+'</div></section><section class="h1stable-card"><h3>过程评估 · Quá trình đến bài '+id+'</h3><div class="h1process-summary"><b>Xu hướng:</b> '+E(trend)+' · <b>Trung bình hiện tại:</b> '+Math.round(nowAvg)+'</div>'+bars(avg)+'<h4>学习轨迹 · Lộ trình từ bài 1 đến hiện tại</h4>'+processRows(id)+'<textarea id="h1stable-coach-'+id+'" class="ex-write-area" placeholder="Ghi nhận xét của phụ huynh: con thích gì, hay quên gì, nghe khó âm nào..."></textarea><div class="hsk1-ai-row"><button class="btn btn-teal" onclick="hsk1StableCoach('+id+',\'external\')">AI tư vấn</button></div><div id="h1stable-coach-res-'+id+'" class="gpt-inline-result"></div></section></div>';
   }
 
   function improveRenderedHsk1(id){
@@ -11964,7 +11940,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
       + '<div><b>阅读 第一部分 15–18</b><p>Điền từ/đọc đoạn ngắn: xét collocation và logic câu. Không chỉ dịch từ, phải xem trước sau có quan hệ nhân quả, đối lập hay liệt kê.</p></div>'
       + '<div><b>阅读 第二/三部分 19–28</b><p>Đọc hiểu: câu đúng thường diễn đạt lại ý trong bài bằng từ khác. Loại đáp án quá tuyệt đối hoặc không xuất hiện trong bài.</p></div>'
       + '</div></div>'
-      + '<div class="hsk5-explain-card"><h3>✍️ 书写 · Câu mẫu viết</h3><ol>'+writing+'</ol><p class="muted">Câu 32 là bài viết mở. App vẫn giữ phần AI trong app / AI ngoài để chấm câu viết tự do.</p></div>'
+      + '<div class="hsk5-explain-card"><h3>✍️ 书写 · Câu mẫu viết</h3><ol>'+writing+'</ol><p class="muted">Câu 32 là bài viết mở. App có AI chấm câu viết tự do.</p></div>'
       + '<div class="hsk5-explain-card"><h3>📌 Trọng điểm bài này</h3><p>'+esc(d.note||'')+'</p></div>'
       + '<div class="hsk5-explain-card"><h3>🤖 Nhờ AI giải thích sâu hơn</h3><p>Muốn giải thích từng câu cụ thể, bấm nút dưới đây rồi nhập số câu, ví dụ: “giải thích câu nghe 7 bài '+id+'”.</p><button class="btn btn-outline" onclick="askAI(\'Dựa trên transcript và đáp án HSK 5 上 bài '+id+', giải thích chi tiết câu tôi hỏi. Hãy giải thích bằng tiếng Việt, chỉ rõ từ khóa nghe/đọc và vì sao các lựa chọn sai.\')">Hỏi AI giải thích câu cụ thể</button></div>'
       + '</div>';
@@ -12103,6 +12079,9 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var tag = (el.tagName || '').toLowerCase();
     if(tag !== 'textarea' && tag !== 'input' && tag !== 'select') return false;
     if(/^auth-/.test(el.id)) return false;
+    // Ghi chép bài học được quản lý riêng theo course+lesson (xem saveNote / renderNotesTab),
+    // KHÔNG để cơ chế đồng bộ chung áp giá trị theo id (vì #lesson-note dùng chung id cho mọi bài).
+    if(el.id === 'lesson-note') return false;
     if(el.closest && el.closest('#auth-card')) return false;
     var type = (el.type || '').toLowerCase();
     if(['button','submit','reset','password','email','hidden','file','checkbox','radio','range'].indexOf(type) >= 0) return false;
@@ -12136,6 +12115,17 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     root = root || document;
     if(!root.querySelectorAll) return;
     root.querySelectorAll('textarea[id], input[id], select[id]').forEach(applyElement);
+    // Nạp riêng ghi chép bài học theo đúng key course+lesson (không dùng id chung).
+    try {
+      var note = document.getElementById('lesson-note');
+      if(note && document.activeElement !== note && typeof noteStorageKey === 'function'){
+        var lid = note.getAttribute('data-lesson-id');
+        if(lid){
+          var v = localStorage.getItem('note_' + ((window.CURRENT_COURSE==='hsk1')?'hsk1':'hsk5') + '_lesson_' + lid);
+          if(v != null && v !== '' && note.value !== v) note.value = v;
+        }
+      }
+    } catch(e){}
   }
 
   window.hskCloudApplyToDom = hskCloudApplyToDom;
@@ -12186,7 +12176,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
       for(var i=0;i<localStorage.length;i++) {
         var k = localStorage.key(i);
         if(!k) continue;
-        if(k === 'hsk5_app_v2' || /^note_lesson_/.test(k) || /^typing_draft_/.test(k) || /^hsk1_progress_/.test(k) || /^hsk_cloud_input_/.test(k)) {
+        if(k === 'hsk5_app_v2' || /^note_lesson_/.test(k) || /^note_hsk[15]_lesson_/.test(k) || /^typing_draft_/.test(k) || /^hsk1_progress_/.test(k) || /^hsk_cloud_input_/.test(k)) {
           keys.push(k);
         }
       }
@@ -12257,9 +12247,10 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
       var oldSaveNote = window.saveNote;
       window.saveNote = function(lessonId){
         var r = oldSaveNote.apply(this, arguments);
-        hskCloudSaveLocalStorageKey('note_lesson_' + lessonId, false);
-        var el = document.getElementById('lesson-note');
-        if(el) hskCloudSaveKV('input:' + currentCourse() + ':L' + lessonId + ':lesson-note', el.value || '', false);
+        // Lưu cloud bằng đúng key có course + lesson (khớp với noteStorageKey ở frontend).
+        var course = (window.CURRENT_COURSE === 'hsk1') ? 'hsk1' : 'hsk5';
+        var key = 'note_' + course + '_lesson_' + lessonId;
+        hskCloudSaveLocalStorageKey(key, false);
         return r;
       };
       window.saveNote.__cloudWrapped = true;
@@ -12581,13 +12572,93 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
 
   // Tra 1 chuỗi: nếu trùng nguyên cụm thì trả về; nếu không, tách từng chữ và ghép kết quả.
   // ---- Cache CC-CEDICT (tầng 2) trong localStorage để lần sau dùng offline ----
-  var CEDICT_CDN = 'https://cdn.jsdelivr.net/gh/infinyte7/cedict-json/data/';
-  function cedictCacheGet(word){
-    try { var v = localStorage.getItem('cedict_' + word); return v ? JSON.parse(v) : undefined; }
-    catch(e){ return undefined; }
+  // Toàn bộ CC-CEDICT (~115k từ) tải MỘT LẦN rồi cache vào IndexedDB.
+  // Sau lần đầu, tra cứu hoàn toàn trong RAM -> tức thì, chạy offline.
+  var CEDICT_BULK_URLS = [
+    'https://cdn.jsdelivr.net/gh/krmanik/cedict-json@master/cedict.json',
+    'https://cdn.jsdelivr.net/gh/krmanik/cedict-json/cedict.json',
+    'https://raw.githubusercontent.com/krmanik/cedict-json/master/cedict.json'
+  ];
+  var CEDICT_MAP = null;        // Map: chữ giản thể -> entry {py,en}
+  var CEDICT_LOADING = null;    // promise đang tải
+  var CEDICT_DB_NAME = 'hsk_cedict_db';
+  var CEDICT_STORE = 'kv';
+
+  function idbOpen(){
+    return new Promise(function(res, rej){
+      try {
+        var req = indexedDB.open(CEDICT_DB_NAME, 1);
+        req.onupgradeneeded = function(){ req.result.createObjectStore(CEDICT_STORE); };
+        req.onsuccess = function(){ res(req.result); };
+        req.onerror = function(){ rej(req.error); };
+      } catch(e){ rej(e); }
+    });
   }
-  function cedictCacheSet(word, obj){
-    try { localStorage.setItem('cedict_' + word, JSON.stringify(obj)); } catch(e){}
+  function idbGet(key){
+    return idbOpen().then(function(db){
+      return new Promise(function(res, rej){
+        var tx = db.transaction(CEDICT_STORE, 'readonly');
+        var rq = tx.objectStore(CEDICT_STORE).get(key);
+        rq.onsuccess = function(){ res(rq.result); };
+        rq.onerror = function(){ rej(rq.error); };
+      });
+    });
+  }
+  function idbSet(key, val){
+    return idbOpen().then(function(db){
+      return new Promise(function(res, rej){
+        var tx = db.transaction(CEDICT_STORE, 'readwrite');
+        tx.objectStore(CEDICT_STORE).put(val, key);
+        tx.oncomplete = function(){ res(true); };
+        tx.onerror = function(){ rej(tx.error); };
+      });
+    });
+  }
+
+  // Dựng Map từ mảng entry thô của cedict.json
+  function buildCedictMap(arr){
+    var m = new Map();
+    for(var i=0;i<arr.length;i++){
+      var d = arr[i];
+      if(!d || !d.simplified) continue;
+      if(m.has(d.simplified)) continue; // giữ nghĩa đầu tiên (thường phổ biến nhất)
+      var py = '';
+      if(Array.isArray(d.pinyin)) py = d.pinyin.join(' ');
+      else if(typeof d.pinyin === 'string') py = d.pinyin;
+      var en = '';
+      if(Array.isArray(d.definitions)) en = d.definitions.join('; ');
+      else if(d.definitions && typeof d.definitions === 'object'){
+        var parts = []; for(var k in d.definitions){ parts.push(d.definitions[k]); } en = parts.join('; ');
+      } else en = String(d.definitions||'');
+      m.set(d.simplified, { py: py, en: en });
+    }
+    return m;
+  }
+
+  // Tải CC-CEDICT (ưu tiên IndexedDB cache, nếu chưa có thì tải từ CDN rồi cache).
+  function ensureCedictLoaded(){
+    if(CEDICT_MAP) return Promise.resolve(CEDICT_MAP);
+    if(CEDICT_LOADING) return CEDICT_LOADING;
+    CEDICT_LOADING = idbGet('cedict_raw').then(function(cached){
+      if(cached && cached.length){
+        CEDICT_MAP = buildCedictMap(cached);
+        return CEDICT_MAP;
+      }
+      return fetchFirstOk(CEDICT_BULK_URLS)
+        .then(function(arr){
+          CEDICT_MAP = buildCedictMap(arr);
+          idbSet('cedict_raw', arr).catch(function(){});
+          return CEDICT_MAP;
+        });
+    }).catch(function(e){ console.warn('CC-CEDICT load error', e); CEDICT_MAP = new Map(); return CEDICT_MAP; });
+    return CEDICT_LOADING;
+  }
+  function fetchFirstOk(urls, idx){
+    idx = idx || 0;
+    if(idx >= urls.length) return Promise.reject(new Error('Tất cả nguồn từ điển đều lỗi'));
+    return fetch(urls[idx])
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .catch(function(){ return fetchFirstOk(urls, idx+1); });
   }
 
   // Chuyển pinyin số (ni3 hao3) -> có dấu (nǐ hǎo) cho dễ đọc
@@ -12613,23 +12684,13 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     return String(py).trim().split(/\s+/).map(numToToneSyllable).join(' ');
   }
 
-  // Tra 1 từ qua CC-CEDICT CDN (bất đồng bộ). Trả promise -> entry hoặc null.
+  // Tra 1 từ trong CC-CEDICT đã nạp vào RAM (tức thì). Trả promise để giữ tương thích.
   function fetchCedict(word){
-    var cached = cedictCacheGet(word);
-    if(cached !== undefined) return Promise.resolve(cached);
-    return fetch(CEDICT_CDN + encodeURIComponent(word) + '.json')
-      .then(function(r){ if(!r.ok) throw new Error('not found'); return r.json(); })
-      .then(function(d){
-        var entry = {
-          zh: d.simplified || word,
-          py: prettyPinyin(Array.isArray(d.pinyin)? d.pinyin.join(' ') : d.pinyin),
-          en: Array.isArray(d.definitions) ? d.definitions.join('; ') : String(d.definitions||''),
-          vi: '', type: '', src: 'cedict'
-        };
-        cedictCacheSet(word, entry);
-        return entry;
-      })
-      .catch(function(){ cedictCacheSet(word, null); return null; });
+    return ensureCedictLoaded().then(function(map){
+      var d = map.get(word);
+      if(!d) return null;
+      return { zh: word, py: prettyPinyin(d.py), en: d.en, vi:'', type:'', src:'cedict' };
+    });
   }
 
   // Tầng 1 (đồng bộ): tách câu thành các từ dài nhất có trong từ vựng bài học.
@@ -12794,7 +12855,8 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
       btn.textContent = window.DICT_ENABLED ? '📖 Từ điển: Bật' : '📖 Từ điển: Tắt';
       btn.classList.toggle('dict-on', window.DICT_ENABLED);
     }
-    if(!window.DICT_ENABLED) hideTooltip();
+    if(window.DICT_ENABLED){ try { ensureCedictLoaded(); } catch(e){} }
+    else hideTooltip();
   };
 
   function init(){
@@ -12803,6 +12865,8 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
       btn.textContent = window.DICT_ENABLED ? '📖 Từ điển: Bật' : '📖 Từ điển: Tắt';
       btn.classList.toggle('dict-on', window.DICT_ENABLED);
     }
+    // Nếu từ điển đang bật sẵn, nạp trước CC-CEDICT để lần tra đầu tức thì.
+    if(window.DICT_ENABLED){ try { ensureCedictLoaded(); } catch(e){} }
     // Bắt sự kiện bôi đen trên toàn vùng nội dung bài học
     document.addEventListener('mouseup', onSelect);
     document.addEventListener('touchend', onSelect);
