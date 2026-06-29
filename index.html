@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>HSK Albert — AI Học Tiếng Trung</title>
 <!-- Rebuilt from index final UI.html: restored UI + HSK5 exercise explanation tab + Supabase online sync -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -13136,6 +13136,530 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   }
   if(document.readyState !== 'loading') boot();
   else document.addEventListener('DOMContentLoaded', boot);
+})();
+</script>
+
+
+
+<!-- =========================================================
+     HSK Albert Mobile Friendly Patch
+     - Desktop keeps the original sidebar layout.
+     - Phone/tablet uses an off-canvas sidebar, sticky mobile header,
+       larger touch targets, horizontal-scroll tables, and single-column cards.
+========================================================= -->
+<style id="hsk-mobile-friendly-css">
+@media (min-width: 861px) {
+  .mobile-appbar,
+  .mobile-sidebar-backdrop { display: none !important; }
+  body.is-desktop .sidebar { transform: none !important; }
+}
+
+@media (max-width: 860px) {
+  html { -webkit-text-size-adjust: 100%; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  body { font-size: 15px; background: var(--paper); }
+
+  .app {
+    display: block !important;
+    height: auto !important;
+    min-height: 100svh !important;
+    overflow: visible !important;
+  }
+  .main {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 100svh !important;
+    display: block !important;
+    overflow: visible !important;
+    padding-top: 58px !important;
+  }
+  .page-content {
+    height: auto !important;
+    min-height: calc(100svh - 58px) !important;
+    overflow: visible !important;
+  }
+
+  .mobile-appbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(54px + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) 12px 0;
+    z-index: 1000001;
+    background: rgba(250,248,243,.96);
+    border-bottom: 1px solid var(--border);
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .mobile-menu-btn {
+    width: 42px;
+    height: 42px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    flex-shrink: 0;
+  }
+  .mobile-appbar-title {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+  .mobile-appbar-title strong {
+    font-size: 15px;
+    letter-spacing: -.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mobile-appbar-title span {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: min(88vw, 330px) !important;
+    min-width: 0 !important;
+    height: 100svh !important;
+    max-height: 100svh !important;
+    z-index: 1000002 !important;
+    transform: translateX(-106%) !important;
+    transition: transform .24s ease !important;
+    box-shadow: 22px 0 60px rgba(0,0,0,.35) !important;
+    border-right: 1px solid rgba(255,255,255,.08);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  body.mobile-nav-open { overflow: hidden !important; }
+  body.mobile-nav-open .sidebar { transform: translateX(0) !important; }
+
+  .mobile-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(12,12,25,.52);
+    z-index: 1000000;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .2s ease, visibility .2s ease;
+  }
+  body.mobile-nav-open .mobile-sidebar-backdrop {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .sidebar-header { padding-top: calc(18px + env(safe-area-inset-top, 0px)) !important; }
+  .nav-item { min-height: 44px; font-size: 14px; }
+  .nav-icon { font-size: 17px; }
+  .sidebar-section { padding-top: 12px; }
+
+  #auth-bar,
+  #auth-bar.h1-sidebar-auth,
+  #auth-bar[data-in-sidebar="1"] {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 12px 16px 16px !important;
+    background: rgba(255,255,255,.08) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    box-shadow: none !important;
+    border-radius: 14px !important;
+    padding: 12px !important;
+    font-size: 12px !important;
+    z-index: auto !important;
+  }
+  #auth-bar input {
+    width: 100% !important;
+    min-height: 40px !important;
+    margin: 0 0 8px !important;
+    background: rgba(255,255,255,.95) !important;
+    color: var(--ink) !important;
+  }
+  #auth-bar button { width: 100% !important; min-height: 40px !important; margin: 4px 0 !important; }
+  #auth-bar #auth-logged-out,
+  #auth-bar #auth-logged-in {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+  }
+  #auth-bar[data-auth-state="out"] #auth-logged-out,
+  #auth-bar[data-auth-state="in"] #auth-logged-in { display: flex !important; }
+  #auth-bar[data-auth-state="out"] #auth-logged-in,
+  #auth-bar[data-auth-state="in"] #auth-logged-out { display: none !important; }
+  #auth-bar #auth-user-email {
+    color: #fff !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.35 !important;
+    margin-bottom: 6px !important;
+  }
+
+  .topbar {
+    position: sticky !important;
+    top: calc(54px + env(safe-area-inset-top, 0px)) !important;
+    z-index: 90 !important;
+    padding: 12px !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    background: rgba(250,248,243,.97) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .topbar-title { font-size: 17px; line-height: 1.35; }
+  .topbar-sub { font-size: 12px; line-height: 1.45; }
+  .topbar-actions {
+    margin-left: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    padding-bottom: 2px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .topbar-actions .btn,
+  .topbar-actions select,
+  .topbar-actions input {
+    flex: 0 0 auto !important;
+    min-height: 42px !important;
+  }
+  #vocab-search { width: min(100%, 340px) !important; }
+
+  .content { padding: 12px !important; overflow: visible !important; }
+  .today-grid { grid-template-columns: 1fr !important; gap: 10px !important; margin-bottom: 14px !important; }
+  .grid2 { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .stat-card { padding: 14px !important; border-radius: 14px !important; }
+  .stat-card .num { font-size: 26px; }
+  .section-card { margin-bottom: 12px !important; border-radius: 14px !important; }
+  .section-card-header { padding: 12px 14px !important; }
+  .section-card-body,
+  .grammar-card-body,
+  .ex-part-body,
+  .tb-drill-body { padding: 14px !important; overflow-x: auto !important; }
+  .task-item { align-items: flex-start !important; flex-wrap: wrap !important; gap: 10px !important; }
+  .task-item > div:nth-child(2) { flex: 1 1 calc(100% - 42px); min-width: 0; }
+  .task-badge { margin-left: 34px !important; }
+
+  .roadmap-phase { margin-bottom: 14px !important; }
+  .roadmap-phase-header { padding: 12px 14px !important; }
+  .week-row { display: block !important; }
+  .week-label { border-right: 0 !important; border-bottom: 1px solid var(--border) !important; }
+  .week-content { padding: 12px !important; }
+  .day-pill { min-height: 36px; align-items: center; }
+
+  #lesson-list-view { padding: 12px !important; }
+  #lesson-grid [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+  #lesson-detail-view { height: auto !important; min-height: calc(100svh - 58px) !important; overflow: visible !important; }
+  #lesson-tab-content { padding: 12px !important; overflow: visible !important; }
+  .lesson-header { padding: 16px 12px !important; gap: 10px !important; flex-wrap: wrap !important; }
+  .lesson-header > div:last-child { margin-left: 0 !important; width: 100%; }
+  .lesson-header .btn { width: 100%; min-height: 42px; }
+  .lesson-num-badge { width: 44px !important; height: 44px !important; font-size: 18px !important; }
+  .lesson-zh { font-size: 18px !important; line-height: 1.35 !important; }
+  .lesson-vi { font-size: 12px !important; }
+  .lesson-topic { font-size: 10.5px !important; }
+  .tabs {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .tab-btn {
+    min-height: 44px !important;
+    padding: 12px 14px !important;
+    flex: 0 0 auto !important;
+    font-size: 13px !important;
+  }
+  .tab-content { overflow-x: auto !important; }
+
+  .reading-text { padding: 16px !important; font-size: 17px !important; line-height: 2.05 !important; }
+  .reading-title { font-size: 20px !important; line-height: 1.35 !important; }
+  .reading-controls,
+  .typing-toolbar,
+  .gpt-config-row,
+  .chatgpt-setup { align-items: stretch !important; }
+  .typing-textarea { min-height: 150px !important; font-size: 16px !important; }
+  .typing-original { max-height: 200px !important; font-size: 16px !important; }
+
+  .vocab-table,
+  .hsk5-custom-table,
+  #admin-panel table {
+    min-width: 680px !important;
+  }
+  .hsk5-custom-table textarea { min-height: 42px !important; }
+
+  .ex-options { grid-template-columns: 1fr !important; }
+  .ex-option,
+  .quiz-opt { min-height: 44px !important; padding: 11px 12px !important; }
+  .ex-audio-block,
+  .reading-audio-row,
+  .ex-audio-sticky .ex-audio-block,
+  .h1-audio-row,
+  .hsk1-audio-inline {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .ex-audio-label,
+  .reading-audio-label { min-width: 0 !important; }
+  audio.ex-player,
+  .reading-audio-row audio,
+  .h1-audio-row audio,
+  .hsk1-audio-inline audio {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+  .ex-audio-sticky { top: calc(54px + env(safe-area-inset-top, 0px)) !important; }
+
+  .tb-drill-line { grid-template-columns: 28px 1fr !important; align-items: start !important; }
+  .tb-drill-hint { white-space: normal !important; }
+  .tb-drill-input { width: 100% !important; min-width: 0 !important; max-width: 100% !important; }
+  .ai-direct-tools { justify-content: stretch !important; }
+  .ai-direct-tools .btn { width: 100% !important; }
+
+  .flashcard { max-width: 100% !important; min-height: 190px !important; padding: 28px 16px !important; border-radius: 18px !important; }
+  .card-zh { font-size: 40px !important; }
+  .card-py { font-size: 16px !important; }
+  .card-actions { flex-wrap: wrap !important; }
+  .card-actions .btn { flex: 1 1 120px; min-height: 42px; }
+  .fc-progress { gap: 8px !important; }
+
+  .streak-calendar { gap: 4px !important; }
+  .streak-day-cell { border-radius: 7px !important; font-size: 11px !important; }
+
+  .ai-panel-header,
+  .ai-chat-body,
+  .ai-input-row { padding-left: 12px !important; padding-right: 12px !important; }
+  #quick-btns,
+  .quick-btns { padding: 8px 12px 4px !important; }
+  .ai-chat-body { max-height: 240px !important; }
+  .msg-bubble { max-width: 92% !important; }
+  .ai-input { min-height: 42px !important; font-size: 14px !important; }
+  .ai-send { width: 42px !important; height: 42px !important; }
+
+  .gpt-modal-backdrop { padding: 0 !important; align-items: stretch !important; }
+  .gpt-modal {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+  }
+  .gpt-modal-head,
+  .gpt-modal-body,
+  .gpt-modal-foot { padding-left: 14px !important; padding-right: 14px !important; }
+  .gpt-config-row input,
+  .gpt-config-row select,
+  .gpt-prompt-box { min-width: 0 !important; width: 100% !important; }
+  .gpt-answer { padding: 14px !important; font-size: 13px !important; }
+  #admin-panel { padding: 0 !important; align-items: stretch !important; justify-content: stretch !important; }
+  #admin-panel .ap-card { border-radius: 0 !important; min-height: 100vh !important; overflow-x: auto !important; }
+
+  .btn,
+  button,
+  input,
+  select,
+  textarea,
+  .quick-btn,
+  .quiz-opt,
+  .ex-option,
+  .word-chip {
+    touch-action: manipulation;
+  }
+  .btn,
+  .quick-btn { min-height: 40px; }
+  .speak-btn { min-width: 36px !important; width: 36px !important; height: 36px !important; }
+
+  .hsk1-line-zh,
+  .h1-zh { font-size: 19px !important; }
+  .hsk1-answer-row { grid-template-columns: 1fr !important; }
+  .hsk1-classroom-list-rich,
+  .h1-class-grid,
+  .h1-word-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 480px) {
+  .mobile-appbar-title strong { font-size: 14px; }
+  .mobile-appbar-title span { font-size: 10px; }
+  .topbar-title { font-size: 16px; }
+  .section-card-header { font-size: 13px !important; }
+  .reading-text { font-size: 16px !important; }
+  .vocab-table,
+  .hsk5-custom-table,
+  #admin-panel table { min-width: 620px !important; }
+  .card-zh { font-size: 36px !important; }
+  .grammar-pattern { font-size: 16px !important; }
+}
+
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 860px) {
+    .app, .main, .sidebar { min-height: -webkit-fill-available !important; }
+  }
+}
+</style>
+
+<script id="hsk-mobile-friendly-js">
+(function(){
+  if(window.HSK_MOBILE_FRIENDLY_PATCH_LOADED) return;
+  window.HSK_MOBILE_FRIENDLY_PATCH_LOADED = true;
+  var BREAKPOINT = 860;
+  var mobileQuery = window.matchMedia('(max-width: '+BREAKPOINT+'px), (pointer: coarse) and (max-width: 1024px)');
+
+  function $(sel){ return document.querySelector(sel); }
+  function body(){ return document.body || document.documentElement; }
+
+  function ensureMobileShell(){
+    if(!document.body) return;
+    if(!$('#mobile-sidebar-backdrop')){
+      var backdrop = document.createElement('div');
+      backdrop.id = 'mobile-sidebar-backdrop';
+      backdrop.className = 'mobile-sidebar-backdrop';
+      backdrop.addEventListener('click', closeMobileMenu);
+      document.body.appendChild(backdrop);
+    }
+    if(!$('#mobile-appbar')){
+      var appbar = document.createElement('div');
+      appbar.id = 'mobile-appbar';
+      appbar.className = 'mobile-appbar';
+      appbar.innerHTML = '<button type="button" class="mobile-menu-btn" aria-label="Mở menu" aria-expanded="false">☰</button><div class="mobile-appbar-title"><strong>HSK Albert</strong><span>Menu học tập</span></div>';
+      document.body.insertBefore(appbar, document.body.firstChild);
+      var btn = appbar.querySelector('.mobile-menu-btn');
+      if(btn) btn.addEventListener('click', toggleMobileMenu);
+    }
+    moveAuthIntoSidebar();
+    updateMobileTitle();
+  }
+
+  function isMobile(){ return !!(mobileQuery && mobileQuery.matches); }
+
+  function syncMode(){
+    ensureMobileShell();
+    var m = isMobile();
+    body().classList.toggle('is-mobile', m);
+    body().classList.toggle('is-desktop', !m);
+    if(!m) closeMobileMenu();
+    updateMobileTitle();
+  }
+
+  function openMobileMenu(){
+    ensureMobileShell();
+    if(!isMobile()) return;
+    body().classList.add('mobile-nav-open');
+    var btn = $('.mobile-menu-btn');
+    if(btn){ btn.setAttribute('aria-expanded','true'); btn.textContent = '×'; }
+  }
+  function closeMobileMenu(){
+    if(!document.body) return;
+    body().classList.remove('mobile-nav-open');
+    var btn = $('.mobile-menu-btn');
+    if(btn){ btn.setAttribute('aria-expanded','false'); btn.textContent = '☰'; }
+  }
+  function toggleMobileMenu(){
+    if(body().classList.contains('mobile-nav-open')) closeMobileMenu();
+    else openMobileMenu();
+  }
+
+  function moveAuthIntoSidebar(){
+    var bar = document.getElementById('auth-bar');
+    var sidebar = document.querySelector('.sidebar');
+    if(!bar || !sidebar) return;
+    var box = document.getElementById('hsk-mobile-account-box') || document.getElementById('sidebar-auth-box');
+    if(!box){
+      box = document.createElement('div');
+      box.id = 'hsk-mobile-account-box';
+      box.innerHTML = '<div class="sidebar-section">Tài khoản</div>';
+      sidebar.appendChild(box);
+    }
+    if(bar.parentNode !== box) box.appendChild(bar);
+    bar.dataset.inSidebar = '1';
+    bar.classList.add('h1-sidebar-auth');
+  }
+
+  function updateMobileTitle(){
+    var appbar = document.getElementById('mobile-appbar');
+    if(!appbar) return;
+    var title = appbar.querySelector('strong');
+    var sub = appbar.querySelector('span');
+    var pageTitle = document.querySelector('.page-content[style*="display:flex"] .topbar-title, .page-content[style*="display: flex"] .topbar-title');
+    var activeNav = document.querySelector('.nav-item.active');
+    if(title) title.textContent = pageTitle ? pageTitle.textContent.trim().replace(/\s+/g,' ') : 'HSK Albert';
+    if(sub) sub.textContent = activeNav ? activeNav.textContent.trim().replace(/\s+/g,' ') : 'Menu học tập';
+  }
+
+  function wrapShowPage(){
+    if(typeof window.showPage !== 'function' || window.showPage.__hskMobileWrapped) return;
+    var original = window.showPage;
+    window.showPage = function(){
+      closeMobileMenu();
+      var result = original.apply(this, arguments);
+      setTimeout(updateMobileTitle, 0);
+      return result;
+    };
+    window.showPage.__hskMobileWrapped = true;
+  }
+
+  function bindGlobalEvents(){
+    document.addEventListener('click', function(ev){
+      var nav = ev.target && ev.target.closest ? ev.target.closest('.nav-item') : null;
+      if(nav) setTimeout(closeMobileMenu, 0);
+    }, true);
+    document.addEventListener('keydown', function(ev){
+      if(ev.key === 'Escape') closeMobileMenu();
+    });
+    if(mobileQuery && mobileQuery.addEventListener) mobileQuery.addEventListener('change', syncMode);
+    else if(mobileQuery && mobileQuery.addListener) mobileQuery.addListener(syncMode);
+    window.addEventListener('resize', function(){
+      clearTimeout(window.__hskMobileResizeTimer);
+      window.__hskMobileResizeTimer = setTimeout(syncMode, 120);
+    });
+  }
+
+  function boot(){
+    ensureMobileShell();
+    syncMode();
+    wrapShowPage();
+    bindGlobalEvents();
+    // Existing older patches sometimes move the auth box again; keep it in the sidebar.
+    [100, 500, 1200, 2200, 4200].forEach(function(ms){ setTimeout(function(){ moveAuthIntoSidebar(); syncMode(); }, ms); });
+    if(window.MutationObserver){
+      var obs = new MutationObserver(function(){
+        clearTimeout(window.__hskMobileMutationTimer);
+        window.__hskMobileMutationTimer = setTimeout(function(){ moveAuthIntoSidebar(); updateMobileTitle(); }, 80);
+      });
+      obs.observe(document.body, { childList:true, subtree:true });
+    }
+  }
+
+  window.hskMobileOpenMenu = openMobileMenu;
+  window.hskMobileCloseMenu = closeMobileMenu;
+  window.hskMobileToggleMenu = toggleMobileMenu;
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();
 </script>
 
