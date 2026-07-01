@@ -3177,14 +3177,44 @@ let STATE = {
   completedLessons: [],
   currentLesson: 1,
   reviewQueue: [],    // word ids to review
+  reviewCursor: 0,    // vị trí bắt đầu của lô flashcard tiếp theo
+  reviewBatchSize: 30,// mỗi buổi học 30 từ mới theo thứ tự
   knownWords: {},     // { 'word': 'known'|'again'|'hard' }
   quizHistory: [],
   startDate: new Date().toISOString().slice(0,10)
 };
 
 function loadState() {
-  try { const s = localStorage.getItem(STATE_KEY); if(s) STATE = {...STATE, ...JSON.parse(s)}; } catch(e) {}
+  try {
+    const s = localStorage.getItem(STATE_KEY);
+    if(s) {
+      const saved = JSON.parse(s);
+      const hadReviewCursor = Object.prototype.hasOwnProperty.call(saved, 'reviewCursor');
+      STATE = {...STATE, ...saved};
+      // Migration từ bản cũ: nếu người học đã chấm xong 30 thẻ đầu nhưng app chưa có con trỏ lô,
+      // tự nhảy sang lô kế tiếp để không bắt học lại 30 từ cũ sau khi cập nhật file.
+      if(!hadReviewCursor) migrateOldFlashcardProgress(saved);
+    }
+  } catch(e) {}
   updateStreak();
+}
+
+function migrateOldFlashcardProgress(saved) {
+  try {
+    const known = (saved && saved.knownWords) || {};
+    const all = getAllReviewWords();
+    const batchSize = parseInt((saved && saved.reviewBatchSize) || STATE.reviewBatchSize || 30, 10) || 30;
+    let consecutiveRated = 0;
+    for(const w of all) {
+      if(known[w.zh]) consecutiveRated++;
+      else break;
+    }
+    if(consecutiveRated >= batchSize) {
+      STATE.reviewCursor = Math.min(Math.floor(consecutiveRated / batchSize) * batchSize, all.length);
+      if(STATE.reviewCursor >= all.length) STATE.reviewCursor = 0;
+      saveState();
+    }
+  } catch(e) {}
 }
 function saveState() {
   try { localStorage.setItem(STATE_KEY, JSON.stringify(STATE)); } catch(e) {}
@@ -6247,63 +6277,178 @@ function addLessonToReview(id) {
 
 // ═══════════════════════════════════════════════
 // REVIEW PAGE — Flashcard Anki-style
+// Sửa logic: học theo từng lô 30 từ tiếp theo, không bị kẹt ở 30 từ đầu.
+// Dù thẻ được đánh dấu “Học lại/Khó”, app vẫn chuyển sang lô kế tiếp sau khi học xong lô hiện tại.
 // ═══════════════════════════════════════════════
-let reviewWords = [], reviewIdx = 0, cardFlipped = false;
+let reviewWords = [], reviewIdx = 0, cardFlipped = false, reviewBatchStart = 0;
 
-function renderReview() {
-  // Gather words to review
-  reviewWords = [];
+function getReviewBatchSize() {
+  const n = parseInt(STATE.reviewBatchSize, 10);
+  return Number.isFinite(n) && n > 0 ? n : 30;
+}
+
+function getAllReviewWords() {
+  const seen = new Set();
+  const words = [];
   LESSONS.forEach(lesson => {
-    lesson.vocab.forEach(w => {
-      if(STATE.knownWords[w.zh] === 'again' || STATE.knownWords[w.zh] === 'hard' || !STATE.knownWords[w.zh]) {
-        reviewWords.push({...w, lessonId: lesson.id});
-      }
+    (lesson.vocab || []).forEach(w => {
+      const key = String(w.zh || '').trim();
+      if(!key || seen.has(key)) return;
+      seen.add(key);
+      words.push({...w, lessonId: lesson.id, reviewKey: key});
     });
   });
-  reviewWords = reviewWords.slice(0,30);
-  reviewIdx = 0; cardFlipped = false;
-  document.getElementById('review-sub').textContent = `${reviewWords.length} thẻ cần ôn · Nhấp vào thẻ để lật`;
-  document.getElementById('badge-review').textContent = reviewWords.length;
+  return words;
+}
+
+function normalizeReviewCursor(total) {
+  let cursor = parseInt(STATE.reviewCursor, 10);
+  if(!Number.isFinite(cursor) || cursor < 0) cursor = 0;
+  if(total > 0 && cursor >= total) cursor = 0;
+  return cursor;
+}
+
+function saveReviewCursor(cursor, total) {
+  if(total <= 0) {
+    STATE.reviewCursor = 0;
+    return;
+  }
+  let next = parseInt(cursor, 10);
+  if(!Number.isFinite(next) || next < 0) next = 0;
+  if(next >= total) next = 0;
+  STATE.reviewCursor = next;
+}
+
+function updateReviewHeader(total) {
+  const sub = document.getElementById('review-sub');
+  const badge = document.getElementById('badge-review');
+  if(!sub) return;
+  if(!total || !reviewWords.length) {
+    sub.textContent = 'Không có thẻ để ôn';
+    if(badge) badge.textContent = 0;
+    return;
+  }
+  const batchSize = getReviewBatchSize();
+  const batchNo = Math.floor(reviewBatchStart / batchSize) + 1;
+  const batchTotal = Math.ceil(total / batchSize);
+  const from = reviewBatchStart + 1;
+  const to = reviewBatchStart + reviewWords.length;
+  sub.textContent = `Lô ${batchNo}/${batchTotal} · Từ ${from}-${to}/${total} · ${reviewWords.length} thẻ · Nhấp vào thẻ để lật`;
+  if(badge) badge.textContent = reviewWords.length;
+}
+
+function prepareReviewBatch(opts = {}) {
+  const allWords = getAllReviewWords();
+  const total = allWords.length;
+  const batchSize = getReviewBatchSize();
+
+  if(total === 0) {
+    reviewWords = [];
+    reviewIdx = 0;
+    cardFlipped = false;
+    reviewBatchStart = 0;
+    updateReviewHeader(0);
+    return;
+  }
+
+  let cursor = normalizeReviewCursor(total);
+  if(opts.restartFromBeginning) cursor = 0;
+
+  reviewBatchStart = cursor;
+  reviewWords = allWords.slice(cursor, Math.min(cursor + batchSize, total));
+  reviewIdx = 0;
+  cardFlipped = false;
+
+  saveReviewCursor(cursor, total);
+  saveState();
+  updateReviewHeader(total);
+}
+
+function renderReview() {
+  prepareReviewBatch();
   renderFlashcard();
 }
 
 function shuffleCards() {
+  if(!reviewWords.length) prepareReviewBatch();
   reviewWords = reviewWords.sort(()=>Math.random()-.5);
-  reviewIdx = 0; cardFlipped = false;
+  reviewIdx = 0;
+  cardFlipped = false;
   renderFlashcard();
 }
 
-function startReview() { reviewIdx = 0; cardFlipped = false; renderFlashcard(); }
+function startReview() {
+  // Nếu vừa hoàn thành một lô, nút này sẽ mở lô kế tiếp vì reviewCursor đã được cập nhật.
+  if(!reviewWords.length || reviewIdx >= reviewWords.length) prepareReviewBatch();
+  else {
+    reviewIdx = 0;
+    cardFlipped = false;
+    updateReviewHeader(getAllReviewWords().length);
+  }
+  renderFlashcard();
+}
+
+function repeatCurrentReviewBatch() {
+  reviewIdx = 0;
+  cardFlipped = false;
+  updateReviewHeader(getAllReviewWords().length);
+  renderFlashcard();
+}
+
+function restartReviewFromBeginning() {
+  STATE.reviewCursor = 0;
+  saveState();
+  prepareReviewBatch({restartFromBeginning:true});
+  renderFlashcard();
+}
 
 function renderFlashcard() {
+  const total = getAllReviewWords().length;
   if(reviewWords.length === 0) {
     document.getElementById('review-content').innerHTML = `<div class="empty-state"><div class="icon">🎉</div><div>Tuyệt vời! Không có thẻ nào cần ôn tập.<br>Thêm từ vào ôn tập bằng cách nhấp vào từ trong bài học.</div></div>`;
     return;
   }
   if(reviewIdx >= reviewWords.length) {
-    document.getElementById('review-content').innerHTML = `<div class="empty-state"><div class="icon">✅</div><div style="font-size:18px;font-weight:700;margin-bottom:8px">Hoàn thành buổi ôn!</div><div style="color:var(--muted)">Bạn đã ôn ${reviewWords.length} từ.</div><div style="margin-top:16px"><button class="btn btn-primary" onclick="startReview()">Ôn lại từ đầu</button></div></div>`;
+    const from = reviewBatchStart + 1;
+    const to = reviewBatchStart + reviewWords.length;
+    const reachedEnd = to >= total;
+    const nextMsg = reachedEnd
+      ? 'Bạn đã đi hết toàn bộ danh sách từ. Lần tiếp theo app sẽ quay lại lô 1 để ôn vòng mới.'
+      : `Lô tiếp theo sẽ bắt đầu từ từ số ${to + 1}. Các thẻ “Học lại/Khó” vẫn được lưu trạng thái, nhưng không chặn bạn học tiếp.`;
+    document.getElementById('review-content').innerHTML = `<div class="empty-state">
+      <div class="icon">✅</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px">Hoàn thành lô ${from}-${to}!</div>
+      <div style="color:var(--muted);max-width:560px;margin:0 auto 16px">Bạn đã học xong ${reviewWords.length} từ trong lô này. ${nextMsg}</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px">
+        <button class="btn btn-primary" onclick="startReview()">${reachedEnd ? 'Ôn lại từ lô 1' : 'Học 30 từ tiếp theo →'}</button>
+        <button class="btn btn-outline" onclick="repeatCurrentReviewBatch()">Ôn lại lô vừa học</button>
+        <button class="btn btn-outline" onclick="restartReviewFromBeginning()">Về lô 1</button>
+      </div>
+    </div>`;
     return;
   }
   const w = reviewWords[reviewIdx];
   const pct = Math.round((reviewIdx/reviewWords.length)*100);
+  const absoluteNo = reviewBatchStart + reviewIdx + 1;
   document.getElementById('review-content').innerHTML = `
     <div class="fc-progress">
       <span style="font-size:12px;color:var(--muted)">${reviewIdx}/${reviewWords.length}</span>
       <div class="fc-progress-bar"><div class="fc-progress-fill" style="width:${pct}%"></div></div>
       <span style="font-size:12px;color:var(--muted)">${pct}%</span>
     </div>
+    <div style="text-align:center;font-size:12px;color:var(--muted);margin:-4px 0 10px">Từ số ${absoluteNo}/${total} · Bài ${w.lessonId}</div>
     <div class="flashcard" id="flashcard" onclick="flipCard()">
       <div style="display:flex;align-items:center;gap:10px;justify-content:center">
         <div class="card-zh">${w.zh}</div>
         <button class="speak-btn" id="spk-fc" style="width:34px;height:34px;font-size:18px" onclick="event.stopPropagation();speakWord('${w.zh}','')" title="Nghe phát âm">🔊</button>
       </div>
-      <div class="card-py">${w.py}</div>
       <div class="card-answer" id="card-answer">
+        <div class="card-py" style="margin-bottom:10px">${w.py}</div>
         <div class="card-vi">${w.vi}</div>
         <div class="card-example" style="margin-top:8px">${w.type}</div>
         <div style="font-size:12px;color:var(--muted);margin-top:4px">Bài ${w.lessonId}</div>
       </div>
-      <div class="card-hint">Nhấp để xem nghĩa</div>
+      <div class="card-hint">Nhấp để xem pinyin + nghĩa</div>
     </div>
     <div class="card-actions" id="card-actions" style="display:none">
       <button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="rateCard('again')">😓 Học lại</button>
@@ -6322,8 +6467,17 @@ function flipCard() {
 function rateCard(rating) {
   const w = reviewWords[reviewIdx];
   STATE.knownWords[w.zh] = rating;
-  saveState(); updateStreak();
   reviewIdx++;
+
+  // Khi học xong đủ lô hiện tại, chuyển con trỏ sang lô kế tiếp ngay.
+  // Vì vậy lần bấm “Bắt đầu ôn” sau đó sẽ không quay lại 30 từ cũ nữa.
+  if(reviewIdx >= reviewWords.length) {
+    const total = getAllReviewWords().length;
+    saveReviewCursor(reviewBatchStart + reviewWords.length, total);
+  }
+
+  saveState();
+  updateStreak();
   cardFlipped = false;
   renderFlashcard();
 }
