@@ -991,7 +991,7 @@ audio.ex-player { height:34px;border-radius:8px;outline:none;flex:1;min-width:0;
   <div class="topbar">
     <div>
       <div class="topbar-title" id="lesson-page-title">Chọn bài học</div>
-      <div class="topbar-sub" id="lesson-page-sub">20 bài · Tập 1 + Tập 2</div>
+      <div class="topbar-sub" id="lesson-page-sub">28 bài · Tập 1 (18) + Tập 2 (10)</div>
     </div>
     <div class="topbar-actions">
       <button class="btn btn-outline" onclick="showLessonList()">← Danh sách</button>
@@ -2292,6 +2292,386 @@ const HSK5_TAP2_FIX = {
 })();
 
 // ═══════════════════════════════════════════════
+// BỔ SUNG BÀI 11–18 CỦA HSK 标准教程 5 上 (第11–18课)
+// Đánh id 21–28, vol:1, disp '11'–'18' để hiển thị trong Tập 1 (上).
+// Nguồn: Giáo trình chuẩn HSK 5 (tập 1) – Sách bài học – Đáp án + Sách bài tập.
+// Ghi chú: PDF gốc chỉ có phần đáp án + lời thoại nghe, KHÔNG có nguyên văn 课文.
+// readingText dưới đây là đoạn văn minh họa viết lại theo đúng chủ đề & từ trọng tâm
+// của mỗi bài (không phải nguyên văn 课文 gốc). Nếu có ảnh/văn bản 课文 gốc, gửi thêm
+// để thay vào. Toàn bộ 词语辨析 / 练习 / 扩展 / 听力答案 / 阅读答案 / 书写 đều lấy đúng đáp án sách.
+// ═══════════════════════════════════════════════
+const HSK5_TAP1_EXTRA = [
+  { id:21, disp:'11', zh:'闹钟的危害', vi:'Tác hại của đồng hồ báo thức', topic:'走近科学·Đến gần khoa học', topicNum:4, vol:1,
+    grammar:['所 (suǒ)','导致 (dǎozhì)','过渡 (guòdù)'],
+    keyVocab:['闹钟','必要','导致','规律','享受','过渡','精神','危害'],
+    grammarDetail:[
+      {pattern:'必要',full:'必要 (bìyào) — cần thiết, sự cần thiết',explanation:'Tính từ/danh từ, chỉ điều không thể thiếu, cần phải có. Thường dùng: 有必要 / 没有必要 / 有必要的.',senses:[
+        {label:'① 有/没有 + 必要 — có/không cần thiết',examples:[{zh:'在婚姻问题上，听听父母的意见还是很有必要的。',vi:'Trong vấn đề hôn nhân, việc lắng nghe ý kiến cha mẹ vẫn rất cần thiết.'},{zh:'这件小事没有必要告诉大家。',vi:'Chuyện nhỏ này không cần thiết phải nói cho mọi người biết.'}]},
+        {label:'② 必要 làm định ngữ',examples:[{zh:'我们要做好必要的准备。',vi:'Chúng ta phải chuẩn bị những thứ cần thiết.'}]},
+      ],tip:'💡 必要 (cần thiết) ≠ 必须 (bắt buộc phải). 必要 nhấn "có cần hay không"; 必须 nhấn "buộc phải làm".'},
+      {pattern:'导致',full:'导致 (dǎozhì) — dẫn đến, gây ra (kết quả xấu)',explanation:'Động từ, chỉ nguyên nhân dẫn đến một kết quả — thường là kết quả tiêu cực, không mong muốn.',senses:[
+        {label:'① 导致 + kết quả xấu',examples:[{zh:'由于近一个月来没有降水，导致河水水位持续下降。',vi:'Do gần một tháng nay không có mưa, dẫn đến mực nước sông tiếp tục hạ thấp.'},{zh:'长期睡眠不足会导致很多健康问题。',vi:'Thiếu ngủ lâu dài sẽ dẫn đến nhiều vấn đề sức khỏe.'}]},
+      ],tip:'⚠️ 导致 hầu như chỉ đi với kết quả xấu. Kết quả tốt dùng 使 / 让 / 促使. So với 造成 (gây ra, cũng nghĩa xấu) thì 导致 nhấn quan hệ nhân–quả logic hơn.'},
+      {pattern:'过渡',full:'过渡 (guòdù) — chuyển tiếp, quá độ',explanation:'Động từ/danh từ, chỉ sự chuyển dần từ trạng thái/giai đoạn này sang trạng thái/giai đoạn khác.',senses:[
+        {label:'① Chuyển dần từ trạng thái A sang B',examples:[{zh:'擦擦办公桌，整理一下文件，这些都可以让你从放松的休息状态自然过渡到工作状态。',vi:'Lau bàn, sắp xếp tài liệu, những việc này giúp bạn chuyển tự nhiên từ trạng thái nghỉ ngơi sang trạng thái làm việc.'},{zh:'这是一个过渡时期，很多制度还在调整。',vi:'Đây là giai đoạn chuyển tiếp, nhiều chế độ vẫn đang được điều chỉnh.'}]},
+      ],tip:'💡 过渡 (guòdù, chuyển tiếp) ≠ 过度 (guòdù, quá mức). Đồng âm nhưng khác chữ, khác nghĩa: 过度疲劳 = mệt quá mức.'},
+    ],
+    readingTitle:'闹钟的危害',
+    readingText:'很多人每天都是被闹钟的铃声叫醒的。可是你想过吗？这种被强行叫醒的方式，其实对我们的身体有一定的危害。\n\n人的睡眠是有规律的，它分成好几个阶段。如果闹钟在深睡阶段突然响起，把我们从睡梦中猛地惊醒，就会导致我们醒来后头脑不清醒、情绪不稳定，一整天都没有精神。研究显示，人们对自然醒与被闹钟铃声叫醒所产生的反应是很不相同的：自然醒来的人往往心情平静，而被闹钟惊醒的人则容易感到紧张、疲劳。\n\n那么，有没有必要每天都用闹钟呢？专家建议，如果条件允许，最好养成有规律的作息习惯，让身体形成自己的\"生物钟\"，这样就能在差不多的时间自然醒来，而不必依赖闹钟。有规律的运动和早睡早起，对身体健康都大有好处。\n\n即使必须用闹钟，也有一些方法可以减轻它的危害。比如：把闹钟的铃声调得柔和一些，或者选择那种铃声由小到大慢慢变响的闹钟，让身体有一个自然过渡的过程。醒来后不要马上跳下床，可以先躺一会儿，做几个深呼吸，打起精神，让自己慢慢从睡眠状态过渡到清醒状态。\n\n为了享受轻松健康的生活，我们不妨从改善睡眠开始，重新认识一下这个每天都在使用的小闹钟。',
+    vocab:[
+      {zh:'闹钟',py:'nào zhōng',type:'dt.',vi:'đồng hồ báo thức',star:true},
+      {zh:'危害',py:'wēi hài',type:'đgt./dt.',vi:'nguy hại; tác hại',star:true},
+      {zh:'铃声',py:'líng shēng',type:'dt.',vi:'tiếng chuông',star:false},
+      {zh:'规律',py:'guī lǜ',type:'dt./tt.',vi:'quy luật; có quy luật',star:true},
+      {zh:'阶段',py:'jiē duàn',type:'dt.',vi:'giai đoạn',star:false},
+      {zh:'导致',py:'dǎo zhì',type:'đgt.',vi:'dẫn đến, gây ra',star:true},
+      {zh:'情绪',py:'qíng xù',type:'dt.',vi:'tâm trạng, cảm xúc',star:true},
+      {zh:'稳定',py:'wěn dìng',type:'tt./đgt.',vi:'ổn định',star:true},
+      {zh:'精神',py:'jīng shen',type:'dt.',vi:'tinh thần, sức lực',star:true},
+      {zh:'反应',py:'fǎn yìng',type:'đgt./dt.',vi:'phản ứng',star:true},
+      {zh:'产生',py:'chǎn shēng',type:'đgt.',vi:'sinh ra, nảy sinh',star:false},
+      {zh:'必要',py:'bì yào',type:'tt./dt.',vi:'cần thiết; sự cần thiết',star:true},
+      {zh:'作息',py:'zuò xī',type:'dt.',vi:'làm việc và nghỉ ngơi (giờ giấc)',star:false},
+      {zh:'所',py:'suǒ',type:'trợ.',vi:'(trợ từ tạo danh ngữ trước động từ)',star:true},
+      {zh:'依赖',py:'yī lài',type:'đgt.',vi:'lệ thuộc, dựa dẫm',star:true},
+      {zh:'柔和',py:'róu hé',type:'tt.',vi:'dịu, êm (âm thanh, ánh sáng)',star:true},
+      {zh:'过渡',py:'guò dù',type:'đgt./dt.',vi:'chuyển tiếp, quá độ',star:true},
+      {zh:'呼吸',py:'hū xī',type:'đgt.',vi:'hô hấp, thở',star:false},
+      {zh:'享受',py:'xiǎng shòu',type:'đgt.',vi:'hưởng thụ, tận hưởng',star:true},
+      {zh:'继续',py:'jì xù',type:'đgt.',vi:'tiếp tục',star:false},
+      {zh:'持续',py:'chí xù',type:'đgt.',vi:'kéo dài, liên tục',star:true},
+      {zh:'地毯',py:'dì tǎn',type:'dt.',vi:'thảm',star:false},
+      {zh:'书架',py:'shū jià',type:'dt.',vi:'giá sách',star:false},
+      {zh:'玩具',py:'wán jù',type:'dt.',vi:'đồ chơi',star:false},
+      {zh:'抽屉',py:'chōu ti',type:'dt.',vi:'ngăn kéo',star:false},
+    ]
+  },
+
+  { id:22, disp:'12', zh:'海外用户玩儿微信', vi:'Người dùng nước ngoài chơi WeChat', topic:'走近科学·Đến gần khoa học', topicNum:4, vol:1,
+    grammar:['以及 (yǐjí)','针对 (zhēnduì)','出 (chū)'],
+    keyVocab:['推广','召开','注册','业务','合作','实现','使用','以及','针对'],
+    grammarDetail:[
+      {pattern:'以及',full:'以及 (yǐjí) — và, cùng với (liên từ)',explanation:'Liên từ nối các thành phần song song (danh từ, cụm từ, phân câu). Thường dùng để nối phần phụ, thứ yếu vào sau phần chính — trang trọng hơn 和.',senses:[
+        {label:'① Nối nhiều thành phần liệt kê',examples:[{zh:'本店销售电视、冰箱、洗衣机以及其他电器。',vi:'Cửa hàng chúng tôi bán tivi, tủ lạnh, máy giặt và các đồ điện khác.'},{zh:'你不要用筷子敲打碗、盘子以及桌面。',vi:'Đừng dùng đũa gõ vào bát, đĩa và mặt bàn.'}]},
+      ],tip:'💡 以及 thường đặt phần quan trọng ở trước, phần phụ/khái quát ở sau. Khác 和 (bình đẳng hơn, dùng cả khẩu ngữ).'},
+      {pattern:'针对',full:'针对 (zhēnduì) — nhắm vào, nhằm vào (giới từ)',explanation:'Giới từ, biểu thị hành động hướng vào một đối tượng/vấn đề cụ thể. Cấu trúc: 针对 + N + VP.',senses:[
+        {label:'① 针对 + vấn đề/đối tượng',examples:[{zh:'针对这个问题，我们开会讨论了好几次。',vi:'Nhằm vào vấn đề này, chúng tôi đã họp thảo luận nhiều lần.'},{zh:'我曾经针对留学生做过一项调查。',vi:'Tôi từng làm một cuộc khảo sát nhắm vào du học sinh.'}]},
+      ],tip:'💡 针对性 = tính nhắm trúng đích. 针对 nhấn "có mục tiêu cụ thể", khác 对于 (chỉ nêu đối tượng chung chung).'},
+      {pattern:'出',full:'出 (chū) — bổ ngữ xu hướng: ra, xuất hiện',explanation:'Làm bổ ngữ xu hướng sau động từ, biểu thị: (1) từ trong ra ngoài; (2) từ không có → xuất hiện/tạo ra; (3) nhận ra, phân biệt được.',senses:[
+        {label:'① Tạo ra, làm ra (từ không → có)',examples:[{zh:'公司新开发出的产品很受消费者欢迎。',vi:'Sản phẩm công ty mới phát triển ra rất được người tiêu dùng ưa chuộng.'}]},
+        {label:'② Nhận ra, phân biệt được — 看出/听出/尝出',examples:[{zh:'我一下子就听出了他的声音。',vi:'Tôi lập tức nghe ra được giọng của anh ấy.'}]},
+      ],tip:'💡 V + 出 + 来 = làm ra/nhận ra được (说出来、写出来、看出来). 出 nhấn "từ ẩn → hiện".'},
+    ],
+    readingTitle:'海外用户玩儿微信',
+    readingText:'微信是中国一款非常流行的社交软件。近年来，为了推广这款产品，把它介绍给全世界，微信团队做了很多努力，海外用户的数量也在不断增长。\n\n要使用微信，你首先要注册一个账号。注册以后，就可以添加联系人，和朋友聊天儿、发语音、发图片，还可以使用\"扫一扫\"\"朋友圈\"等各种功能。对很多海外用户来说，微信不仅是一个聊天工具，更是了解中国文化的一扇窗口。\n\n针对海外市场，微信公司召开了多次会议，专门研究不同国家用户的使用习惯，并和当地的一些公司展开合作，共同开发出适合当地人的新功能。调查数据显示，用户们对微信的服务很满意。\n\n当然，在使用过程中也会遇到一些问题。比如手机没电、信号不好，或者忘带充电器等等。这时候，微信提供的很多功能就没办法正常使用了。不过总的来说，随着技术的不断进步，微信正一步步实现着\"连接一切\"的愿望，成为越来越多海外用户日常生活中的一部分。',
+    vocab:[
+      {zh:'用户',py:'yòng hù',type:'dt.',vi:'người dùng, khách hàng',star:true},
+      {zh:'社交',py:'shè jiāo',type:'dt.',vi:'giao tiếp xã hội',star:false},
+      {zh:'软件',py:'ruǎn jiàn',type:'dt.',vi:'phần mềm',star:false},
+      {zh:'推广',py:'tuī guǎng',type:'đgt.',vi:'quảng bá, phổ biến',star:true},
+      {zh:'注册',py:'zhù cè',type:'đgt.',vi:'đăng ký',star:true},
+      {zh:'账号',py:'zhàng hào',type:'dt.',vi:'tài khoản',star:false},
+      {zh:'功能',py:'gōng néng',type:'dt.',vi:'chức năng',star:true},
+      {zh:'使用',py:'shǐ yòng',type:'đgt.',vi:'sử dụng',star:false},
+      {zh:'针对',py:'zhēn duì',type:'giới.',vi:'nhắm vào, nhằm vào',star:true},
+      {zh:'召开',py:'zhào kāi',type:'đgt.',vi:'triệu tập, tổ chức (hội nghị)',star:true},
+      {zh:'合作',py:'hé zuò',type:'đgt.',vi:'hợp tác',star:false},
+      {zh:'开发',py:'kāi fā',type:'đgt.',vi:'khai thác, phát triển',star:true},
+      {zh:'数据',py:'shù jù',type:'dt.',vi:'dữ liệu, số liệu',star:true},
+      {zh:'实现',py:'shí xiàn',type:'đgt.',vi:'thực hiện, đạt được',star:true},
+      {zh:'愿望',py:'yuàn wàng',type:'dt.',vi:'nguyện vọng, mong muốn',star:false},
+      {zh:'业务',py:'yè wù',type:'dt.',vi:'nghiệp vụ, công việc kinh doanh',star:true},
+      {zh:'逗',py:'dòu',type:'đgt.',vi:'trêu, chọc cho vui',star:false},
+      {zh:'以及',py:'yǐ jí',type:'liên.',vi:'và, cùng với',star:true},
+      {zh:'个人',py:'gè rén',type:'dt.',vi:'cá nhân',star:false},
+      {zh:'充电器',py:'chōng diàn qì',type:'dt.',vi:'bộ sạc',star:false},
+      {zh:'系统',py:'xì tǒng',type:'dt.',vi:'hệ thống',star:true},
+      {zh:'信号',py:'xìn hào',type:'dt.',vi:'tín hiệu, sóng',star:false},
+      {zh:'节省',py:'jié shěng',type:'đgt.',vi:'tiết kiệm',star:false},
+    ]
+  },
+
+  { id:23, disp:'13', zh:'锯掉生活的"筐底"', vi:'Cưa bỏ "đáy rổ" của cuộc sống', topic:'放眼世界·Phóng tầm nhìn ra thế giới', topicNum:5, vol:1,
+    grammar:['何必 (hébì)','何况 (hékuàng)','多亏 (duōkuī)'],
+    keyVocab:['气氛','连忙','仿佛','重复','造成','缺乏','何必','何况','多亏'],
+    grammarDetail:[
+      {pattern:'何必',full:'何必 (hébì) — hà tất, việc gì phải (phản vấn)',explanation:'Phó từ dùng trong câu phản vấn, biểu thị "không cần thiết phải…", khuyên người khác đừng làm việc gì đó vì cho là thừa.',senses:[
+        {label:'① Câu phản vấn — việc gì phải…',examples:[{zh:'您多画点儿画儿多好，何必把时间浪费在这些人的身上？',vi:'Bác vẽ thêm tranh có phải tốt hơn không, việc gì phải lãng phí thời gian cho những người này?'},{zh:'一个电话就能说清楚，何必亲自跑一趟呢？',vi:'Một cú điện thoại là nói rõ được rồi, việc gì phải đích thân chạy một chuyến?'}]},
+      ],tip:'💡 何必 = 为什么一定要 (…đâu cần…). Cuối câu thường có 呢. Mang ý khuyên nhủ nhẹ nhàng.'},
+      {pattern:'何况',full:'何况 (hékuàng) — huống chi, huống hồ',explanation:'Liên từ, dùng để tăng tiến: điều trước đã vậy, điều sau càng như thế. Thường đi với 连…都/也 hoặc 更.',senses:[
+        {label:'① Tăng tiến — huống chi',examples:[{zh:'年轻人恐怕都受不了，何况一个有病的老人呢？',vi:'Người trẻ e rằng cũng chịu không nổi, huống chi một ông già đang bệnh?'},{zh:'这本书连中国人都觉得难，何况外国人呢？',vi:'Cuốn sách này người Trung Quốc còn thấy khó, huống chi người nước ngoài?'}]},
+      ],tip:'💡 何况 nhấn mức độ tăng dần A→B. Khác 而且 (chỉ bổ sung, không tăng tiến mạnh như vậy).'},
+      {pattern:'多亏',full:'多亏 (duōkuī) — may nhờ, may mà',explanation:'Động từ/phó từ, biểu thị nhờ có sự giúp đỡ/điều kiện nào đó mà tránh được kết quả xấu; mang ý biết ơn.',senses:[
+        {label:'① May nhờ có… (nếu không thì…)',examples:[{zh:'多亏你提醒，要不我肯定忘了下午还要开会。',vi:'May nhờ bạn nhắc, không thì chắc chắn tôi quên mất chiều còn phải họp.'},{zh:'多亏这场雨，庄稼才活了下来。',vi:'May nhờ trận mưa này, hoa màu mới sống được.'}]},
+      ],tip:'💡 多亏 + nguyên nhân tốt, vế sau thường có 要不/不然 (nếu không thì kết quả xấu).'},
+    ],
+    readingTitle:'锯掉生活的"筐底"',
+    readingText:'有一次，一群大人在讨论一个问题：怎样才能把篮球稳稳地放进一个又高又深的篮筐里？大家想了很多复杂的办法，气氛越来越紧张，可谁也想不出好主意。\n\n这时，一个在旁边玩耍的小孩子仿佛不经意地说：\"把篮筐的底锯掉，不就行了吗？\"大人们一听，先是一愣，连忙又笑了起来——多么简单的办法啊！去掉筐底，球放进去就自然掉下来了，何必想那么复杂？\n\n这件小事让人深思。生活中，我们常常给自己设下各种各样的\"筐底\"，把简单的事情想得过于复杂，结果白白浪费了时间和精力，甚至给自己造成很大的压力。我们缺乏的，往往不是能力，而是换一个角度看问题的勇气。\n\n有时候，我们的思维就像篮球一样，被那个看不见的\"筐底\"挡在了半空中。如果能像那个孩子一样，勇敢地\"锯掉\"心里的\"筐底\"，重复了无数次的难题也许一下子就解开了。\n\n多亏那个孩子的一句话，大人们才明白：真正聪明的做法，不是把问题变复杂，而是学会把复杂的问题变简单。',
+    vocab:[
+      {zh:'锯',py:'jù',type:'đgt./dt.',vi:'cưa; cái cưa',star:false},
+      {zh:'筐',py:'kuāng',type:'dt.',vi:'sọt, giỏ, rổ',star:false},
+      {zh:'气氛',py:'qì fēn',type:'dt.',vi:'không khí, bầu không khí',star:true},
+      {zh:'紧张',py:'jǐn zhāng',type:'tt.',vi:'căng thẳng',star:false},
+      {zh:'仿佛',py:'fǎng fú',type:'phó.',vi:'dường như, tựa như',star:true},
+      {zh:'连忙',py:'lián máng',type:'phó.',vi:'vội vàng, vội',star:true},
+      {zh:'重复',py:'chóng fù',type:'đgt.',vi:'lặp lại',star:true},
+      {zh:'思维',py:'sī wéi',type:'dt.',vi:'tư duy',star:true},
+      {zh:'角度',py:'jiǎo dù',type:'dt.',vi:'góc độ',star:false},
+      {zh:'勇气',py:'yǒng qì',type:'dt.',vi:'dũng khí, can đảm',star:false},
+      {zh:'造成',py:'zào chéng',type:'đgt.',vi:'gây ra, tạo thành',star:true},
+      {zh:'压力',py:'yā lì',type:'dt.',vi:'áp lực',star:false},
+      {zh:'缺乏',py:'quē fá',type:'đgt.',vi:'thiếu, thiếu hụt',star:true},
+      {zh:'缺少',py:'quē shǎo',type:'đgt.',vi:'thiếu, không đủ',star:true},
+      {zh:'装',py:'zhuāng',type:'đgt.',vi:'đựng, chứa; lắp',star:false},
+      {zh:'形成',py:'xíng chéng',type:'đgt.',vi:'hình thành',star:true},
+      {zh:'何必',py:'hé bì',type:'phó.',vi:'hà tất, việc gì phải',star:true},
+      {zh:'何况',py:'hé kuàng',type:'liên.',vi:'huống chi, huống hồ',star:true},
+      {zh:'多亏',py:'duō kuī',type:'đgt./phó.',vi:'may nhờ, may mà',star:true},
+      {zh:'武术',py:'wǔ shù',type:'dt.',vi:'võ thuật',star:false},
+      {zh:'太极拳',py:'tài jí quán',type:'dt.',vi:'Thái Cực Quyền',star:false},
+      {zh:'象棋',py:'xiàng qí',type:'dt.',vi:'cờ tướng',star:false},
+      {zh:'对手',py:'duì shǒu',type:'dt.',vi:'đối thủ',star:false},
+      {zh:'冠军',py:'guàn jūn',type:'dt.',vi:'nhà vô địch, quán quân',star:true},
+    ]
+  },
+
+  { id:24, disp:'14', zh:'北京的四合院', vi:'Tứ hợp viện Bắc Kinh', topic:'放眼世界·Phóng tầm nhìn ra thế giới', topicNum:5, vol:1,
+    grammar:['因而 (yīn\u2019ér)','让 (ràng)','具备 (jùbèi)'],
+    keyVocab:['具备','日常','浓','广泛','组合','矛盾','组成','因而'],
+    grammarDetail:[
+      {pattern:'因而',full:'因而 (yīn\u2019ér) — vì thế, do đó (liên từ)',explanation:'Liên từ chỉ kết quả, nối vế nguyên nhân với vế kết quả. Dùng ở đầu vế sau, mang tính văn viết.',senses:[
+        {label:'① Nêu kết quả từ nguyên nhân đã nói',examples:[{zh:'他坚持锻炼，因而身体很好。',vi:'Anh ấy kiên trì tập luyện, vì thế sức khỏe rất tốt.'},{zh:'四合院冬暖夏凉，因而很受人们喜爱。',vi:'Tứ hợp viện đông ấm hè mát, do đó rất được mọi người yêu thích.'}]},
+      ],tip:'💡 因而 (do đó) chỉ đứng ở vế kết quả. Khác 因为 (vì — đứng ở vế nguyên nhân). 因而 ≈ 因此.'},
+      {pattern:'让',full:'让 (ràng) — câu chữ 让 (kiêm ngữ/bị động)',explanation:'Động từ, tạo câu kiêm ngữ (让 + tân ngữ + động từ) nghĩa "để/khiến ai làm gì"; cũng dùng biểu thị bị động, nhường.',senses:[
+        {label:'① 让 ai làm gì (sai khiến/cho phép)',examples:[{zh:'是那位工程师让我把机器安装在这儿。',vi:'Chính vị kỹ sư đó bảo tôi lắp máy ở đây.'}]},
+        {label:'② 让 khiến ai đó (cảm nhận)',examples:[{zh:'这里的宏伟建筑深深地让人耳目一新。',vi:'Những công trình hùng vĩ ở đây khiến người ta hoàn toàn mới mẻ.'}]},
+      ],tip:'💡 让 vừa là "để/khiến/bảo" (kiêm ngữ), vừa dùng bị động khẩu ngữ: 杯子让他打破了 (cái cốc bị anh ấy làm vỡ).'},
+      {pattern:'具备',full:'具备 (jùbèi) — có đủ, hội đủ (điều kiện/chức năng)',explanation:'Động từ, chỉ việc có đầy đủ những điều kiện, năng lực, chức năng cần thiết. Tân ngữ thường trừu tượng.',senses:[
+        {label:'① 具备 + điều kiện/chức năng',examples:[{zh:'现在的手机都具备很多功能，不再只是个打电话的工具。',vi:'Điện thoại bây giờ đều có đủ nhiều chức năng, không còn chỉ là công cụ gọi điện.'},{zh:'该产品已经具备了基本功能。',vi:'Sản phẩm này đã có đủ các chức năng cơ bản.'}]},
+      ],tip:'💡 具备 (hội đủ, tân ngữ trừu tượng: 条件/功能/资格) khác 具有 (mang, có — dùng cả cụ thể lẫn trừu tượng: 具有特色).'},
+    ],
+    readingTitle:'北京的四合院',
+    readingText:'四合院是中国华北地区一种非常有代表性的传统民居，其中又以北京的四合院最为著名。它历史悠久，样式独特，是北京城市文化的重要组成部分。\n\n所谓\"四合院\"，\"四\"指的是东、西、南、北四个方向，\"合\"就是四面的房屋围合在一起，中间形成一个方形的院子。这种独特的组合方式，使四合院既安静又舒适。一家人住在里面，日常生活十分方便，邻里之间的关系也很密切。\n\n四合院通常由大门、影壁、正房、厢房、后院等部分组合而成。院子里常常种着花草树木，有的人家还养金鱼、种竹子，环境优美。夏天，院子里绿树成荫，因而十分凉爽；到了冬天，厚厚的墙壁又能挡住寒风，屋里很暖和。\n\n如今，随着城市的发展，一座座方盒子似的楼房代替了北京原有的平房，很多老四合院消失了。有人搬进了宽敞的楼房，条件是好了，但也开始怀念四合院里那种热闹、亲切的气氛。为了保护这份宝贵的文化遗产，北京对一些具有代表性的四合院进行了广泛的调查和保护。\n\n四合院不仅是一种建筑，更承载着老北京人的生活方式和情感记忆，值得我们好好珍惜。',
+    vocab:[
+      {zh:'四合院',py:'sì hé yuàn',type:'dt.',vi:'tứ hợp viện',star:true},
+      {zh:'民居',py:'mín jū',type:'dt.',vi:'nhà ở dân gian',star:false},
+      {zh:'具备',py:'jù bèi',type:'đgt.',vi:'có đủ, hội đủ',star:true},
+      {zh:'组成',py:'zǔ chéng',type:'đgt.',vi:'tạo thành, cấu thành',star:true},
+      {zh:'组合',py:'zǔ hé',type:'đgt./dt.',vi:'kết hợp, tổ hợp',star:true},
+      {zh:'方向',py:'fāng xiàng',type:'dt.',vi:'phương hướng',star:false},
+      {zh:'日常',py:'rì cháng',type:'tt.',vi:'thường ngày, hàng ngày',star:true},
+      {zh:'密切',py:'mì qiè',type:'tt.',vi:'mật thiết, gắn bó',star:true},
+      {zh:'浓',py:'nóng',type:'tt.',vi:'đậm, dày, đặc',star:true},
+      {zh:'凉爽',py:'liáng shuǎng',type:'tt.',vi:'mát mẻ',star:false},
+      {zh:'因而',py:'yīn\u2019ér',type:'liên.',vi:'vì thế, do đó',star:true},
+      {zh:'代替',py:'dài tì',type:'đgt.',vi:'thay thế',star:true},
+      {zh:'广泛',py:'guǎng fàn',type:'tt.',vi:'rộng rãi, rộng khắp',star:true},
+      {zh:'矛盾',py:'máo dùn',type:'dt./tt.',vi:'mâu thuẫn',star:true},
+      {zh:'遗产',py:'yí chǎn',type:'dt.',vi:'di sản',star:false},
+      {zh:'珍惜',py:'zhēn xī',type:'đgt.',vi:'trân trọng, quý trọng',star:true},
+      {zh:'接待',py:'jiē dài',type:'đgt.',vi:'tiếp đón',star:true},
+      {zh:'创造',py:'chuàng zào',type:'đgt.',vi:'sáng tạo, tạo ra',star:false},
+      {zh:'阳台',py:'yáng tái',type:'dt.',vi:'ban công',star:false},
+      {zh:'宿舍',py:'sù shè',type:'dt.',vi:'ký túc xá',star:false},
+      {zh:'单元',py:'dān yuán',type:'dt.',vi:'đơn nguyên (tòa nhà); đơn vị bài học',star:false},
+      {zh:'隔壁',py:'gé bì',type:'dt.',vi:'bên cạnh, sát vách',star:false},
+    ]
+  },
+
+  { id:25, disp:'15', zh:'纸上谈兵', vi:'Bàn việc binh trên giấy', topic:'放眼世界·Phóng tầm nhìn ra thế giới', topicNum:5, vol:1,
+    grammar:['曾经 (céngjīng)','绝对 (juéduì)','下 (xià)'],
+    keyVocab:['阻止','宝贵','善于','糊涂','挑战','独立','曾经','绝对'],
+    grammarDetail:[
+      {pattern:'曾经',full:'曾经 (céngjīng) — đã từng (trong quá khứ)',explanation:'Phó từ, biểu thị hành động/trạng thái đã từng xảy ra trong quá khứ, nay không còn tiếp diễn. Sau động từ thường có 过.',senses:[
+        {label:'① Đã từng (nay không còn)',examples:[{zh:'我曾经以为这一生我只能做一个普普通通的工人了。',vi:'Tôi đã từng nghĩ cả đời này mình chỉ có thể làm một công nhân bình thường.'},{zh:'人们曾经把西红柿当做有害的果子。',vi:'Người ta đã từng coi cà chua là loại quả có hại.'}]},
+      ],tip:'⚠️ 曾经 (đã từng, nhấn quá khứ đã qua) ≠ 已经 (đã, nhấn hoàn thành/vẫn liên quan hiện tại). 曾经 thường + 过.'},
+      {pattern:'绝对',full:'绝对 (juéduì) — tuyệt đối, hoàn toàn',explanation:'Phó từ/tính từ, nhấn mạnh mức độ cao nhất, không có ngoại lệ. Làm trạng ngữ (绝对 + V/Adj) hoặc định ngữ.',senses:[
+        {label:'① Phó từ — tuyệt đối, chắc chắn',examples:[{zh:'我相信这样的安排他是绝对不会同意的。',vi:'Tôi tin sự sắp xếp như vậy anh ấy tuyệt đối sẽ không đồng ý.'},{zh:'这件事你绝对可以放心。',vi:'Chuyện này bạn tuyệt đối có thể yên tâm.'}]},
+        {label:'② Tính từ — tuyệt đối (trái với 相对)',examples:[{zh:'世界上没有绝对的公平。',vi:'Trên đời không có sự công bằng tuyệt đối.'}]},
+      ],tip:'💡 绝对 (tuyệt đối) ↔ 相对 (tương đối). Làm phó từ nhấn "chắc chắn 100%".'},
+      {pattern:'下',full:'下 (xià) — động từ/bổ ngữ đa nghĩa',explanation:'Nghĩa gốc "xuống"; còn dùng: (1) ra (mệnh lệnh/quyết định) 下命令; (2) làm bổ ngữ kết quả/xu hướng 记下、留下、坐下.',senses:[
+        {label:'① 下 + tân ngữ trừu tượng (ra lệnh, hạ quyết tâm)',examples:[{zh:'将军下了命令，士兵们立刻出发了。',vi:'Tướng quân ra lệnh, binh sĩ lập tức xuất phát.'},{zh:'他下决心一定要学好汉语。',vi:'Anh ấy hạ quyết tâm nhất định phải học giỏi tiếng Hán.'}]},
+        {label:'② Bổ ngữ — 记下/留下/写下 (ghi lại, giữ lại)',examples:[{zh:'请把重要的内容记下来。',vi:'Hãy ghi lại những nội dung quan trọng.'}]},
+      ],tip:'💡 下 + 命令/决心/结论 = ra/hạ. Làm bổ ngữ: 留下(giữ lại)、记下(ghi lại)、停下(dừng lại).'},
+    ],
+    readingTitle:'纸上谈兵',
+    readingText:'战国时期，赵国有一位大将叫赵奢，曾经立下过很多战功。他有个儿子叫赵括，从小就熟读兵书，谈起用兵打仗的道理来滔滔不绝，连他父亲赵奢也说不过他。很多人因此认为赵括很有本领，将来一定是个出色的将军。\n\n可是赵奢却一点儿也不为儿子感到骄傲。他担忧地说：\"打仗是关系到生死存亡的大事，可赵括却把它说得太轻松了。他只会讲大道理，缺乏实际的锻炼。将来赵国如果不用他做将军也就罢了，如果一定要用他，那使赵国打败仗的，一定就是赵括！\"\n\n后来，赵奢去世了。秦国进攻赵国，赵王果然任命赵括为大将。赵括的母亲再三地阻止，说儿子并不具备真正带兵打仗的资格，可赵王绝对不听。赵括一上任，就完全改变了原来的作战安排。他自以为很聪明，其实糊涂得很，根本不懂得根据实际情况灵活应对。\n\n结果，在一场大战中，赵括中了敌人的计，四十多万赵军全军覆没，赵括自己也在战斗中被杀。这个惨痛的教训，让\"纸上谈兵\"成了一句流传至今的成语。\n\n这个故事告诉我们：真正宝贵的经验，是在实践中一点一点积累起来的。一个人如果只善于空谈理论，而不重视实际锻炼，就算再有\"本领\"，也难免会失败。学习任何本领，都不能只停留在\"纸上\"，而要勇于接受实践的挑战，独立地解决真正的问题。',
+    vocab:[
+      {zh:'纸上谈兵',py:'zhǐ shàng tán bīng',type:'thành ngữ',vi:'bàn việc binh trên giấy (lý thuyết suông)',star:true},
+      {zh:'将军',py:'jiāng jūn',type:'dt.',vi:'tướng quân',star:false},
+      {zh:'兵书',py:'bīng shū',type:'dt.',vi:'binh thư, sách binh pháp',star:false},
+      {zh:'本领',py:'běn lǐng',type:'dt.',vi:'bản lĩnh, tài năng',star:true},
+      {zh:'骄傲',py:'jiāo\u2019ào',type:'tt.',vi:'kiêu ngạo; tự hào',star:true},
+      {zh:'缺乏',py:'quē fá',type:'đgt.',vi:'thiếu, thiếu hụt',star:true},
+      {zh:'阻止',py:'zǔ zhǐ',type:'đgt.',vi:'ngăn cản, ngăn chặn',star:true},
+      {zh:'资格',py:'zī gé',type:'dt.',vi:'tư cách, tiêu chuẩn',star:true},
+      {zh:'绝对',py:'jué duì',type:'phó./tt.',vi:'tuyệt đối, hoàn toàn',star:true},
+      {zh:'糊涂',py:'hú tu',type:'tt.',vi:'hồ đồ, lú lẫn',star:true},
+      {zh:'灵活',py:'líng huó',type:'tt.',vi:'linh hoạt',star:true},
+      {zh:'战争',py:'zhàn zhēng',type:'dt.',vi:'chiến tranh',star:false},
+      {zh:'教训',py:'jiào xun',type:'dt.',vi:'bài học (đau thương), sự răn dạy',star:true},
+      {zh:'宝贵',py:'bǎo guì',type:'tt.',vi:'quý báu, quý giá',star:true},
+      {zh:'善于',py:'shàn yú',type:'đgt.',vi:'giỏi về, sở trường',star:true},
+      {zh:'独立',py:'dú lì',type:'đgt./tt.',vi:'độc lập',star:true},
+      {zh:'挑战',py:'tiǎo zhàn',type:'dt./đgt.',vi:'thách thức, thử thách',star:true},
+      {zh:'曾经',py:'céng jīng',type:'phó.',vi:'đã từng',star:true},
+      {zh:'毛病',py:'máo bìng',type:'dt.',vi:'khuyết điểm; trục trặc; bệnh',star:true},
+      {zh:'道理',py:'dào lǐ',type:'dt.',vi:'đạo lý, lẽ phải',star:false},
+      {zh:'克服',py:'kè fú',type:'đgt.',vi:'khắc phục',star:true},
+      {zh:'枪',py:'qiāng',type:'dt.',vi:'súng',star:false},
+      {zh:'胜利',py:'shèng lì',type:'đgt./dt.',vi:'thắng lợi',star:false},
+      {zh:'英雄',py:'yīng xióng',type:'dt.',vi:'anh hùng',star:false},
+      {zh:'射击',py:'shè jī',type:'đgt.',vi:'bắn, xạ kích',star:false},
+    ]
+  },
+
+  { id:26, disp:'16', zh:'体重与节食', vi:'Cân nặng và ăn kiêng', topic:'修身养性·Tu dưỡng bản thân', topicNum:6, vol:1,
+    grammar:['结果 (jiéguǒ)','明显 (míngxiǎn)','暂时 (zànshí)'],
+    keyVocab:['参与','达到','可靠','总共','借口','采取','明显','结果','暂时'],
+    grammarDetail:[
+      {pattern:'暂时',full:'暂时 (zànshí) — tạm thời, nhất thời',explanation:'Danh từ/phó từ chỉ thời gian, biểu thị khoảng thời gian ngắn trước mắt, không lâu dài. Làm định ngữ hoặc trạng ngữ.',senses:[
+        {label:'① Định ngữ — khó khăn/hiện tượng tạm thời',examples:[{zh:'公司遇到一些暂时的困难，我们正在积极想办法。',vi:'Công ty gặp một số khó khăn tạm thời, chúng tôi đang tích cực tìm cách.'}]},
+        {label:'② Trạng ngữ — tạm thời (đừng vội)',examples:[{zh:'这件事你暂时先不要告诉他。',vi:'Chuyện này bạn tạm thời đừng nói cho anh ấy vội.'},{zh:'演出结束，我想暂时休息一段时间。',vi:'Buổi diễn kết thúc, tôi muốn tạm nghỉ một thời gian.'}]},
+      ],tip:'💡 暂时 nhấn "trong lúc này, chưa lâu dài". Trái nghĩa: 长期 / 永久.'},
+      {pattern:'明显',full:'明显 (míngxiǎn) — rõ ràng, rõ rệt',explanation:'Tính từ, chỉ điều dễ nhận thấy, rõ ràng. Làm vị ngữ, định ngữ hoặc trạng ngữ (明显 + V).',senses:[
+        {label:'① Rõ rệt (dễ thấy)',examples:[{zh:'调查结果显示，市民对电子阅读的兴趣明显提高了。',vi:'Kết quả điều tra cho thấy hứng thú đọc sách điện tử của người dân tăng lên rõ rệt.'},{zh:'吃了药以后，他的病情有了明显的好转。',vi:'Sau khi uống thuốc, bệnh tình của anh ấy chuyển biến tốt rõ rệt.'}]},
+      ],tip:'💡 明显 (rõ rệt, khách quan dễ thấy) khác 显然 (hiển nhiên, thiên về suy luận chủ quan "rõ là…").'},
+      {pattern:'结果',full:'结果 (jiéguǒ) — kết quả; cuối cùng thì (liên từ)',explanation:'Danh từ = kết quả; còn dùng làm liên từ đầu câu, nối tình huống trước với kết cục sau (thường bất ngờ).',senses:[
+        {label:'① Danh từ — kết quả',examples:[{zh:'调查结果显示，父亲参与越多，孩子越聪明。',vi:'Kết quả điều tra cho thấy người cha tham gia càng nhiều, con càng thông minh.'}]},
+        {label:'② Liên từ — cuối cùng thì, thế rồi',examples:[{zh:'我本来想完成计划再去美国，结果那边有更重要的事，不得不提前去。',vi:'Tôi vốn định hoàn thành kế hoạch rồi mới đi Mỹ, cuối cùng bên đó có việc quan trọng hơn, đành phải đi sớm.'}]},
+      ],tip:'💡 结果 làm liên từ thường dẫn ra kết cục ngoài dự tính. Đứng đầu vế sau.'},
+    ],
+    readingTitle:'体重与节食',
+    readingText:'现在，越来越多的人开始关注自己的体重，减肥、节食成了很多人日常谈论的话题。可是，节食减肥真的可靠吗？\n\n有些人为了达到理想的体重，采取了非常极端的节食方法：只吃蔬菜，连主食和肉都不吃。他们以为这样就能很快瘦下来，结果却常常造成营养不足，身体明显变差。医生指出，这样的减肥方法非常不可靠，甚至会对健康造成危害。\n\n其实，控制体重并不等于\"不吃\"。科学的做法是合理搭配一日三餐，保证营养均衡，同时积极参与各种体育锻炼。研究发现，运动的参与程度越高，减肥的效果就越明显，而且不容易反弹。\n\n还有一些人，总是给自己找各种借口：今天太忙了，明天再运动；这顿是朋友请客，不好意思拒绝……就这样，减肥的计划总是被一再推迟。\n\n专家建议，减肥不能只靠一时的节食，而要养成长期、规律的健康生活习惯。体重的变化只是暂时的表面现象，真正重要的，是拥有一个健康的身体。所以，与其盲目节食，不如从今天开始，采取科学的方法，一步一步地管理好自己的体重和健康。',
+    vocab:[
+      {zh:'体重',py:'tǐ zhòng',type:'dt.',vi:'cân nặng, trọng lượng cơ thể',star:false},
+      {zh:'节食',py:'jié shí',type:'đgt.',vi:'ăn kiêng, tiết chế ăn uống',star:false},
+      {zh:'减肥',py:'jiǎn féi',type:'đgt.',vi:'giảm cân',star:false},
+      {zh:'可靠',py:'kě kào',type:'tt.',vi:'đáng tin cậy',star:true},
+      {zh:'达到',py:'dá dào',type:'đgt.',vi:'đạt tới, đạt được',star:true},
+      {zh:'采取',py:'cǎi qǔ',type:'đgt.',vi:'áp dụng, thực hiện (biện pháp)',star:true},
+      {zh:'极端',py:'jí duān',type:'tt./dt.',vi:'cực đoan',star:false},
+      {zh:'营养',py:'yíng yǎng',type:'dt.',vi:'dinh dưỡng',star:false},
+      {zh:'明显',py:'míng xiǎn',type:'tt.',vi:'rõ ràng, rõ rệt',star:true},
+      {zh:'造成',py:'zào chéng',type:'đgt.',vi:'gây ra, tạo thành',star:true},
+      {zh:'均衡',py:'jūn héng',type:'tt.',vi:'cân bằng, đều',star:false},
+      {zh:'参与',py:'cān yù',type:'đgt.',vi:'tham gia',star:true},
+      {zh:'程度',py:'chéng dù',type:'dt.',vi:'mức độ, trình độ',star:false},
+      {zh:'结果',py:'jié guǒ',type:'dt./liên.',vi:'kết quả; cuối cùng thì',star:true},
+      {zh:'借口',py:'jiè kǒu',type:'dt./đgt.',vi:'cái cớ; lấy cớ',star:true},
+      {zh:'总共',py:'zǒng gòng',type:'phó.',vi:'tổng cộng',star:true},
+      {zh:'一再',py:'yī zài',type:'phó.',vi:'nhiều lần, liên tục',star:true},
+      {zh:'推迟',py:'tuī chí',type:'đgt.',vi:'lùi lại, hoãn',star:false},
+      {zh:'暂时',py:'zàn shí',type:'dt./phó.',vi:'tạm thời',star:true},
+      {zh:'现象',py:'xiàn xiàng',type:'dt.',vi:'hiện tượng',star:true},
+      {zh:'报道',py:'bào dào',type:'đgt./dt.',vi:'đưa tin; bài báo',star:true},
+      {zh:'措施',py:'cuò shī',type:'dt.',vi:'biện pháp',star:true},
+      {zh:'打喷嚏',py:'dǎ pēn tì',type:'đoản ngữ',vi:'hắt hơi',star:false},
+      {zh:'过敏',py:'guò mǐn',type:'đgt.',vi:'dị ứng',star:false},
+      {zh:'痒',py:'yǎng',type:'tt.',vi:'ngứa',star:false},
+      {zh:'消化',py:'xiāo huà',type:'đgt.',vi:'tiêu hóa',star:false},
+    ]
+  },
+
+  { id:27, disp:'17', zh:'在最美好的时刻离开', vi:'Rời đi vào khoảnh khắc đẹp nhất', topic:'修身养性·Tu dưỡng bản thân', topicNum:6, vol:1,
+    grammar:['以 (yǐ)','宁可 (nìngkě)','依然 (yīrán)'],
+    keyVocab:['体会','运用','集中','推荐','度过','争取','深刻','宁可','依然'],
+    grammarDetail:[
+      {pattern:'以',full:'以 (yǐ) — để mà, dùng để (giới từ/liên từ mục đích)',explanation:'Giới từ/liên từ văn viết. Thường gặp: (1) 以 + VP = để, nhằm (mục đích); (2) 以…为… = lấy…làm…; (3) 以 = dùng, bằng.',senses:[
+        {label:'① 以 + VP — để, nhằm (mục đích)',examples:[{zh:'大家要迅速地熟悉新产品，以更好地向顾客推广。',vi:'Mọi người phải nhanh chóng làm quen sản phẩm mới, để quảng bá tới khách hàng tốt hơn.'}]},
+        {label:'② 以…为… — lấy … làm …',examples:[{zh:'他一直以帮助别人为快乐。',vi:'Anh ấy luôn lấy việc giúp đỡ người khác làm niềm vui.'}]},
+      ],tip:'💡 以 (để/nhằm) mang tính văn viết, thường đứng trước vế mục đích. Khác 为了 (đứng đầu, khẩu ngữ hơn).'},
+      {pattern:'宁可',full:'宁可 (nìngkě) — thà rằng, thà… còn hơn',explanation:'Liên từ, biểu thị sau khi so sánh, chọn phương án này dù không hoàn hảo. Thường đi với 也 / 也不 / 也要.',senses:[
+        {label:'① 宁可 A 也要 B / 也不 C',examples:[{zh:'我宁可多花点儿钱，也要买一个质量好点儿的。',vi:'Tôi thà tốn thêm chút tiền, cũng phải mua cái chất lượng tốt hơn.'},{zh:'他宁可自己吃亏，也不愿意麻烦别人。',vi:'Anh ấy thà mình chịu thiệt, cũng không muốn làm phiền người khác.'}]},
+      ],tip:'💡 宁可 A 也(不) B: chọn A dù A có cái giá của nó. Có thể đảo: 与其 C，不如 A (thà A hơn C).'},
+      {pattern:'依然',full:'依然 (yīrán) — vẫn, vẫn như cũ',explanation:'Phó từ, biểu thị tình huống vẫn giữ nguyên như trước, không thay đổi. Mang màu sắc văn viết.',senses:[
+        {label:'① Vẫn (không đổi)',examples:[{zh:'十几年过去了，她依然那么美丽。',vi:'Hơn chục năm trôi qua, cô ấy vẫn xinh đẹp như thế.'},{zh:'虽然遇到很多困难，他依然没有放弃。',vi:'Dù gặp nhiều khó khăn, anh ấy vẫn không từ bỏ.'}]},
+      ],tip:'💡 依然 ≈ 仍然 (vẫn). 依然 văn vẻ hơn; 还 (hái) khẩu ngữ hơn.'},
+    ],
+    readingTitle:'在最美好的时刻离开',
+    readingText:'人生就像一场演出，什么时候登场，什么时候离开，都很有讲究。有一种智慧，叫做\"在最美好的时刻离开\"。\n\n有一位很有名的演员，正当事业达到最高峰、观众最喜爱他的时候，突然宣布退出舞台。很多人不理解，觉得太可惜了。可他却说：\"我宁可在大家最想念我的时候离开，也不愿意等到大家厌倦我的时候才走。\"多年以后，人们回忆起他，印象依然那么深刻，那么美好。\n\n其实，生活中很多事情都是这个道理。一场旅行，在玩得最尽兴的时候结束，会给我们留下最深刻的体会；一段谈话，在最愉快的时候告别，会让彼此都感到轻松。懂得在合适的时刻停下来，是一种需要慢慢学习、灵活运用的人生智慧。\n\n当然，\"离开\"并不意味着放弃或者逃避。我们首先要全力以赴，集中精力去争取、去度过每一个美好的时刻；然后，在最恰当的时候，从容地转身。有人向我们推荐这样一种生活态度：认真对待过程，坦然面对告别。\n\n愿我们每个人都能珍惜眼前的美好，也都能拥有\"在最美好的时刻离开\"的勇气与智慧。',
+    vocab:[
+      {zh:'时刻',py:'shí kè',type:'dt.',vi:'thời khắc, khoảnh khắc',star:false},
+      {zh:'讲究',py:'jiǎng jiu',type:'đgt./tt.',vi:'cầu kỳ, chú trọng; điều cần lưu ý',star:true},
+      {zh:'智慧',py:'zhì huì',type:'dt.',vi:'trí tuệ, sự khôn ngoan',star:false},
+      {zh:'高峰',py:'gāo fēng',type:'dt.',vi:'đỉnh cao',star:false},
+      {zh:'宣布',py:'xuān bù',type:'đgt.',vi:'tuyên bố',star:false},
+      {zh:'宁可',py:'nìng kě',type:'liên.',vi:'thà rằng, thà… còn hơn',star:true},
+      {zh:'厌倦',py:'yàn juàn',type:'đgt.',vi:'chán ngán, chán chường',star:true},
+      {zh:'依然',py:'yī rán',type:'phó.',vi:'vẫn, vẫn như cũ',star:true},
+      {zh:'深刻',py:'shēn kè',type:'tt.',vi:'sâu sắc',star:true},
+      {zh:'体会',py:'tǐ huì',type:'đgt./dt.',vi:'cảm nhận, lĩnh hội',star:true},
+      {zh:'尽兴',py:'jìn xìng',type:'tt.',vi:'thỏa thích, hết mình',star:false},
+      {zh:'告别',py:'gào bié',type:'đgt.',vi:'từ biệt, tạm biệt',star:false},
+      {zh:'运用',py:'yùn yòng',type:'đgt.',vi:'vận dụng, sử dụng',star:true},
+      {zh:'意味着',py:'yì wèi zhe',type:'đgt.',vi:'có nghĩa là, ngụ ý',star:true},
+      {zh:'逃避',py:'táo bì',type:'đgt.',vi:'trốn tránh',star:false},
+      {zh:'集中',py:'jí zhōng',type:'đgt.',vi:'tập trung',star:true},
+      {zh:'精力',py:'jīng lì',type:'dt.',vi:'sức lực, tinh lực',star:false},
+      {zh:'争取',py:'zhēng qǔ',type:'đgt.',vi:'giành lấy, phấn đấu giành',star:true},
+      {zh:'度过',py:'dù guò',type:'đgt.',vi:'trải qua (thời gian)',star:true},
+      {zh:'恰当',py:'qià dàng',type:'tt.',vi:'thích đáng, phù hợp',star:true},
+      {zh:'推荐',py:'tuī jiàn',type:'đgt.',vi:'giới thiệu, tiến cử',star:true},
+      {zh:'以',py:'yǐ',type:'giới./liên.',vi:'để, dùng để; lấy… làm…',star:true},
+      {zh:'诊断',py:'zhěn duàn',type:'đgt.',vi:'chẩn đoán',star:false},
+      {zh:'病毒',py:'bìng dú',type:'dt.',vi:'vi rút',star:false},
+      {zh:'传染',py:'chuán rǎn',type:'đgt.',vi:'lây, truyền nhiễm',star:false},
+      {zh:'寿命',py:'shòu mìng',type:'dt.',vi:'tuổi thọ',star:false},
+    ]
+  },
+
+  { id:28, disp:'18', zh:'抽象艺术美不美？', vi:'Nghệ thuật trừu tượng có đẹp không?', topic:'修身养性·Tu dưỡng bản thân', topicNum:6, vol:1,
+    grammar:['极其 (jíqí)','其余 (qíyú)','哪怕 (nǎpà)'],
+    keyVocab:['调整','规则','业余','活跃','证据','事实','极其','其余','哪怕'],
+    grammarDetail:[
+      {pattern:'极其',full:'极其 (jíqí) — vô cùng, cực kỳ (phó từ)',explanation:'Phó từ chỉ mức độ cao nhất, đứng trước tính từ/động từ tâm lý (hai âm tiết). Trang trọng, văn viết.',senses:[
+        {label:'① 极其 + tính từ hai âm tiết',examples:[{zh:'我对这个人极其欣赏，我认为他很有才华。',vi:'Tôi vô cùng ngưỡng mộ người này, tôi cho rằng anh ấy rất có tài.'},{zh:'上海给我留下了极其深刻的印象。',vi:'Thượng Hải để lại cho tôi ấn tượng vô cùng sâu sắc.'}]},
+      ],tip:'⚠️ 极其 chỉ dùng với từ hai âm tiết, không nói ✗极其好 (nên dùng 非常好). 极了 thì đứng sau: 好极了.'},
+      {pattern:'其余',full:'其余 (qíyú) — phần còn lại, những cái khác',explanation:'Đại từ, chỉ phần còn lại ngoài phần đã nêu. Làm chủ ngữ, tân ngữ hoặc định ngữ.',senses:[
+        {label:'① Phần còn lại',examples:[{zh:'我只认识这两个字，其余都不认识。',vi:'Tôi chỉ biết hai chữ này, những chữ còn lại đều không biết.'},{zh:'除了他，其余的人都同意了。',vi:'Ngoài anh ấy ra, những người còn lại đều đồng ý.'}]},
+      ],tip:'💡 其余 = 剩下的、别的. Thường dùng sau khi đã nêu một phần cụ thể.'},
+      {pattern:'哪怕',full:'哪怕 (nǎpà) — cho dù, dẫu cho (giả thiết nhượng bộ)',explanation:'Liên từ, nêu điều kiện giả định cực đoan, vế sau thường có 也/都 biểu thị kết quả không đổi.',senses:[
+        {label:'① 哪怕 A，也 B',examples:[{zh:'哪怕熬夜，我今天也得把这个计划做完。',vi:'Cho dù thức khuya, hôm nay tôi cũng phải làm xong kế hoạch này.'},{zh:'哪怕是一分钟他也不愿意再等了。',vi:'Dẫu chỉ một phút anh ấy cũng không muốn đợi thêm.'}]},
+      ],tip:'💡 哪怕 ≈ 即使 / 就算 (cho dù). 哪怕 khẩu ngữ hơn, thường + con số/tình huống cực đoan, vế sau 也/都.'},
+    ],
+    readingTitle:'抽象艺术美不美？',
+    readingText:'走进美术馆，面对一幅抽象派大师的作品，很多人都会感到困惑：这上面只有一些不规则的色块和线条，既看不出画的是人，也看不出画的是景，这样的画到底美不美？\n\n有人认为，抽象艺术根本谈不上美。他们说，一幅画连画的是什么都看不懂，凭什么被称为艺术？也有人举出各种\"证据\"，说有些抽象画其实是随手乱画出来的。\n\n但欣赏抽象艺术的人却不这么看。他们认为，抽象艺术的价值，正在于它不去简单地\"再现\"某个具体的事物，而是用色彩和形状直接表达艺术家内心的情感。它需要观众发挥想象，用心去感受，而不是只用眼睛去\"认\"。事实上，很多看似简单的作品，背后往往下了极其深的功夫。\n\n其实，艺术欣赏本来就没有绝对统一的标准。有人喜欢写实的风格，有人偏爱抽象的表达，这就像有人喜欢热闹、有人喜欢安静一样，其余的评价都是次要的。哪怕你暂时看不懂，也不必急着否定它。\n\n所以，抽象艺术美不美，也许并没有一个标准答案。重要的是，我们能不能带着开放和欣赏的心态，去调整自己的眼光，让自己的内心变得更加丰富、更加活跃。',
+    vocab:[
+      {zh:'抽象',py:'chōu xiàng',type:'tt.',vi:'trừu tượng',star:true},
+      {zh:'艺术',py:'yì shù',type:'dt.',vi:'nghệ thuật',star:false},
+      {zh:'困惑',py:'kùn huò',type:'tt./đgt.',vi:'bối rối, khó hiểu',star:false},
+      {zh:'规则',py:'guī zé',type:'dt./tt.',vi:'quy tắc; theo quy tắc',star:true},
+      {zh:'色块',py:'sè kuài',type:'dt.',vi:'mảng màu',star:false},
+      {zh:'线条',py:'xiàn tiáo',type:'dt.',vi:'đường nét',star:false},
+      {zh:'证据',py:'zhèng jù',type:'dt.',vi:'bằng chứng, chứng cứ',star:true},
+      {zh:'再现',py:'zài xiàn',type:'đgt.',vi:'tái hiện',star:false},
+      {zh:'色彩',py:'sè cǎi',type:'dt.',vi:'màu sắc',star:false},
+      {zh:'表达',py:'biǎo dá',type:'đgt.',vi:'biểu đạt, diễn đạt',star:true},
+      {zh:'想象',py:'xiǎng xiàng',type:'đgt./dt.',vi:'tưởng tượng',star:true},
+      {zh:'事实',py:'shì shí',type:'dt.',vi:'sự thật, thực tế',star:true},
+      {zh:'极其',py:'jí qí',type:'phó.',vi:'vô cùng, cực kỳ',star:true},
+      {zh:'功夫',py:'gōng fu',type:'dt.',vi:'công phu, công sức',star:false},
+      {zh:'欣赏',py:'xīn shǎng',type:'đgt.',vi:'thưởng thức, ngưỡng mộ',star:true},
+      {zh:'标准',py:'biāo zhǔn',type:'dt./tt.',vi:'tiêu chuẩn',star:false},
+      {zh:'写实',py:'xiě shí',type:'tt.',vi:'tả thực',star:false},
+      {zh:'其余',py:'qí yú',type:'đại.',vi:'phần còn lại, những cái khác',star:true},
+      {zh:'哪怕',py:'nǎ pà',type:'liên.',vi:'cho dù, dẫu cho',star:true},
+      {zh:'否定',py:'fǒu dìng',type:'đgt.',vi:'phủ định, bác bỏ',star:true},
+      {zh:'调整',py:'tiáo zhěng',type:'đgt.',vi:'điều chỉnh',star:true},
+      {zh:'活跃',py:'huó yuè',type:'tt./đgt.',vi:'sôi nổi, tích cực; làm sôi nổi',star:true},
+      {zh:'业余',py:'yè yú',type:'tt.',vi:'nghiệp dư; ngoài giờ',star:true},
+      {zh:'录音',py:'lù yīn',type:'đgt./dt.',vi:'ghi âm',star:false},
+      {zh:'麦克风',py:'mài kè fēng',type:'dt.',vi:'micro',star:false},
+      {zh:'频道',py:'pín dào',type:'dt.',vi:'kênh (truyền hình)',star:false},
+      {zh:'乐器',py:'yuè qì',type:'dt.',vi:'nhạc cụ',star:false},
+    ]
+  }
+];
+// Gộp Bài 11–18 (上) vào cuối danh sách, đặt vol:1 để hiển thị trong Tập 1.
+LESSONS.push.apply(LESSONS, HSK5_TAP1_EXTRA);
+
+
+// ═══════════════════════════════════════════════
 // EXTRA VOCAB — bổ sung các từ/cụm còn thiếu trong bài đọc Bài 1-10
 // ═══════════════════════════════════════════════
 const SUPPLEMENT_VOCAB = {
@@ -3579,7 +3959,7 @@ function updateStreak() {
   document.getElementById('sidebar-streak').textContent = s;
   document.getElementById('stat-streak').textContent = s;
   const done = STATE.completedLessons.length;
-  document.getElementById('overall-progress-label').textContent = done+'/20 bài';
+  document.getElementById('overall-progress-label').textContent = done+'/'+((typeof LESSONS!=='undefined'&&LESSONS.length)?LESSONS.length:20)+' bài';
   document.getElementById('overall-progress-fill').style.width = (done/20*100)+'%';
   document.getElementById('stat-done').textContent = done;
   const reviewCount = Object.values(STATE.knownWords).filter(v=>v==='again'||v==='hard').length;
@@ -3750,7 +4130,7 @@ function renderLessonList() {
   if(sel.options.length <= 1) {
     LESSONS.forEach(l=>{
       const opt = document.createElement('option');
-      opt.value = l.id; opt.textContent = `Bài ${l.id}: ${l.zh}`;
+      opt.value = l.id; opt.textContent = `Bài ${l.disp||l.id}: ${l.zh}`;
       sel.appendChild(opt);
     });
   }
@@ -3758,7 +4138,7 @@ function renderLessonList() {
   document.getElementById('lesson-detail-view').style.display = 'none';
   document.getElementById('lesson-page-title').textContent = 'Chọn bài học';
 
-  const vols = [{label:'Tập 1 (上) · Bài 1–10', vol:1},{label:'Tập 2 (下) · Bài 11–20', vol:2}];
+  const vols = [{label:'Tập 1 (上) · Bài 1–18', vol:1},{label:'Tập 2 (下) · Bài 11–20', vol:2}];
   document.getElementById('lesson-grid').innerHTML = vols.map(v=>`
     <div style="margin-bottom:24px">
       <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">${v.label}</div>
@@ -3768,7 +4148,7 @@ function renderLessonList() {
           const current = l.id === STATE.currentLesson;
           return `<div class="section-card" style="cursor:pointer;${current?'border-color:var(--teal);border-width:2px':''}" onclick="loadLesson(${l.id})">
             <div style="padding:14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
-              <div style="width:36px;height:36px;border-radius:8px;background:${done?'var(--teal)':current?'var(--teal-light)':'var(--paper2)'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${done?'white':current?'var(--teal)':'var(--muted)'};flex-shrink:0">${done?'✓':l.id}</div>
+              <div style="width:36px;height:36px;border-radius:8px;background:${done?'var(--teal)':current?'var(--teal-light)':'var(--paper2)'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${done?'white':current?'var(--teal)':'var(--muted)'};flex-shrink:0">${done?'✓':(l.disp||l.id)}</div>
               <div style="min-width:0">
                 <div class="zh" style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.zh}</div>
                 <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.vi}</div>
@@ -3794,7 +4174,7 @@ function loadLesson(id) {
   const lesson = LESSONS.find(l=>l.id===id);
   if(!lesson) return;
   document.getElementById('lesson-selector').value = id;
-  document.getElementById('lesson-page-title').textContent = `Bài ${id}: ${lesson.zh}`;
+  document.getElementById('lesson-page-title').textContent = `Bài ${lesson.disp||id}: ${lesson.zh}`;
   document.getElementById('lesson-page-sub').textContent = lesson.vi;
   document.getElementById('lesson-list-view').style.display = 'none';
   const detail = document.getElementById('lesson-detail-view');
@@ -5726,6 +6106,285 @@ function renderTextbookCourseExercises(lesson) {
 }
 
 
+
+// ═══════════════════════════════════════════════
+// Bài tập giáo trình (词语辨析 / 练习1 / 练习2 / 练习3 / 扩展) — Bài 11–18 (上, 第11–18课)
+// id 21–28. Trích đúng đáp án "Giáo trình chuẩn HSK 5 (tập 1) – Sách bài học – Đáp án".
+// ═══════════════════════════════════════════════
+Object.assign(TEXTBOOK_COURSE_EXERCISES, {
+  "21": { // 第11课 闹钟的危害
+    distinction: [
+      { title: "词语辨析：持续 / 继续", explain: "<b>持续</b> (chíxù): \"kéo dài liên tục\" — nhấn <b>trạng thái/quá trình duy trì không gián đoạn</b> (雨持续下、活动持续到…).<br><b>继续</b> (jìxù): \"tiếp tục\" — nhấn <b>nối tiếp lại</b> việc đã bắt đầu, có thể sau khi dừng (继续前进、继续学习).<br>👉 持续 + trạng thái liền mạch; 继续 + hành động nối tiếp.", bank:["持续","继续"], items:[
+        ["天气预报说，这样的高温还将____一个星期。","持续"],
+        ["这次的宣传活动将____到9月底。","持续"],
+        ["不管你是快乐还是难过，生活总要____下去。","持续 / 继续"],
+        ["朋友是在你失败时，鼓励你____前进的人。","继续"]
+      ]}
+    ],
+    vocabFill: { bank:["必要","导致","所","过渡","规律","享受"], items:[
+      ["在婚姻问题上，听听父母的意见还是很有____的。","必要"],
+      ["由于近一个月来没有降水，____河水水位持续下降。","导致"],
+      ["正如你____估计的那样，李岩确实改变了主意。","所"],
+      ["擦擦办公桌，整理一下文件，这些都可以让你从放松的休息状态自然____到工作状态。","过渡"],
+      ["生命在于运动，有____的运动对于身体健康大有好处。","规律"],
+      ["为了____轻松的生活，夫妻俩决定把家搬到这个安静的小镇。","享受"]
+    ]},
+    choose: [
+      ["实验失败了没关系，打起____从头再来。",["精力","精神"],1],
+      ["每晚抽出点儿时间用来阅读、学习，坚持____年之后，成功就会向你招手。",["数","几"],0],
+      ["作为孩子的父母，我们当然____他能成为一个有用的人才。",["希望","愿望"],0],
+      ["他的行为已经严重____到了社会安全。",["危害","伤害"],0]
+    ],
+    extra: { title:"扩展 · 做一做（选词填空）", bank:["地毯","书架","玩具","抽屉"], items:[
+      ["这块____是去年夏天我和太太去新疆旅游时买回来的，她很喜欢。","地毯"],
+      ["李阳很喜欢作家老舍，____上摆满了他不同时期的作品。","书架"],
+      ["我建议您给孩子买这个____火车，这个牌子很有名。","玩具"],
+      ["我把光盘放在书桌左边的第二个____里了。","抽屉"]
+    ]}
+  },
+
+  "22": { // 第12课 海外用户玩儿微信
+    distinction: [
+      { title: "词语辨析：发达 / 发展", explain: "<b>发达</b> (fādá): \"phát triển, phát đạt\" — <b>tính từ</b>, chỉ trạng thái đã phát triển cao, hưng thịnh (经济发达、大脑发达).<br><b>发展</b> (fāzhǎn): \"phát triển\" — <b>động từ/danh từ</b>, chỉ quá trình lớn mạnh dần lên (发展经济、事业的发展).<br>👉 发达 = trạng thái (đã cao); 发展 = quá trình (đang lên).", bank:["发达","发展"], items:[
+        ["这座城市交通十分____，去哪里都很方便。","发达"],
+        ["人们常说这种动物不聪明，其实它的大脑很____。","发达"],
+        ["方便的交通是____经济的基础。","发展"],
+        ["她的病情____得比我们想象的还要快。","发展"]
+      ]}
+    ],
+    vocabFill: { bank:["推广","召开","逗","注册","业务","合作"], items:[
+      ["为了____这项新产品，公司做了很多宣传。","推广"],
+      ["原本定在周三上午____的会议改时间了。","召开"],
+      ["你做这么多事，难道只是为了____女朋友开心？","逗"],
+      ["要想在这个网站购物，你必须先____一个它的邮箱。","注册"],
+      ["那个新来的销售员这个月做成了三笔大____，真厉害！","业务"],
+      ["我们跟这家公司____过两次，很愉快。","合作"]
+    ]},
+    choose: [
+      ["像这样能够给全社会信心与快乐的事情，我们应该重点____。",["宣传","广告"],0],
+      ["要吃中国菜，你首先要学会____筷子。",["使用","应用"],0],
+      ["过了这么多年，我的愿望终于____了！",["表现","实现"],1],
+      ["这是我的____爱好，跟我学什么专业没有关系。",["个人","个别"],0]
+    ],
+    placement: [
+      ["这个问题是在 A 什么样的 B 背景 C 提出来的 D？（下）",["A","B","C","D"],2],
+      ["公司新开发 A 的 B 产品 C 很受消费者 D 欢迎。（出）",["A","B","C","D"],0],
+      ["本店销售电视、冰箱、洗衣机 A 其他 B 电器 C，D 应有尽有。（以及）",["A","B","C","D"],0],
+      ["A 这个问题，B 我们 C 开会 D 讨论了好几次。（针对）",["A","B","C","D"],0]
+    ],
+    extra: { title:"扩展 · 做一做（选词填空）", bank:["充电器","系统","数据","信号"], items:[
+      ["我忘带手机____了，得节省着用，先关机吧。","充电器"],
+      ["汉字是一个整体的____，字与字之间是有联系的。","系统"],
+      ["调查____显示，用户们对微信的服务很满意。","数据"],
+      ["喂，您说什么？我听不清。这里____不太好。","信号"]
+    ]}
+  },
+
+  "23": { // 第13课 锯掉生活的"筐底"
+    distinction: [
+      { title: "词语辨析：激烈 / 强烈", explain: "<b>激烈</b> (jīliè): \"gay gắt, kịch liệt\" — nhấn <b>xung đột, đối kháng, mức độ dữ dội</b> (竞争激烈、比赛激烈、激烈的争论).<br><b>强烈</b> (qiángliè): \"mãnh liệt, mạnh mẽ\" — nhấn <b>cường độ mạnh của cảm xúc/yêu cầu/ánh sáng…</b> (强烈要求、强烈的愿望、强烈的阳光).<br>👉 激烈 + đối kháng/tranh đấu; 强烈 + cường độ cảm xúc/tác động.", bank:["激烈","强烈"], items:[
+        ["经过一番____的讨论，大家终于达成了一致。","激烈"],
+        ["明天我去一家公司面试，听说竞争很____。","激烈"],
+        ["当晚的比赛紧张、____，两队都打出了很高的水平。","激烈"],
+        ["学生们____要求重新安排考试。","强烈"]
+      ]}
+    ],
+    vocabFill: { bank:["气氛","连忙","仿佛","重复","造成","缺乏"], items:[
+      ["今天的晚会你们组织得相当好，____搞得轻松愉快。","气氛"],
+      ["一觉醒来发现已经8点多了，李阳____穿好衣服往公司赶。","连忙"],
+      ["他一边听，一边在本子上记着什么，____对我的发言挺感兴趣似的。","仿佛"],
+      ["心理学家指出，一个人的动作或想法，如果____二十一天就会形成习惯。","重复"],
+      ["每天大量饮酒确实给我的身体健康____了很大的伤害。","造成"],
+      ["在食物____的季节，动物为了活下去就只能多睡觉。","缺乏"]
+    ]},
+    choose: [
+      ["要整理的东西太多了，你看，这个箱子根本____不下。",["装","放"],0],
+      ["昨晚我失眠了，睡不着就躺着____书，结果不知不觉天就亮了。",["读","看"],1],
+      ["即使在现代社会里，故事仍然是人们生活中不可____的一部分。",["缺少","缺乏"],0],
+      ["你们知道中国人除夕夜守岁、放鞭炮的风俗是怎么____的吗？",["形成","造成"],0]
+    ],
+    placement: [
+      ["您多画点儿画儿多好，A 把 B 时间 C 浪费在 D 这些人的身上？（何必）",["A","B","C","D"],0],
+      ["年轻人恐怕都受不了，A 一个 B 有病的 C 老人 D 呢？（何况）",["A","B","C","D"],0],
+      ["A 你提醒，B 要不我 C 肯定 D 忘了下午还要开会。（多亏）",["A","B","C","D"],0],
+      ["经历了那件事后，我 A 一夜 B 之间 C 长大 D 成人了。（仿佛）",["A","B","C","D"],0]
+    ],
+    extra: { title:"扩展 · 做一做（选词填空）", bank:["武术","太极拳","象棋","对手","冠军"], items:[
+      ["____是中国传统的体育项目，____是其中重要的组成部分。","武术 / 太极拳"],
+      ["我认识一位大学的体育老师，他____下得可棒了。","象棋"],
+      ["打羽毛球你可不是我的____，不管打多少场你也赢不了。","对手"],
+      ["他决心苦练一年，好在下次比赛时打败对方，拿回____的奖杯。","冠军"]
+    ]}
+  },
+
+  "24": { // 第14课 北京的四合院
+    distinction: [
+      { title: "词语辨析：通常 / 常常", explain: "<b>通常</b> (tōngcháng): \"thông thường, thường lệ\" — nhấn <b>tình huống chung, theo lệ thường</b>, thường làm định ngữ/trạng ngữ đầu câu (通常情况下、通常都…).<br><b>常常</b> (chángcháng): \"thường xuyên\" — nhấn <b>tần suất lặp lại nhiều lần</b> của hành động (常常去、常常迟到).<br>👉 通常 = theo lệ thường (khái quát); 常常 = hay, nhiều lần (tần suất).", bank:["通常","常常"], items:[
+        ["中国北方的冬天____都很冷。","通常"],
+        ["____除夕晚上都要放鞭炮、吃饺子。","通常"],
+        ["在____情况下，火车是不会晚点的。","通常"],
+        ["周末他____去父母家过。","常常"]
+      ]}
+    ],
+    vocabFill: { bank:["具备","日常","浓","广泛","组合","矛盾"], items:[
+      ["现在的手机都____很多功能，不再只是个打电话的工具。","具备"],
+      ["刚开始学中文的时候，我学的主要是一些____用语。","日常"],
+      ["今天雾很____，对面的建筑都看不清了。","浓"],
+      ["这个问题需要进行____调查，然后才能做出决定。","广泛"],
+      ["这本书是由三个部分____起来的。","组合"],
+      ["老人家里有两个儿子，他们俩常常闹____。","矛盾"]
+    ]},
+    choose: [
+      ["手机已经成为人们生活中的重要____部分。",["组成","组合"],0],
+      ["他的兴趣爱好非常____，跟谁都能聊到一块儿。",["广泛","广大"],0],
+      ["他坚持锻炼，____身体很好。",["因为","因而"],1],
+      ["是那位工程师____我把机器安装在这儿。",["叫","让"],1]
+    ],
+    extra: { title:"扩展 · 做一做（选词填空）", bank:["阳台","宿舍","单元","隔壁"], items:[
+      ["这套房子除了客厅、卧室、厨房、卫生间，还有两个大____。","阳台"],
+      ["我在外面租了套公寓，但下学期我想搬到学校____去住。","宿舍"],
+      ["我家住在学知小区一号楼二____403。","单元"],
+      ["她就住在我家____，是我的邻居。","隔壁"]
+    ]}
+  },
+
+  "25": { // 第15课 纸上谈兵
+    distinction: [
+      { title: "词语辨析：胜利 / 成功", explain: "<b>胜利</b> (shènglì): \"thắng lợi\" — nhấn <b>giành phần thắng trong đấu tranh/thi đấu/chiến tranh</b> (取得胜利、比赛胜利).<br><b>成功</b> (chénggōng): \"thành công\" — nhấn <b>đạt được mục tiêu, việc làm có kết quả tốt</b> (成功地说服、事业成功).<br>👉 胜利 + đối kháng/thắng thua; 成功 + đạt mục tiêu.", bank:["胜利","成功"], items:[
+        ["经过艰苦的努力，他们终于取得了这场比赛的____。","胜利"],
+        ["得民心者才会赢得这场战争的____。","胜利"],
+        ["她____地说服了丈夫放弃了搬家的打算。","成功"],
+        ["座谈会开得很____，大家交换了意见，增进了理解。","成功"]
+      ]}
+    ],
+    vocabFill: { bank:["阻止","宝贵","善于","糊涂","挑战","独立"], items:[
+      ["我见朋友的小孩怎么也打不开房门，就想帮他，却被朋友____了。","阻止"],
+      ["任何经验都是____的，但并不是任何时候都是有效的。","宝贵"],
+      ["社会上的成功人士，有不少都____记住别人的名字。","善于"],
+      ["你这脑子可真____，银行卡的密码怎么能忘了呢？","糊涂"],
+      ["跳伞运动以自身的惊险和____性，被世人称为\u201c勇敢者的运动\u201d。","挑战"],
+      ["家长应尽量创造一个能让孩子____生活和学习的环境。","独立"]
+    ]},
+    choose: [
+      ["我____以为这一生我只能做一个普普通通的工人了。",["曾经","已经"],0],
+      ["师傅，最近我这车出了点儿____，空调总是不太凉。",["缺点","毛病"],1],
+      ["父母给我讲了许多做人的____，对我的影响很大。",["理由","道理"],1],
+      ["我相信这样的安排他是____不会同意的。",["绝对","一定"],0]
+    ],
+    extra: { title:"扩展 · 做一做（选词填空）", bank:["枪","胜利","英雄","射击"], items:[
+      ["猎人被眼前的情景吓傻了，慌乱地连开了几____。","枪"],
+      ["我们已经走完一大半了，坚持就是____。","胜利"],
+      ["花木兰是中国古代的女____，她替父参军并打败敌人，从而闻名天下。","英雄"],
+      ["在1896年的奥运会上，____就被列为了正式比赛项目。","射击"]
+    ]}
+  },
+
+  "26": { // 第16课 体重与节食
+    distinction: [
+      { title: "词语辨析：暂时 / 临时", explain: "<b>暂时</b> (zànshí): \"tạm thời\" — nhấn <b>khoảng thời gian ngắn trước mắt</b>, trái với lâu dài (暂时的困难、暂时休息).<br><b>临时</b> (línshí): \"lâm thời, tạm thời (đột xuất)\" — nhấn <b>không cố định/phát sinh đột xuất</b> (临时工、临时决定、临时有事).<br>👉 暂时 = trong lúc này (ngắn hạn); 临时 = tạm/đột xuất (không chính thức).", bank:["暂时","临时"], items:[
+        ["刘总昨天____有事去上海了，会取消了。","临时"],
+        ["演出结束，我想____休息一段时间，考虑一下明年的工作。","暂时"],
+        ["公司遇到一些____的困难，我们正在积极想办法。","暂时"],
+        ["这件事你____先不要告诉他。","暂时"]
+      ]}
+    ],
+    vocabFill: { bank:["参与","达到","可靠","总共","借口","采取"], items:[
+      ["教师要让学生主动____班集体管理，锻炼他们的能力。","参与"],
+      ["许多人喜爱喝茶，几乎____不可一日无茶的程度。","达到"],
+      ["听声音判断水瓶是否保温的方法并不____。","可靠"],
+      ["您好，您____消费了747元。您刷卡还是付现金？","总共"],
+      ["他____家里有事，提前离开了会场。","借口"],
+      ["我们虽然还不能准确预报地震，但可以____有效措施，最大限度地保护我们的财产。","采取"]
+    ]},
+    choose: [
+      ["研究发现，父亲对教育子女的____程度越高，孩子就越聪明。",["参与","参加"],0],
+      ["调查结果显示，市民对电子阅读的兴趣____提高了。",["明显","显然"],0],
+      ["我本来想完成这个计划以后再去美国，____现在那边有更重要的事，不得不提前去。",["结论","结果"],1],
+      ["关于空气质量问题，现在报纸、网络上相关的____特别多，大家讨论得也很热闹。",["报告","报道"],1]
+    ],
+    extra: { title:"扩展 · 做一做（选词填空）", bank:["打喷嚏","过敏","痒","消化"], items:[
+      ["你是不是着凉了？怎么一直在____？","打喷嚏"],
+      ["一到春天开花的时候，我的鼻子就____。","过敏"],
+      ["我身上也不知道被什么咬了，特别____。","痒"],
+      ["当初人们发明乒乓球是为了饭后做些运动帮助____食物的。","消化"]
+    ]}
+  },
+
+  "27": { // 第17课 在最美好的时刻离开
+    distinction: [
+      { title: "词语辨析：忽视 / 轻视", explain: "<b>忽视</b> (hūshì): \"xem nhẹ, bỏ sót, không để ý\" — nhấn <b>không chú ý tới, bỏ quên</b> (忽视了交流、忽视细节).<br><b>轻视</b> (qīngshì): \"coi thường, xem thường\" — nhấn <b>thái độ khinh thường, đánh giá thấp</b> đối tượng (轻视对手、轻视别人).<br>👉 忽视 = không để ý (vô tình bỏ qua); 轻视 = coi thường (thái độ chủ quan).", bank:["忽视","轻视"], items:[
+        ["细节虽小，但绝不能____。","忽视"],
+        ["我们过多地看电视、玩手机，____了家人之间的交流。","忽视"],
+        ["虽然这是一份平常的工作，你也不能____，要认真做好。","轻视"],
+        ["你不要因为他是小孩子就____他。","轻视"]
+      ]}
+    ],
+    vocabFill: { bank:["体会","运用","集中","推荐","度过","争取"], items:[
+      ["我刚开始学滑雪的时候，最大的____就是要放松，越紧张越容易摔倒。","体会"],
+      ["学知识不能死记硬背，要懂得灵活地____。","运用"],
+      ["你复习时要____注意力，效果才会好。","集中"],
+      ["一些现代营养学专家常常向大家____\u201c餐餐有蔬菜，每天有水果\u201d。","推荐"],
+      ["我在外公外婆身边____了美好的童年。","度过"],
+      ["机会要靠自己去____。","争取"]
+    ]},
+    choose: [
+      ["大家要迅速地熟悉新产品，____更好地向顾客推广。",["为","以"],1],
+      ["这次旅行给我留下了____的印象。",["深刻","深厚"],0],
+      ["这部电影很____，我觉得没必要去看。",["平常","平静"],0],
+      ["他被____为本校今年的十大\u201c优秀毕业生\u201d之一。",["评","选"],0]
+    ],
+    placement: [
+      ["事情发生后，A 领导 B 采取了 C 措施，D 积极应对。（迅速）",["A","B","C","D"],1],
+      ["三 A 加五 B 是 C 八 D 吗？（等于）",["A","B","C","D"],2],
+      ["十几年过去了，A 她 B 那么 C 美丽 D。（依然）",["A","B","C","D"],1],
+      ["我 A 多花点儿钱，B 也要 C 买一个 D 质量好点儿的。（宁可）",["A","B","C","D"],0]
+    ],
+    extra: { title:"扩展 · 做一做（选词填空）", bank:["诊断","病毒","传染","寿命"], items:[
+      ["医生还在为他____病情，请耐心地等待。","诊断"],
+      ["我的电脑速度越来越慢了，是不是中了____？","病毒"],
+      ["这是一种新型的____病，可能会在人和动物之间传播。","传染"],
+      ["海龟的____最长可达150多年，是动物中当之无愧的老寿星。","寿命"]
+    ]}
+  },
+
+  "28": { // 第18课 抽象艺术美不美？
+    distinction: [
+      { title: "词语辨析：目前 / 现在", explain: "<b>目前</b> (mùqián): \"hiện nay, trước mắt\" — thiên <b>văn viết, nhấn tình hình trong giai đoạn hiện tại</b> (目前的情况、目前还无法…).<br><b>现在</b> (xiànzài): \"bây giờ\" — <b>khẩu ngữ, chỉ thời điểm hiện tại</b>, phạm vi rộng hơn (现在几点、现在的年轻人).<br>👉 目前 ≈ 现在 nhưng trang trọng hơn, nhấn \"giai đoạn hiện thời\"; 现在 dùng linh hoạt hơn.", bank:["目前","现在"], items:[
+        ["这项技术____还不成熟，需要进一步研究。","目前"],
+        ["选择性失忆____还无法治疗。","目前 / 现在"],
+        ["调查显示，66.9%的女性对____的工作不满意。","目前 / 现在"],
+        ["____的年轻人，跟我们那时候真不一样！","现在"]
+      ]}
+    ],
+    vocabFill: { bank:["幅","调整","规则","业余","活跃","证据"], items:[
+      ["书房的墙上挂着一____静物画。","幅"],
+      ["因为销售情况不太好，我们正准备____产品价格。","调整"],
+      ["这块布上只有一些不____的色块，我看不出来画的是什么。","规则"],
+      ["我们只是一支____的乐队，不够专业水平。","业余"],
+      ["每次晚会他都是主持人，要靠他来____气氛。","活跃"],
+      ["如果没有可靠的____，你就不能这么说。","证据"]
+    ]},
+    choose: [
+      ["那个人长得____丑。",["非常","极其"],0],
+      ["这次展出的一____服装是由七____戏服组成的。",["组 / 套","套 / 组"],0],
+      ["可能出门时我____把钥匙放在门口的桌子上了。",["随手","随便"],0],
+      ["我认为你们其实忽略了一个十分重要的____。",["事实","事情"],0]
+    ],
+    placement: [
+      ["我对这个人 A 欣赏，B 我 C 认为他 D 很有才华。（极其）",["A","B","C","D"],0],
+      ["这是我 A 新 B 的 C 作品，D 请您过目。（设计）",["A","B","C","D"],1],
+      ["我只认识这两个字，A 都 B 不 C 认识 D。（其余）",["A","B","C","D"],0],
+      ["A 熬夜，B 我今天 C 也得 D 把这个计划做完。（哪怕）",["A","B","C","D"],0]
+    ],
+    extra: { title:"扩展 · 做一做（选词填空）", bank:["录音","麦克风","频道","乐器"], items:[
+      ["在____设备发明之前，没有人注意到你的声音在自己听来和别人听来是不一样的。","录音"],
+      ["主持人，你胸前的____歪了，请调整一下。","麦克风"],
+      ["这个连续剧最近好几个____都在放，你看了没有？","频道"],
+      ["除了钢琴，我没有学过别的____。","乐器"]
+    ]}
+  }
+});
+
 const TEXTBOOK_GRAMMAR_DRILLS = {
   1:[
     {title:'如何',items:[{text:'请你说一说，____。',hint:'如何'},{text:'A：____？\nB：他们相敬如宾，关系很好。',hint:'如何'},{text:'A：你能不能简单地叙述一下那部电影的内容？\nB：____。',hint:'如何'}]},
@@ -5821,15 +6480,14 @@ function getAudioURL(lessonId, part) {
   const base = 'https://archive.org/download/hsk-5-11-2/';
   // Trên archive.org item hsk-5-11-2 dùng dấu "+" và "（）" là ký tự thật trong tên file.
   // Chỉ dùng encodeURI (mã hoá khoảng trắng + chữ Hán), KHÔNG encode dấu "+".
-  if(lessonId <= 10) {
-    // App bài 1-10 = HSK 5上 练习册 Unit 1-10, có folder con.
-    const path = `HSK 5上 Workbook Audio/HSK 5上 Workbook Unit ${parseInt(lessonId)}/HSK标准教程+5（上）练习册音频+${n}-${part}.mp3`;
+  // App bài 1-18 = HSK 5上 (练习册 Unit 1-18). File nằm TRỰC TIẾP ở gốc item,
+  // tên dạng "HSK标准教程+5（上）练习册音频+01-1.mp3" ... "+18-2.mp3".
+  if(lessonId >= 1 && lessonId <= 18) {
+    const path = `HSK标准教程+5（上）练习册音频+${n}-${part}.mp3`;
     return base + encodeURI(path);
   } else {
-    // App bài 11-20 = HSK 5下 练习册 Unit 19-28 (offset +8). File nằm ở gốc item, tên dạng "HSK5下练习册+19-1.mp3".
-    const wbNum = lessonId + 8;
-    const wn = String(wbNum).padStart(2,'0');
-    const path = `HSK5下练习册+${wn}-${part}.mp3`;
+    // App bài 19+ = HSK 5下 练习册, tên dạng "HSK5下练习册+19-1.mp3".
+    const path = `HSK5下练习册+${n}-${part}.mp3`;
     return base + encodeURI(path);
   }
 }
@@ -6497,6 +7155,59 @@ const WORKBOOK = {
   19:{writing:{p1:{label:'第一部分 (题29-31)',desc:'完成句子',questions:[{words:['估计','需要','准确的','事先做出','我们'],ans:'我们需要事先做出准确的估计。'},{words:['你','已经','一切','拥有的','请珍惜'],ans:'请珍惜你已经拥有的一切。'},{words:['把','吓坏了','都','老板的责备','职员们'],ans:'老板的责备把职员们都吓坏了。'}]},p2:{label:'第二部分 (题32)',desc:'写短文',words:['教训','把握','吸取','原则','后果'],prompt:'请结合下列词语（要全部使用，顺序不分先后），写一篇80字左右的短文。'}}},
   20:{writing:{p1:{label:'第一部分 (题29-31)',desc:'完成句子',questions:[{words:['是','的','在','她的反应','正常范围内'],ans:'她的反应是在正常范围内的。'},{words:['到达了','代表们','会场','陆续','已经'],ans:'代表们已经陆续到达了会场。'},{words:['可以','他的','给你','成长过程','参考'],ans:'他的成长过程可以给你参考。'}]},p2:{label:'第二部分 (题32)',desc:'写短文',words:['前途','行业','体验','缺乏','显然'],prompt:'请结合下列词语（要全部使用，顺序不分先后），写一篇80字左右的短文。'}}},
 };
+
+
+// ═══════════════════════════════════════════════
+// Dữ liệu 练习册 (Sách bài tập) cho Bài 11–18 上 — id 21–28.
+// 书写 (viết) lấy đúng đáp án "HSK 标准教程 5 上 · 练习册答案".
+// Phần nghe (听力) & đáp án đọc: dùng lại DATA/听力文本 của bài 11–18 上 đã có sẵn trong app.
+// ═══════════════════════════════════════════════
+(function(){
+  // 1) 书写 (完成句子) — đáp án 练习册 第11–18课 上
+  var WB_WRITING = {
+    21:{p1:['放慢脚步是为了享受生活。','人偶尔情绪低落是很正常的。','雷阵雨持续的时间一般都较短。'],
+        words:['规律','导致','必要','享受','过渡']},
+    22:{p1:['我曾经针对留学生做过一项调查。','请给我一次实现愿望的机会。','你不要用筷子敲打碗、盘子以及桌面。'],
+        words:['推广','注册','使用','以及','实现']},
+    23:{p1:['我们的训练学校缺乏在室内进行的运动项目。','一再重复的暂停行为影响了比赛的气氛。','这次的宣传推广活动是受他们公司的启发。'],
+        words:['气氛','仿佛','重复','造成','缺乏']},
+    24:{p1:['北京四合院的样式很具有代表性。','该产品已经具备了基本功能。','我很感激那位亲切的长辈曾经给我的帮助。'],
+        words:['具备','组成','日常','广泛','矛盾']},
+    25:{p1:['他对这种军事理论有很深的理解。','谁都没有资格轻视别人。','这个故事讽刺的是那些不懂得灵活变通的人。'],
+        words:['阻止','宝贵','善于','独立','挑战']},
+    26:{p1:['这次总共有两百多人来报名。','医生决定采取中医的治疗方法。','经理觉得小刘办事不太可靠。'],
+        words:['参与','达到','可靠','采取','借口']},
+    27:{p1:['他要给自己争取更多的时间。','老刘刚给我推荐了一份工作。','这是最容易被人忽视的细节。'],
+        words:['体会','集中','推荐','度过','争取']},
+    28:{p1:['上海给我留下了极其深刻的印象。','哪怕是一分钟他也不愿意再等了。','成语\u201c画龙点睛\u201d便出自关于他的传说。'],
+        words:['调整','规则','活跃','事实','其余']}
+  };
+  if(typeof WORKBOOK !== 'undefined'){
+    Object.keys(WB_WRITING).forEach(function(k){
+      var w = WB_WRITING[k];
+      WORKBOOK[k] = { writing: {
+        p1: { label:'第一部分 (题29-31)', desc:'完成句子（参考答案）',
+          questions: w.p1.map(function(s){ return { words: s.replace(/[。！？]/g,'').split(''), ans: s }; }) },
+        p2: { label:'第二部分 (题32)', desc:'写短文', words: w.words,
+          prompt:'请结合下列词语（要全部使用，顺序不分先后），写一篇80字左右的短文。' }
+      }};
+    });
+  }
+
+  // 2) Alias 答案 tổng hợp (DATA) và lời thoại nghe (HSK5_LISTENING_SCRIPT):
+  //    Bài 11–18 上 đã có sẵn key "11"–"18" (đúng nội dung 上). Copy sang "21"–"28".
+  try {
+    if(typeof DATA !== 'undefined'){
+      for(var i=11;i<=18;i++){ if(DATA[i]) DATA[i+10] = DATA[i]; }
+    }
+  } catch(e){}
+  try {
+    if(typeof HSK5_LISTENING_SCRIPT !== 'undefined'){
+      for(var j=11;j<=18;j++){ if(HSK5_LISTENING_SCRIPT[j]) HSK5_LISTENING_SCRIPT[j+10] = HSK5_LISTENING_SCRIPT[j]; }
+    }
+  } catch(e){}
+})();
+
 
 
 function renderTextbookExercises(lesson) {
@@ -7179,7 +7890,7 @@ function renderQuiz() {
           <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Bài học</label>
           <select id="quiz-lesson" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
             <option value="all">Tất cả bài đã học</option>
-            ${LESSONS.map(l=>`<option value="${l.id}">Bài ${l.id}: ${l.zh}</option>`).join('')}
+            ${LESSONS.map(l=>`<option value="${l.id}">Bài ${l.disp||l.id}: ${l.zh}</option>`).join('')}
           </select>
         </div>
         <button class="btn btn-primary" onclick="startQuiz()" style="width:100%">Bắt đầu kiểm tra →</button>
@@ -9874,10 +10585,10 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var list=document.getElementById('lesson-list-view'), detail=document.getElementById('lesson-detail-view');
     if(list) list.style.display='block'; if(detail) detail.style.display='none';
     var title=document.getElementById('lesson-page-title'); if(title) title.innerHTML='Chọn bài học <span class="course-pill">'+currentCourseLabel()+'</span>';
-    var sub=document.getElementById('lesson-page-sub'); if(sub) sub.textContent=(CURRENT_COURSE==='hsk1'?'15 bài · HSK 标准教程 1':'20 bài · HSK 标准教程 5');
+    var sub=document.getElementById('lesson-page-sub'); if(sub) sub.textContent=(CURRENT_COURSE==='hsk1'?'15 bài · HSK 标准教程 1':'28 bài · HSK 标准教程 5 (上18 + 下10)');
     var grid=document.getElementById('lesson-grid'); if(!grid) return;
-    var groups = CURRENT_COURSE==='hsk1' ? [{label:'HSK 1 · Bài 1–15', lessons:LESSONS}] : [{label:'Tập 1 (上) · Bài 1–10', lessons:LESSONS.filter(function(l){return l.vol===1;})},{label:'Tập 2 (下) · Bài 11–20', lessons:LESSONS.filter(function(l){return l.vol===2;})}];
-    grid.innerHTML = groups.map(function(v){return '<div style="margin-bottom:24px"><div style="font-size:12px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">'+v.label+'</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">'+v.lessons.map(function(l){var done=(STATE.completedLessons||[]).includes(l.id); var current=l.id===STATE.currentLesson; return '<div class="section-card" style="cursor:pointer;'+(current?'border-color:var(--teal);border-width:2px':'')+'" onclick="loadLesson('+l.id+')"><div style="padding:14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:8px;background:'+(done?'var(--teal)':current?'var(--teal-light)':'var(--paper2)')+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:'+(done?'white':current?'var(--teal)':'var(--muted)')+';flex-shrink:0">'+(done?'✓':l.id)+'</div><div style="min-width:0"><div class="zh" style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+l.zh+'</div><div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+l.vi+'</div></div></div><div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:11px;color:var(--muted)">'+(l.vocab||[]).length+' từ · '+(l.grammar||[]).length+' mẫu</span><span class="'+(done?'chip chip-teal':current?'chip chip-blue':'chip')+'" style="'+(!done&&!current?'background:var(--paper2);color:var(--muted)':'')+'">'+(done?'Hoàn thành':current?'Đang học':'Chưa học')+'</span></div></div>';}).join('')+'</div></div>';}).join('');
+    var groups = CURRENT_COURSE==='hsk1' ? [{label:'HSK 1 · Bài 1–15', lessons:LESSONS}] : [{label:'Tập 1 (上) · Bài 1–18', lessons:LESSONS.filter(function(l){return l.vol===1;})},{label:'Tập 2 (下) · Bài 11–20', lessons:LESSONS.filter(function(l){return l.vol===2;})}];
+    grid.innerHTML = groups.map(function(v){return '<div style="margin-bottom:24px"><div style="font-size:12px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">'+v.label+'</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">'+v.lessons.map(function(l){var done=(STATE.completedLessons||[]).includes(l.id); var current=l.id===STATE.currentLesson; return '<div class="section-card" style="cursor:pointer;'+(current?'border-color:var(--teal);border-width:2px':'')+'" onclick="loadLesson('+l.id+')"><div style="padding:14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:8px;background:'+(done?'var(--teal)':current?'var(--teal-light)':'var(--paper2)')+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:'+(done?'white':current?'var(--teal)':'var(--muted)')+';flex-shrink:0">'+(done?'✓':(l.disp||l.id))+'</div><div style="min-width:0"><div class="zh" style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+l.zh+'</div><div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+l.vi+'</div></div></div><div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:11px;color:var(--muted)">'+(l.vocab||[]).length+' từ · '+(l.grammar||[]).length+' mẫu</span><span class="'+(done?'chip chip-teal':current?'chip chip-blue':'chip')+'" style="'+(!done&&!current?'background:var(--paper2);color:var(--muted)':'')+'">'+(done?'Hoàn thành':current?'Đang học':'Chưa học')+'</span></div></div>';}).join('')+'</div></div>';}).join('');
   };
 
   function renderHSK1TextbookDrills(lesson){
@@ -12778,6 +13489,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
 <script id="hsk5-workbook-explain-patch">
 (function(){
   var DATA = {"1": {"title": "爱的细节", "vi": "Những chi tiết của tình yêu", "listening": "1-6：DBDCAB；7-14：CBDCADCA", "reading": "15-18：BDCB；19-22：BCDB；23-28：ACBADC", "writing": ["她居然放弃了这次的机会。/ 这次的机会她居然放弃了。", "他们从来没为任何事吵过架。", "靠在我肩膀上睡一会儿吧。"], "note": "Bài nghe xoay quanh quan hệ gia đình, tình cảm và thái độ người nói. Khi giải thích, chú ý các tín hiệu cảm xúc như 抱怨、担心、支持, và quan hệ nhân vật trong đối thoại."}, "2": {"title": "留串钥匙给父母", "vi": "Để lại một chùm chìa khóa cho bố mẹ", "listening": "1-6：CDBCAD；7-14：CCBBDACC", "reading": "15-18：BDCA；19-22：BADC；23-28：CDCCBC", "writing": ["这次出去打工挣了不少钱。", "妻子的微笑让我感受到家的温暖。", "窗外飘来一阵阵动听的歌声。"], "note": "Bài này thường hỏi hàm ý trong gia đình: cha mẹ, con cái, sống chung, chìa khóa, mỉm cười. Khi nghe, cần phân biệt lời từ chối thật và lời nói lịch sự."}, "3": {"title": "人生有选择，一切可改变", "vi": "Đời người có lựa chọn, mọi thứ đều có thể thay đổi", "listening": "1-6：CBDADC；7-14：BDCCBACD", "reading": "15-18：DBCA；19-22：BCDB；23-28：DCCBCC", "writing": ["我随时可以开始干活儿。", "我对新工作的要求就是待遇稳定。", "雨后的彩虹让他感受到一种平静。"], "note": "Trọng tâm là lựa chọn, thay đổi, kế hoạch và thái độ trước quyết định. Khi đọc, chú ý các từ chuyển ý như 但是、不过、于是、因此."}, "4": {"title": "子路背米", "vi": "Tử Lộ cõng gạo", "listening": "1-6：ABBCDA；7-14：BDABACBD", "reading": "15-18：CBDC；19-22：ADCC；23-28：CDDCDC", "writing": ["我的坏脾气让她受了不少委屈。", "喜欢网上阅读的人只占到8%。", "这是个在中国流传了近千年的民间故事。"], "note": "Bài nghe/đọc liên quan cổ tích, hiếu thảo, chuyện xưa và quan điểm đạo đức. Khi giải thích, nên chỉ ra ai là người nói, mục đích nói và từ khóa như 惭愧、委屈、流传."}, "5": {"title": "济南的泉水", "vi": "Suối nước ở Tế Nam", "listening": "1-6：CDBBAB；7-14：CDCDABBA", "reading": "15-18：BABC；19-22：BDCD；23-28：ADCBCB", "writing": ["这两种颜色形成了强烈的对比。", "皮影戏产生于两千多年前的西汉时期。", "脸上的表情往往能反映一个人的心态。"], "note": "Chủ đề phong cảnh, du lịch và ấn tượng cá nhân. Khi đọc, chú ý tên địa danh, đặc điểm nổi bật và câu tổng kết ở cuối đoạn."}, "6": {"title": "除夕的由来", "vi": "Nguồn gốc đêm giao thừa", "listening": "1-6：DAADCB；7-14：CDDABABC", "reading": "15-18：BCAB；19-22：BCCD；23-28：ADCBBD", "writing": ["这东西以后说不定还会有用处的。", "整个下午，他们都在跳舞。/ 他们整个下午都在跳舞。", "方盒子似的楼房代替了北京原有的平房。"], "note": "Chủ đề phong tục truyền thống, tết, thời gian và thói quen. Khi giải thích, cần phân biệt 农历/公历, 习俗/传统 và thái độ của người nói."}, "7": {"title": "成语故事两则", "vi": "Hai câu chuyện thành ngữ", "listening": "1-6：ABBCDC；7-14：BBACBCDA", "reading": "15-18：BBDC；19-22：DBAC；23-28：DBDADC", "writing": ["我连续射了五六支箭。", "相信你一定能寻找到最终的结论。", "他说这话的时候，我完全没有反应过来。"], "note": "Chủ đề thành ngữ và bài học rút ra từ truyện. Khi đọc, cần tìm kết luận/寓意, không chỉ nhìn sự kiện bề mặt."}, "8": {"title": "“朝三暮四”的古今义", "vi": "Nghĩa xưa và nay của 朝三暮四", "listening": "1-6：CBCCBB；7-14：CBDDBACA", "reading": "15-18：BCAD；19-22：DCCB；23-28：CBADAD", "writing": ["这种产品有固定的消费群体。", "请你把昨晚的经历完整地叙述一遍。", "家庭的财力不能满足他的需要。"], "note": "Trọng tâm là nghĩa thành ngữ, thay đổi nghĩa và cách dùng từ. Khi giải thích, cần so nghĩa đen, nghĩa cổ và nghĩa hiện đại."}, "9": {"title": "别样鲁迅", "vi": "Một Lỗ Tấn khác", "listening": "1-6：DABBAC；7-14：CDABBDCD", "reading": "15-18：CBDA；19-22：CDAD；23-28：CBDCDB", "writing": ["他因为胃病而戒了酒。", "你快尝尝这地道的传统点心。", "他平均每两个星期要招待一次客人。"], "note": "Bài tập thường hỏi thông tin nhân vật, thái độ và chi tiết đời sống. Khi nghe, phân biệt 事实 thông tin thật và 推测 suy đoán."}, "10": {"title": "争论的奇迹", "vi": "Kỳ tích của tranh luận", "listening": "1-6：DCABBA；7-14：ABCBAACA", "reading": "15-18：BBDA；19-22：BBAD；23-28：BDBCCA", "writing": ["你的人生或许将由此走向精彩。/ 或许你的人生将由此走向精彩。", "整个讨论都是围绕去留问题进行的。", "这位年轻人始终表现得很稳定。"], "note": "Chủ đề khoa học, quan sát và tranh luận. Khi giải thích, chú ý quan hệ nhân quả: vì sao nhân vật thay đổi ý kiến, bằng chứng nào dẫn đến kết luận."}, "11": {"title": "闹钟的危害", "vi": "Tác hại của đồng hồ báo thức", "listening": "1-6：ACBBCD；7-14：BADABAAD", "reading": "15-18：ACAC；19-22：BADD；23-28：CCABAD", "writing": ["放慢脚步是为了享受生活。", "人偶尔情绪低落是很正常的。", "雷阵雨持续的时间一般都较短。"], "note": "Chủ đề sức khỏe, giấc ngủ và nhịp sống. Khi nghe/đọc, tìm nguyên nhân chính và hậu quả sức khỏe."}, "12": {"title": "海外用户玩儿微信", "vi": "Người dùng nước ngoài chơi WeChat", "listening": "1-6：CDCCBB；7-14：ABDDACB", "reading": "15-18：BDAC；19-22：DBCB；23-28：ACDCCB", "writing": ["我曾经针对留学生做过一项调查。", "请给我一次实现愿望的机会。", "你不要用筷子敲打碗、盘子以及桌面。"], "note": "Chủ đề công nghệ, điện thoại, ứng dụng và giao tiếp. Khi giải thích, cần phân biệt chức năng, thao tác và mục đích sử dụng."}, "13": {"title": "锯掉生活的“筐底”", "vi": "Cưa bỏ đáy rổ của cuộc sống", "listening": "1-6：CABBCB；7-14：DBADCDAD", "reading": "15-18：ACBD；19-22：DCAC；23-28：BDCBCD", "writing": ["我们的训练学校缺乏在室内进行的运动项目。", "一再重复的暂停行为影响了比赛的气氛。", "这次的宣传推广活动是受他们公司的启发。"], "note": "Trọng tâm là tư duy sáng tạo và tháo bỏ giới hạn. Khi đọc, chú ý 题目 ẩn dụ và kết luận cuối đoạn."}, "14": {"title": "北京的四合院", "vi": "Tứ hợp viện Bắc Kinh", "listening": "1-6：BADCAB；7-14：BCDCCADD", "reading": "15-18：CADB；19-22：DACB；23-28：CADCBC", "writing": ["北京四合院的样式很具有代表性。", "该产品已经具备了基本功能。", "我很感激那位亲切的长辈曾经给我的帮助。"], "note": "Chủ đề kiến trúc, văn hóa và lịch sử Bắc Kinh. Khi giải thích, nên chỉ ra định nghĩa 四合院 và các từ chỉ phương hướng/kiến trúc."}, "15": {"title": "纸上谈兵", "vi": "Bàn binh trên giấy", "listening": "1-6：BDACBC；7-14：DBCDCDBC", "reading": "15-18：BCAD；19-22：CBCC；23-28：CBDADD", "writing": ["他对这种军事理论有很深的理解。", "谁都没有资格轻视别人。", "这个故事讽刺的是那些不懂得灵活变通的人。"], "note": "Chủ đề thành ngữ lịch sử và bài học thực tế. Khi giải thích, cần phân biệt 知识 lý thuyết và 实践 thực hành."}, "16": {"title": "体重与节食", "vi": "Cân nặng và ăn kiêng", "listening": "1-6：BBACCA；7-14：ACDBABCD", "reading": "15-18：CBCA；19-22：BDCD；23-28：ABADAD", "writing": ["这次总共有两百多人来报名。", "医生决定采取中医的治疗方法。", "经理觉得小刘办事不太可靠。"], "note": "Chủ đề sức khỏe, ăn uống, điều trị và thói quen. Khi giải thích, cần xem câu hỏi hỏi về 建议, 原因 hay 主要观点."}, "17": {"title": "在最美好的时刻离开", "vi": "Rời đi vào thời khắc đẹp nhất", "listening": "1-6：DDACCD；7-14：ACBACBCA", "reading": "15-18：DABC；19-22：CBCD；23-28：CBCCDA", "writing": ["他要给自己争取更多的时间。", "老刘刚给我推荐了一份工作。/ 老刘给我刚推荐了一份工作。", "这是最容易被人忽视的细节。"], "note": "Chủ đề lựa chọn, rời đi, tâm trạng và chi tiết bị bỏ qua. Khi nghe, chú ý lời khuyên và trạng thái tâm lý của nhân vật."}, "18": {"title": "抽象艺术美不美？", "vi": "Nghệ thuật trừu tượng có đẹp không?", "listening": "1-6：DABBAC；7-14：BBCAACAD", "reading": "15-18：DBAB；19-22：DCDB；23-28：CDBBCB", "writing": ["上海给我留下了极其深刻的印象。", "哪怕是一分钟他也不愿意再等了。", "成语“画龙点睛”便出自关于他的传说。"], "note": "Chủ đề nghệ thuật, cảm nhận và đánh giá. Khi giải thích, cần tách sự thật về tác phẩm và thái độ/cảm nhận của người nói."}};
+  try{for(var _i=11;_i<=18;_i++){ if(DATA[_i]) DATA[_i+10]=DATA[_i]; }}catch(e){}
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function isHsk5(){return !window.CURRENT_COURSE || window.CURRENT_COURSE==='hsk5';}
   function explainHtml(id){
@@ -13200,6 +13912,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
 ========================================================= */
 (function(){
   var HSK5_LISTENING_SCRIPT = {"1":{"title":"爱的细节","answers":"1-6： DBD CAB 7-14：CBDC ADCA","items":[{"kind":"single","q":1,"text":"女：你怎么这么累？昨天晚上太热了没睡好吧？\n 男：不是，半夜我被蚊子叮醒了，我怕我老婆再被吵醒，所以后半夜就在为\n    她赶蚊子。\n 问：男的昨晚为什么没睡好？"},{"kind":"single","q":2,"text":"男：还在加班吗？今晚回不回家吃饭？\n 女：还得打印几份文件，估计半小时以后吧。\n 问：女的现在在哪儿？"},{"kind":"single","q":3,"text":"女：听说你们昨天大学同学聚会了？又见到陈兰了？\n 男：是啊。虽说离婚已经两年了，可是一见面，心里还是有种说不出的感觉……\n 问：男的跟陈兰是什么关系？"},{"kind":"single","q":4,"text":"男：今天菜怎么这么咸啊？\n 女：你每天回家就吃，什么家务活儿也不干，还说菜咸？\n 问：女的是什么语气？"},{"kind":"single","q":5,"text":"女：大夫，你为什么要检查我的肩膀和胳膊呢？\n 男：手指麻木，不一定就是手指的问题，有关的部位都要检查。\n 问：女的哪个地方不舒服？"},{"kind":"single","q":6,"text":"男：高女士，请您简单地叙述一下以前的工作经历。\n 女：好的，我之前在一家电台工作……\n 问：他们最有可能在干什么？\n                                   第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"女：你今天下午几点开会？\n 男：3 点。\n 女：3 点？现在都已经 3 点半了啊！\n 男：啊？我居然看错表了！\n 问：男的怎么了？"},{"kind":"single","q":8,"text":"男：你觉得这两个哪个更好一些？\n 女：都挺好的，各有特点。\n 男：是啊，要是只有一个能得奖，就太可惜了。\n 女：我觉得我们可以建议增加一个奖项。\n 问：女的是什么意思？"},{"kind":"single","q":9,"text":"女：他们认识才两个月就结婚，是不是太快了？\n 男：是否了解一个人并不在于时间长短。\n 女：话不能这么说，时间长，了解的可能性还是大一点儿。\n 男：那又怎么样？就算真了解了，结了婚也可能会变。\n 问：男的是什么意思？"},{"kind":"single","q":10,"text":"男：打扰一下，您能跟我换个座位吗？我们俩是一块儿的。\n  女：行。你的座位在哪儿？\n  男：5A，前面那个靠窗的。需要我帮您拿行李吗？\n  女：没事儿，不用了。\n  问：他们最有可能在哪儿？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n女：小刚，你打算什么时候带我回家见你父母？\n男：我觉得现在还不是时候，过一段再说吧。\n女：你想等到什么时候啊？我们交往也有大半年了……\n男：你别烦我了！你知道我最近很忙，哪儿有时间静下心来想我们的事？\n女：原来我们的事你根本还没想好，那你为什么不早说？\n11．说话的两个人是什么关系？\n12．关于小刚，从对话中可以知道什么？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  友人嫁了个公司经理。她说她选择这段婚姻，原因很简单：不是因为对方生\n活条件好，而是因为那个男人喜欢阅读，喜欢音乐，并且乐在其中。我很少听到\n这样的结婚理由，但真的为好友喝彩，她的幸福很简单，有旋律感，就像美好的\n音乐。\n13．友人选择这段婚姻的理由是什么？\n14．对于友人的婚姻，说话人是什么态度？"}]},"2":{"title":"留串钥匙给父母","answers":"1-6： CDB CAD 7-14：CCBB DACC","items":[{"kind":"single","q":1,"text":"女：都半年没回来了，家里肯定脏死了。\n 男：今天太晚了，到家以后先休息吧，明天再收拾。\n 问：男的是什么意思？"},{"kind":"single","q":2,"text":"男：姑姑，我来帮您拿行李吧。\n 女：乖孩子，你这么小，哪儿用得着你啊！姑姑自己能行。\n 问：女的是什么意思？"},{"kind":"single","q":3,"text":"女：姥爷，您腿脚不好，慢点儿走。\n 男：没事，我天天锻炼，身体好着呢！\n 问：女的觉得姥爷怎么样？"},{"kind":"single","q":4,"text":"男：妈，您做什么好吃的呢？这么香！\n 女：你爸今天出差回来，给他炖个牛肉。你不是也最爱吃牛肉嘛！\n 问：女的为什么要做牛肉？"},{"kind":"single","q":5,"text":"女：既然你在这儿干得不顺心，为什么不换个工作呢？\n 男：我都在这个厂里待了大半辈子了，除了这儿，不知道还能去哪儿。\n 问：男的是什么意思？"},{"kind":"single","q":6,"text":"男：这件事是小李偷偷告诉我的，你可别说出去。\n 女：放心吧，我就当不知道，连小李都不说。\n 问：女的是什么意思？\n                                 第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"女：这件事你就帮帮她吧。\n 男：不行，这种忙我坚决不能帮。\n 女：为什么呢？\n 男：这要被发现了可不得了。\n 问：对于给她帮忙，男的是什么态度？"},{"kind":"single","q":8,"text":"男：妈，你把我的钥匙放在哪儿了？\n 女：不在你卧室的床头柜上吗？\n 男：我看了，没有啊！\n 女：那就在门口的钥匙柜里。\n 问：钥匙可能在哪儿？"},{"kind":"single","q":9,"text":"女：孩子的学习你到底管不管？\n 男：我怎么不管？但是儿子已经这么大了，应该有他的自由。\n 女：自由能考上大学吗？等他以后考不上大学去扫大街，你就后悔去吧！\n 男：你这想象力也太丰富了……\n 问：他们因为什么事情吵架？"},{"kind":"single","q":10,"text":"男：你跟你丈夫的关系不是挺好的吗？\n  女：原来是挺好的，但从我婆婆来了以后，矛盾就越来越多了。\n  男：怎么了？\n  女：婆婆总是说，她一个女人，自己把儿子养大不容易，现在儿子大了，她\n    该享福了，所以总是跟我们要这要那。\n  问：婆婆是什么人？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n男：妈，您和爸爸今天就在这儿住吧。\n女：不行，你又不是不知道，我们从不在城里住。你姥姥、舅舅家都在城里，我\n  们也没住过。\n男：我们这不是买了新房嘛？你们又是第一次来。\n女：以后我们会常来看你们的。\n男：您看，现在都已经这么晚了……\n女：没关系，现在走还能赶上最后一班车。\n11．说话的两个人是什么关系？\n12．妈妈最后的决定是什么？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  微笑是人类最美丽的语言。它能够让我们的生活和心情变得愉快。你付出了\n微笑，闷热的空气中立刻就有了清风，冰冷的世界里立刻就有了温暖，同时你也\n会因此得到快乐。服务者的微笑，表达了对客户最真的情感，所以，对服务从业\n人员来说，微笑是最基本的职业要求。\n13．这段话主要想告诉我们什么？\n14．根据这段话，谁最应该微笑？"}]},"3":{"title":"人生有选择，一切可改变。","answers":"1-6： CBD ADC 7-14：BDCC BACD","items":[{"kind":"single","q":1,"text":"女：请问您还有再次出航的计划吗？\n 男：一切只是开始。等到北风南下之时，我们将再次出发。\n 问：男的是什么意思？"},{"kind":"single","q":2,"text":"男：老婆，今晚在家吃饭还是出去吃？\n 女：你今天下午不是钓回来好几条鱼吗？晚饭就吃鱼吧。\n 问：他们的鱼是怎么来的？"},{"kind":"single","q":3,"text":"女：你今天不是要去出差吗？怎么还在这儿？\n 男：有大雾，航班取消了。\n 问：今天是什么天气？"},{"kind":"single","q":4,"text":"男：外面又打雷又闪电的，咱们等会儿再走吧。\n 女：行，正好我手头还有事没弄完，再加会儿班。\n 问：男的为什么现在不走？"},{"kind":"single","q":5,"text":"女：听说你母亲被车撞了？你怎么还能这么平静？\n 男：我已经给她打过电话了，只是被自行车蹭了一下，没受伤，不要紧。\n 问：关于男的的母亲，下列哪项正确？"},{"kind":"single","q":6,"text":"男：您和先生的事业都这么成功，工作应该都很忙，那你们平时怎么处理工\n    作与生活的关系？\n 女：我们都认为不能因为工作影响生活，比如我们会轮流做家务。\n 问：他们家怎么安排家务？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"女：你疯了吗？为什么突然要辞职？\n 男：不是突然，这个问题我已经考虑了很久了。\n 女：你工作不错，待遇稳定，有什么不满意的？\n 男：我就是想去看看，这个时代、这个世界到底是什么样子。\n 问：对于男的辞职，女的是什么态度？"},{"kind":"single","q":8,"text":"男：那天同学聚会你怎么没去？是没人通知你吗？\n 女：不是，我知道，但那天正好有事。\n 男：周末也有事？忙什么呢？\n 女：我要考英语专业八级，报了个辅导班，周末要上课。\n 问：女的为什么没参加聚会？"},{"kind":"single","q":9,"text":"女：这里挂着“请勿吸烟”的牌子，你没看见吗？\n 男：啊，对不起，我没注意。\n 女：最近天气干燥，很容易着火，千万别再抽了！\n 男：好的好的，我马上就把烟灭了。\n 问：女的为什么不让男的抽烟？"},{"kind":"single","q":10,"text":"男：你今天不是夜班吗？怎么还不去医院？\n  女：我跟丁护士换了个班，明天再去。\n  男：最近丁护士家里是不是有什么事？\n  女：对，她正在为儿子上学的事发愁。\n  问：关于女的，可以知道什么？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n男：这些装饰品都是你亲手做的？\n女：是啊，我平时喜欢做点儿小花小动物什么的，放在家里。\n男：我觉得你可以开一家网店，专门卖你的手工制品。\n女：只是业余爱好而已，开不了店吧……\n男：既能满足自己的爱好，又能挣点儿钱，不是更好吗？\n女：嗯，也许可以考虑考虑。\n11．男的给女的什么建议？\n12．女的是什么态度？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  以前在墨尔本一起租房的一个室友，突然打电话给我，让我猜他现在在哪里。\n我说：“你不是在墨尔本吗，你还能去哪儿？”他很神秘地说：“不是哦，我现\n在在西班牙。”我一下子就愣住了。因为很久之前，我在一个网页上看到有关西\n班牙的照片，那时候跟他说，西班牙那么漂亮，我将来一定要去一次。没想到的\n是，在我就要把自己曾经一闪而过的想法忘记的时候，他的电话就这么来了。到\n最后，站在我最想去的地方的人，却不是我。\n13．朋友是从哪儿给他打电话？\n14．朋友为什么要给他打电话？"}]},"4":{"title":"子路背米。","answers":"1-6： ABB CDA 7-14：BDAB ACBD","items":[{"kind":"single","q":1,"text":"女：你记住要从小区的西北门进去，进门右拐第一个楼就是，王总住四单元\n    201。\n 男：好的，不说了不说了，我赶紧的！\n 问：男的最可能是去哪儿？"},{"kind":"single","q":2,"text":"女：刚才又打雷又闪电，真吓人！怎么这么一会儿雨就停了？\n 男：夏天的雨就是这样，来得快去得也快。\n 问：他们说的雨最可能是下面哪种？"},{"kind":"single","q":3,"text":"男：你今天怎么总打喷嚏，感冒了吧？\n 女：是有点儿。昨晚和老公去看电影，电影院的冷气开得太凉了。\n 问：女的是怎么感冒的？"},{"kind":"single","q":4,"text":"男：我去上班了，你走的时候，记得把窗户关好，天气预报说有雨。\n 女：知道了。儿子上学时没带伞。你回来早的话，给他送一趟吧。\n 问：女的担心什么？"},{"kind":"single","q":5,"text":"男：您好！中通快递，我在您楼下，家里没人啊？\n 女：我先生在家，您稍等一下，我马上跟他联系，不好意思啊！\n 问：女的接下来会做什么？"},{"kind":"single","q":6,"text":"女：看你的黑眼圈，是不是昨晚又熬夜了？\n 男：没错，给欧洲冠军杯决赛做解说，录完节目都快早上五点了。\n 问：男的昨晚为什么熬夜？\n                                    第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"女：你这次回来怎么买了这么多东西，花了不少钱吧？\n 男：妈，不多。临走时我去领工资，结果发现比应得的多了许多。\n 女：是公司算错了吧？你应该老老实实地还给人家。\n 男：没算错，经理说我做事勤快，这是给我加的奖金。\n 问：关于工资，下列哪项正确？"},{"kind":"single","q":8,"text":"女：西安和北京同是古都，但有个很大的不同，就是西安的城墙保存得非常\n    完整。\n 男：北京为了扩建，拆掉了城墙，这一点多少有些遗憾啊！\n 女：西安城墙现在对游人开放。我上去游览过，夜景很美。\n 男：作为北京人，我实在有点儿惭愧！\n 问：男的感到惭愧的原因是什么？"},{"kind":"single","q":9,"text":"男：古代有个大官，叫公孙仪，很喜欢吃鱼。很多人给他送鱼，他都不收。\n 女：为什么呢？\n 男：他说如果我收了别人的鱼，就要按他们的意思去办事，这样就免不了会\n    违反法律，成了罪人，就别想再吃鱼了。\n 女：公孙仪真是个明白的人啊！\n 问：女的认为公孙仪怎么样？"},{"kind":"single","q":10,"text":"男：在中国的名山里，我觉得黄山的风景最美。\n  女：不是有那么句话吗？“黄山归来不看山”嘛。\n  男：黄山的云海、奇松、怪石和温泉，被称为“四绝”。\n  女：虽然夏季黄山的游客最多，但我喜欢冬天去，我觉得冬季才是黄山风景\n     最美的季节。\n  问：女的为什么喜欢冬天去黄山？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n女：你来中国留学一年了，现在觉得怎么样？\n男：收获很大，但也很辛苦。因为我读的专业是中国古典文学，所以除了学普通\n  话，还要学古汉语。\n女：真佩服你！古汉语连我们中国人自己学起来都觉得吃力。\n男：前段时间看了些明清小说。我原来读过英文版的，不过，老师让我们一定要\n  看中文原著。\n女：是的，这很重要。那你最近在看什么？\n男：我在读唐诗，我很喜欢李白的作品，将来想写这方面的毕业论文，有些问题\n  还想请教你呢。\n11．从对话中可以知道，女的佩服男的什么？\n12．关于男的，从对话中可以知道什么？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  中国古代教育家孔子有个学生，名叫子路。子路生活的那个年代，社会动乱，\n连年的战争使老百姓的生活过得非常困难，子路的父母都是农民，家里的日子也\n是一样。一天，子路外出回来，刚到门口就听到父母在屋里说话：“活了大半辈\n子了，别说鱼啊、肉啊，只要能饱饱地吃上一顿米饭，我们也就满足啦！”子路\n听了，心里觉得十分惭愧。他暗下决心：“一定要让父母吃上米饭，不能再委屈\n他们了！”\n13．子路家的生活为什么非常困难？\n14．子路听到父母的谈话后，心里感到怎么样？"}]},"5":{"title":"济南的泉水","answers":"1-6： CDB BAB 7-14：CDCD ABBA","items":[{"kind":"single","q":1,"text":"男：你是要提醒我整理阳台吗？我没忘。\n 女：那你抓紧时间弄，今天太阳好，我想洗洗衣服。\n 问：男的今天要做什么？"},{"kind":"single","q":2,"text":"男：你感冒了，要多休息，这擦地的活儿我来干吧。\n 女：这点儿病算得了什么？再说了，我总觉得你擦得不干净。\n 问：根据对话，可以知道什么？"},{"kind":"single","q":3,"text":"男：暑假我打算带孩子去北京，那儿的名胜古迹多，风景也不错。\n 女：我哥哥家就在那儿，等我打个电话让他招待你们。\n 问：女的为什么给哥哥打电话？"},{"kind":"single","q":4,"text":"男：国庆节你打算去哪儿玩儿？\n 女：去杭州，我大学同学结婚，我要去参加婚礼。回来路过苏州再玩儿两天。\n 问：女的去苏州做什么？"},{"kind":"single","q":5,"text":"男：这次去北京收获不小吧？\n 女：没错。长城、颐和园的风景真美，胡同也很特别，给我留下印象最深的\n    还是北京烤鸭，味道棒极了。\n 问：女的对北京的什么印象最深刻？"},{"kind":"single","q":6,"text":"男：苏州有个叫山塘的地方，不知你这次有没有去看看？\n 女：当然，我还坐了那里的游船，体会了一下“小桥流水人家”的感觉，很\n    有味道。\n 问：女的觉得山塘怎么样？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"男：你来中国留学两年了，利用假期去过不少地方了吧？\n 女：中国的名胜古迹很多，风景优美的地方太多了。\n 男：那你最喜欢的地方是哪里？\n 女：我觉得四川的黄龙风景最美，到了那儿，真像是到了童话世界。\n 问：女的觉得四川的黄龙怎么样？"},{"kind":"single","q":8,"text":"男：姥姥，您来了些日子了，今天正好有空儿，我陪您去故宫转转？\n 女：故宫人太多，我这腿脚又不方便，还是别去了。\n 男：那我陪您看电影去吧？\n 女：好哇！我最爱看电影了！\n 问：关于姥姥，从对话中可以知道什么？"},{"kind":"single","q":9,"text":"男：你好，我想预订周末的一个房间，标准间就行。\n 女：先生，不好意思，我们接待了一个会议的预订，标准间都没有了，只有\n    豪华客房和商务套间，请问您还需要吗？\n 男：也行。我们带孩子来旅游，商务间就不用了，豪华间有大床房吗？\n 女：有的，请问您要住几天？\n 问：关于男的，下列哪项正确？"},{"kind":"single","q":10,"text":"男：我的小学就在和南锣鼓巷交叉的一条胡同里，每天上学都经过这里。\n  女：那时候这里可没有现在这么热闹，就是条普普通通的胡同。\n  男：这都是 20 年前的事了。你看变化多大啊！\n  女：不过，你读的小学一直以来都是所好学校。\n  问：关于男的，从这段对话中可以知道什么？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n女：你带小明去自然博物馆了？\n男：是，儿童节了，我这个当小舅舅的，还不该满足他一个要求嘛！\n女：小明之前跟我说过好几次想去自然博物馆看恐龙，你们看了吗？\n男：当然看了，我们还看了海洋馆。人类馆关闭装修，没看到，很遗憾。那儿的\n  设施虽然有点儿旧，但 8000 平方米的展厅，一天都看不完。\n女：小明喜欢那儿吗？\n男：那还用说吗？小眼睛都不够用的了。\n11．说话的两个人是什么关系？\n12．关于自然博物馆，从对话中可以知道什么？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  有一位名叫威廉森的 9 岁英国男孩，看上去，他和同龄的孩子没什么不同，\n可一拿起画笔，他就立刻显示出画家范儿来。新近在他的个人画展上，展出的\n25 幅作品仅 15 分钟就被抢购一空，价值达 25 万英镑。一位知名艺术品专家表\n示，威廉森的画之所以如此受到欢迎，除了因为他的作品本身很单纯以外，还因\n为他在这么小的年纪就熟练掌握了多种绘画技巧，对一些画家而言，达到他的程\n度需要花上至少 10 年。\n13．关于威廉森，下列哪项正确？\n14．威廉森的画受欢迎的原因是什么？"}]},"6":{"title":"除夕的由来","answers":"1-6： DAA DCB 7-14：CDDA BABC","items":[{"kind":"single","q":1,"text":"男：你看东边的天已放晴了。夏天，在我家阳台上，有时还能看见彩虹呢。\n 女：真的？我还一次也没见过呢。\n 问：从对话中可以知道什么？"},{"kind":"single","q":2,"text":"男：中国人过春节时有“守岁”的习惯，你听说过吗？\n 女：守岁说的就是年三十全家团圆后，大家一起熬夜，迎接新年的到来。\n 问：中国人守岁是在哪天？"},{"kind":"single","q":3,"text":"男：妈妈，我想去院子里骑会儿自行车，行吗？\n 女：你看现在太阳多晒呀，吃完晚饭我陪你去，好不好？\n 问：妈妈为什么不同意孩子骑车？"},{"kind":"single","q":4,"text":"男：你听说过《西游记》这本书吗？\n 女：当然，那是本中国神话故事，很有意思，可惜我现在还看不太懂。\n 问：关于《西游记》，可以知道女的怎么样？"},{"kind":"single","q":5,"text":"男：我又困了，从欧洲回来三四天了，这时差还是没完全倒过来。\n 女：可不是，我上次去美国，一个多星期才倒过来。\n 问：男的怎么了？"},{"kind":"single","q":6,"text":"女：昨晚的篮球邀请赛你去看了吗？\n 男：路上遇到堵车，等赶到体育馆，比赛都进行二十多分钟了。\n 问：关于男的，可以知道什么？\n                                   第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"女：你们中国的中秋节是 8 月 15 号，对吗？\n 男：没错。\n 女：可为什么我在日历上看到的中秋节是在 9 月份呢？\n 男：哦，是这样，中秋节是农历的 8 月 15 号，在公历中每年都不固定，一般\n    是在 9 月份，有时还会离 10 月 1 日国庆节很近呢。\n 问：关于中秋节，可以知道什么？"},{"kind":"single","q":8,"text":"男：今年过年我们还买鞭炮吗？\n 女：过年不放鞭炮，好像缺少点儿过年的气氛啊！\n 男：不过，现在提倡保护环境，这些旧习俗也该改改了。\n 女：那听你的，现在鞭炮很贵，正好可以省点儿钱了。\n 问：关于鞭炮，男的建议怎么做？"},{"kind":"single","q":9,"text":"女：你喜欢吃粽子吗？\n 男：喜欢，不光是粽子，年糕、元宵、汤圆，凡是糯米的东西，我都爱吃。\n 女：你爱吃哪种粽子？\n 男：北方人爱吃甜的，我们南方人爱吃咸的、有肉的粽子。\n 问：关于男的，下列哪项正确？"},{"kind":"single","q":10,"text":"女：你听说过“二月二，龙抬头”吗？\n  男：知道啊，按风俗上讲，那天理发能带来一年的好运。\n  女：我真不理解这是什么道理。你相信吗？\n  男：我信，昨天二月初二我去理发，人比平时多很多。\n  问：女的对“二月二”的风俗是什么态度？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n男：快换到体育频道，北京男篮的球赛快开始了。\n女：你去看卧室里的那台，不行吗？我这儿今天可是最后两集了。\n男：躺着怎么看球赛呢？你在床上看电视剧多舒服呀。\n女：为什么每次你一看球赛，我就得进去看呢？\n男：我总共才看几回电视呀？\n女：可我一躺下，就容易睡着了。\n男：这不正说明你看的那些片子没什么意思吗？\n11．他们最可能是在哪儿说这些话的？\n12．关于男的，下列哪项正确？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  鲁迅的成功，有一个重要的原因，就是珍惜时间。鲁迅几乎每天都在挤时间。\n他说：“时间，就像海绵里的水，只要你挤，总是有的。”鲁迅读书的范围十分\n广泛，又喜欢写作，他对于民间艺术，特别是传说、绘画，也非常喜欢。正因为\n他兴趣广泛，多方面学习，所以时间对他来说，实在非常重要。他一生多病，工\n作条件和生活环境都不好，但他每天都要工作到深夜才肯休息。在鲁迅的眼中，\n时间就仿佛生命。如果无故地浪费别人的时间，其实就是谋财害命。因此，鲁迅\n最讨厌那些成天东家跑跑、西家坐坐、说长道短的人。在他忙于工作的时候，如\n果有人来找他闲聊，即使是很要好的朋友，他也会毫不客气地对人家说：“唉，\n你又来了，就没有别的事好做吗？”\n13．本文认为鲁迅为什么能获得成功？\n14．根据本文，鲁迅最讨厌什么样的人？"}]},"7":{"title":"成语故事两则","answers":"1-6：ABB CDC 7-14：BBAC BCDA","items":[{"kind":"single","q":1,"text":"女：这位先生，请你说说你摸到的大象是什么样的？\n 男：我觉得它像一根绳子。\n 问：这个盲人最可能摸到了大象身体的哪个部位？"},{"kind":"single","q":2,"text":"男：是谁把玻璃打碎了？\n 女：不是我们，窗户外面忽然飞进来一只足球。\n 问：他们现在在哪儿？"},{"kind":"single","q":3,"text":"女：我认为自己很适合贵公司的这个职位。\n 男：那请你说说，如果来我们公司，你最善于处理哪方面的业务？\n 问：对话最可能发生在什么时候？"},{"kind":"single","q":4,"text":"男：就买这个花盆怎么样？\n 女：我不太想要塑料的，还是找找有没有木头的吧。\n 问：女的想买什么材料的花盆？"},{"kind":"single","q":5,"text":"女：你蹲下来点儿，别让他发现你了。\n 男：不要紧，我这边正好有棵树挡着呢。\n 问：男的是什么意思？"},{"kind":"single","q":6,"text":"男：我还没说完你就急着插嘴，能听我说完吗？\n 女：你能有什么好主意？\n 问：女的是什么态度？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"女：你以前考试都是前三名，这次成绩怎么下滑得这么厉害？\n 男：唉，我最近确实不够用心。\n 女：考前没好好复习吗？\n 男：昨天熬夜看书了，但已经来不及了。\n 问：男的为什么成绩下滑？"},{"kind":"single","q":8,"text":"男：咱们把空调打开吧。\n 女：空调太费电了，开个电风扇就行。\n 男：天这么热，电扇不管用。\n 女：有这么热吗？心静自然凉。\n 问：女的是什么意思？"},{"kind":"single","q":9,"text":"女：有人说，传统文化是一个民族的根，您同意吗？\n 男：我完全同意，丢掉传统的民族是没有生命力的。\n 女：那您也同意我们应该尽力保护传统文化了？\n 男：不是尽力，是一定要做到。\n 问：关于传统文化，男的有什么看法？"},{"kind":"single","q":10,"text":"男：你这次比赛中的表现真是太精彩了！\n  女：是吗？我觉得有两道题我反应有点儿慢。\n  男：已经非常好了，最多的一次你连续抢答了六道题呢！\n  女：哈哈，你看得可真仔细啊！\n  问：女的可能参加了什么比赛？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n女：杰克，你学中文的时候，听过“夸父追日”这个故事吗？\n男：听过啊！这是古书《山海经》里的一个神话传说。\n女：那你能不能给我们讲讲这个故事？\n男：好啊，夸父跟太阳赛跑。在追赶太阳的过程中，他太渴了，喝光了黄河、\n  渭河的水都不够，就想去喝北方大湖的水，结果还没到大湖的时候，他就\n  渴死了。在他死后，他扔掉的手杖变成了桃林。\n女：你讲得真清楚。\n11．“夸父追日”是一个什么故事？\n12．夸父是怎么死的？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  一个寒冷的冬夜，有位农夫在路边看到一条快要冻死的蛇。善良的农夫觉得\n很可怜，就把蛇捡起来，放到自己的怀里为它取暖。在农夫温暖的怀中，蛇渐渐\n醒了过来。农夫很高兴，问蛇好点儿了没有。没想到，蛇的回答是狠狠地咬了他\n一口。临死之前，农夫非常后悔。他终于明白，像毒蛇一样的恶人是不应该去帮\n的。但是他明白得太晚了。\n13．这个故事发生在什么季节？\n14．下列哪个词最适合形容农夫的行为？"}]},"8":{"title":"“朝三暮四”的古今义","answers":"1-6： CBC CBB 7-14：CBDD BACA","items":[{"kind":"single","q":1,"text":"女：在汉语当中，语音、汉字、词汇、语法，你对哪个最感兴趣？\n 男：古今词义的变化，我觉得最有意思。\n 问：男的对什么最感兴趣？"},{"kind":"single","q":2,"text":"男：怎么这么半天才来？\n 女：别提了，门口很多人抢着买票，半天才进来。\n 问：女的为什么来得晚？"},{"kind":"single","q":3,"text":"女：李教授，请您谈谈最近几年，汉语新词语有哪些特点？\n 男：首先，在当前产生的新词语中，多音节词明显增多，打破了以前双音节\n    占主要地位的局面。\n 问：李教授提到汉语新词语有什么变化？"},{"kind":"single","q":4,"text":"男：试了这么多次都不行，我真的想放弃了。\n 女：别着急，机会总是给有准备的人的，你一定能成功。\n 问：女的是什么语气？"},{"kind":"single","q":5,"text":"女：老王，今天你穿这件 T 恤显得格外年轻。\n 男：老婆昨天刚给我买的，挺贵的。\n 问：女的觉得男的这件衣服怎么样？"},{"kind":"single","q":6,"text":"女：好久不见，你可胖了不少。\n 男：看来我得限制一下自己的食量了。\n 问：男的是什么意思？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"女：我儿子真是太调皮了！我都快受不了了。\n 男：小孩子嘛，多少都有点儿淘气。\n 女：有点儿？你是没见过他，不知道。\n 男：那你下次把他带到办公室来玩儿玩儿。\n 问：他们最可能是什么关系？"},{"kind":"single","q":8,"text":"男：给你盛点儿饭吧？\n 女：不用，我减肥呢，不吃主食。\n 男：你每天光吃蔬菜，连肉都不吃，会营养不足。\n 女：我觉得没问题，我身体挺好的。\n 问：女的只吃什么？"},{"kind":"single","q":9,"text":"女：新来的小姑娘真是太不会干活儿了！\n 男：你多教教她，慢慢就好了。\n 女：我除了干自己的还得帮她？那我多吃亏啊，挣一份钱打两份工！\n 男：哎呀，不是说吃亏就是福吗？\n 问：男的在表达什么意思？"},{"kind":"single","q":10,"text":"男：这个办法似乎行不通。\n  女：我们还没试过，你怎么知道不行？\n  男：以前有另一个团队用过这个办法，就没成功。\n  女：那要不你再宽限我两天？我再想想别的法子。\n  问：女的是什么意思？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n男：老师，“朝三暮四”是一个成语，对吧？\n女：是的。成语是汉语中特有的一种语言现象。\n男：成语有什么特点呢？\n女：它们有固定的结构，不能随便更改。\n男：听说很多成语背后都有故事？\n女：对，成语的意义并不一定是每个字意思的简单相加，而是一个整体。\n11．对话中提到了哪个成语？\n12．“成语不能随便更改”说的是它哪方面的特点？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  有一天，兔子兄弟得到一块大饼，可是他们碰到了一个大难题：一个大饼\n要怎么分才公平呢？这时候跑来一只狐狸。狐狸说：“我来帮你们呀。”说着\n狐狸就把饼掰作了两半。他故意把左边一块大一点儿的递给兔哥哥，把小的一\n块儿递给兔弟弟。兔弟弟哭了，说：“我不干，哥哥的比我的大。”狐狸\n说：“没事没事，我是最公平的。”说着狐狸便咬了一口兔哥哥的饼，兔弟弟\n笑了，兔哥哥又哭了，狐狸又咬了一口兔弟弟的饼……就这样，一块饼被狐狸\n左一口、右一口地咬光了。\n13．狐狸说自己来干什么？\n14．最后谁吃到了饼？"}]},"9":{"title":"别样鲁迅","answers":"1-6： DAB BAC 7-14：CDAB BDCD","items":[{"kind":"single","q":1,"text":"女：难道鲁迅这样的大文学家还会做饭？\n 男：他不但会做，还对美食很有见解，是个地道的行家。\n 问：关于鲁迅，下列哪项正确？"},{"kind":"single","q":2,"text":"男：作为这方面的专家，您对这个问题怎么看？\n 女：我已经就这个问题专门写了一篇文章。\n 问：男的为什么要问女的的意见？"},{"kind":"single","q":3,"text":"女：听说那家铺子的点心不错，咱们哪天去尝尝吧？\n 男：我最近胃不太好，吃什么都没胃口。\n 问：对于女的的建议，男的是什么态度？"},{"kind":"single","q":4,"text":"男：真没想到这些年老刘的生意做得这么大！\n 女：是啊，不声不响地，他们公司都位居行业之首了。\n 问：老刘的公司在本行业中地位如何？"},{"kind":"single","q":5,"text":"女：这些都是宝贵的资料，应该好好儿保存下来。\n 男：我那儿还有一大堆呢。\n 问：男的是什么意思？"},{"kind":"single","q":6,"text":"男：你读过鲁迅先生的《彷徨》吗？\n 女：当然读过，那是鲁迅的小说作品集，共收录他 1924 年到 1925 年所作的\n    11 篇小说。\n 问：关于《彷徨》，下列哪项不正确？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"女：咱们老同事好久不见了，周末聚聚吧？\n 男：好啊！去太和居怎么样？\n 女：我没去过。你觉得好吗？\n 男：算不上豪华，但很适合朋友聚会。\n 问：男的觉得太和居怎么样？"},{"kind":"single","q":8,"text":"男：要是经济上有困难，你尽管跟我说。\n 女：你已经帮我出了不少力了，不能让你再出钱。\n 男：就算是我借给你的好了，等你赚回来了再还我。\n 女：我会有办法的。\n 问：女的是什么意思？"},{"kind":"single","q":9,"text":"女：你不是戒烟了吗？怎么又抽上了？\n 男：哎呀，跟朋友和同事在一起，免不了要抽一点儿。\n 女：整天就知道呼朋唤友，家里的事你根本不管！\n 男：你看你，又来了……\n 问：他们最可能是什么关系？"},{"kind":"single","q":10,"text":"男：你怎么不吃啊？\n  女：这个碗有点儿脏，我叫服务员换一个。\n  男：你以为这是高档酒店啊，别穷讲究了。\n  女：什么叫穷讲究？路边小馆儿也得干净啊！\n  问：他们在哪儿吃饭？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n男：你听说过孔子吗？\n女：当然。他是中国古代著名的思想家、教育家，儒家学派的创始人。\n男：那我再考考你，孔子是春秋末期哪国人？\n女：鲁国人。不过他曾经带着弟子周游列国 14 年，因为当时没有得到很多人的\n  欣赏。我想他自己也没想到，他的思想和学说对后世产生了这么深远的影响。\n男：还真难不倒你！那最后一个问题，“七十二贤人”是什么意思？\n女：相传孔子有弟子 3000 人，其中有 72 个特别优秀，被后人称为“七十二贤人”。\n11．孔子是春秋末期哪国人？\n12．关于孔子，下列哪项正确？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  文彦博是北宋杰出的政治家，他自小聪明过人。有一次，他和几个小朋友在\n草地上玩儿球，一不小心，球掉进一棵大树的树洞里去了。小朋友尝试伸手进\n树洞取球，可是树洞太深，怎么办呢？小朋友们你一言我一语的，都想不出办\n法来。文彦博看着那黑乎乎的树洞想了一会，说：“我有个办法，可以试\n试！”他们叫人帮忙提来几桶水，把水一桶一桶往树洞里倒，不一会儿，水就\n把树洞给填满了，皮球也浮了上来。\n13．文彦博是什么人？\n14．文彦博想了什么办法把球取出来？"}]},"10":{"title":"争论的奇迹","answers":"1-6： DCA BBA 7-14：ABCB AACA","items":[{"kind":"single","q":1,"text":"男：我觉得马跑得那么快，跳起时四蹄应该都是不着地的。\n 女：瞎说，要是四蹄都不着地，那不成了青蛙啦？\n 问：女的是什么意思？"},{"kind":"single","q":2,"text":"男：刘经理，行李已经给您放车里了，咱们什么时候出发？\n 女：李师傅，登机牌我在网上都换好了。时间还早，您先去吃个饭吧。\n 问：女的准备要去哪儿？"},{"kind":"single","q":3,"text":"男：小李，你这张婚纱照在哪儿照的？真不错！\n 女：是我们去欧洲旅行结婚时，请摄影师拍的。\n 问：关于小李，下列哪项正确？"},{"kind":"single","q":4,"text":"女：儿子来了个短信，说在路上耽误了，让我们再等一会儿。\n 男：这孩子真不像话！这是什么日子，他还敢这么不当回事？\n 问：男的说话时的心情怎么样？"},{"kind":"single","q":5,"text":"女：最近忙什么呢？好长时间没看到你了。\n 男：学院进了一批新电脑，这段时间忙着安装调试呢。\n 问：关于男的，可以知道什么？"},{"kind":"single","q":6,"text":"男：电影频道播的一些原版电影，我很喜欢看。\n 女：我也喜欢，看着字幕，还可以练习一下英语。\n 问：关于女的，可以知道什么？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第7题。"},{"kind":"single","q":7,"text":"女：你看过动画片《大闹天宫》吧？\n 男：咱们小时候，谁没看过？在国内国际多次获过奖的，太经典了！\n 女：昨天，我儿子看了，他居然说不喜欢。\n 男：可能这就是时代的差距吧。\n 问：关于《大闹天宫》\n          ，可以知道什么？"},{"kind":"single","q":8,"text":"男：听你说话声音好像感冒了。\n 女：起床时觉得鼻子有点儿堵，嗓子也发干。\n 男：用盐水漱漱口，用吹风机吹吹脖子后边，注意别太烫。\n 女：这办法还没用过，管用吗？\n 男：感冒初期有效，严重了当然还得吃药。\n 问：男的建议用吹风机吹什么地方？"},{"kind":"single","q":9,"text":"女：你这条牛仔裤的颜色越洗越浅了。\n 男：是啊，褪色了。不好看了。\n 女：听人说，新的牛仔裤放浓盐水里泡半天，以后就不会褪色了。\n 男：下回咱们试试。\n 问：关于牛仔裤，可以知道什么？"},{"kind":"single","q":10,"text":"男：昨天我整理东西，有个意外的收获。\n  女：是吗？什么收获？\n  男：我居然找到考上大学时，姑姑送我的那块手表了，我一直以为丢了呢。\n  女：看起来你应该经常收拾一下房间。\n  问：男的那块手表，是谁送给他的？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n女：你的相机看起来挺不错，唯一的缺点就是重。\n男：你说得没错，但我喜欢摄影，这点儿难题能克服。\n女：你这相机多少钱买的？\n男：加上镜头，一万五左右。\n女：我这个手机才四千多，也有拍照功能，效果也不错，带着多方便。\n男：手机怎么能和相机比？太不专业了。\n11．关于男的，从对话中可以知道什么？\n12．女的对相机最不满意的地方是什么？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  现在的孩子“动”的时间越来越少。在家里，饭来张口，衣来伸手，基本不\n做家务；外出，上楼有电梯，出行有汽车；在学校，课间 10 分钟多被加课挤占，\n体育课的活动量过小或被挪作他用；有限的业余时间又多用在电脑上网、玩儿游\n戏机、看电视等静态的活动上，户外活动时间越来越少。据统计，60%的儿童肥\n胖和每天长时间坐在屏幕前有关。\n  其实，玩儿是孩子们的天性，孩子在玩儿中得到快乐，也在玩儿中锻炼身\n体。如今，过多的作业、名目繁多的特长班和辅导班夺去了孩子们玩儿的权\n利。而家长们由于职场压力和工作负担，也谈不上做孩子们的玩伴了。\n13．文中提到的“动”的时间，是指下列哪种时间？\n14．根据本文，家长为什么不能成为陪孩子玩儿的玩伴？"}]},"11":{"title":"闹钟的危害","answers":"1-6： ACB BCD 7-14：BADA BAAD","items":[{"kind":"single","q":1,"text":"女：我不是催你，只是想告诉你一声，我已经到了。\n 男：啊？你都到啦！这才几点哪？\n 问：从对话中可以知道什么？"},{"kind":"single","q":2,"text":"女：你不是说今天有会要早点儿去单位吗？怎么还不走？\n 男：刘总昨天临时有事去上海了，会取消了。\n 问：根据对话，男的怎么了？"},{"kind":"single","q":3,"text":"男：妈妈，你看天阴得多厉害，这雨肯定小不了，下午篮球训练还能进行吗？\n 女：现在都是雷阵雨，说不定一会儿就停了。\n 问：妈妈觉得下午的训练最可能怎样？"},{"kind":"single","q":4,"text":"男：真佩服你丈夫。抽了 20 多年的烟，说戒就戒了。我也一直想，可到现在\n    也没戒掉。\n 女：其实很简单，关键就看你有没有决心。\n 问：关于戒烟，可以知道男的什么情况？"},{"kind":"single","q":5,"text":"男：小区的中心广场安装了很多健身器，你没事也去锻炼锻炼吧。\n 女：等我把这集电视剧看完了再说。\n 问：男的让女的做什么？"},{"kind":"single","q":6,"text":"男：小刘，你帮我看看，这个复印机出什么问题了？印着印着就停了。\n 女：这个指示灯亮了，就说明没纸了，要重新装纸。\n 问：关于复印机，下列哪项正确？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"男：这两天又失眠了。你说，换个枕头会不会好点儿？\n 女：也许吧，睡前喝杯牛奶可以改善睡眠，你试试。\n 男：昨晚夜里三点多醒了，想起单位那些头疼的事，就再也没睡着。\n 女：你要学会放松，别老胡思乱想。\n 问：男的为什么失眠？"},{"kind":"single","q":8,"text":"女：你说，鸵鸟也有翅膀，可为什么不会飞呢？\n 男：我听说它们胸骨太平了，肌肉不够发达。\n 女：懂的还不少。关键是它们的羽毛太柔软，翅膀与身体相比过于短小，根\n    本不适合飞行。\n 男：还是没你懂得多呀！\n 问：根据对话，鸵鸟不会飞的关键因素是什么？"},{"kind":"single","q":9,"text":"女：现在大家都用智能手机了，你怎么还用这种老式的功能手机啊？\n 男：我这个手机的电池充一次电能用好几天，你的不行吧。\n 女：你太落后了，功能机有很多应用用不了。\n 男：没关系，我只要能打电话、发短信就够了。\n 问：男的为什么还用老式的功能手机？"},{"kind":"single","q":10,"text":"男：上周五校庆，你怎么没来啊？\n  女：我在外地出差呢。\n  男：好多外地同学也来了，都二十年没见了，我们照了好多照片。\n  女：你不是有我微信吗？赶快给我发几张看看。\n  问：女的上周五做什么了？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n男：我老板送了我两张展览会的门票，周六你有时间吗？\n女：是什么展览？\n男：今年的国际车展，全球各大厂商的新款车型都有展出。\n女：太好了！我正想买车呢，听说买新能源汽车，政府是有很大优惠的。\n男：新能源汽车是今后的发展方向，车展上你可以去咨询一下这方面的情况。\n女：你汽车方面比我懂得多，到时候帮我参谋参谋。\n男：没问题。那周六你就在家等我，我开车去接你。\n11．说话的两个人最可能是什么关系？\n12．关于车展，从对话中可以知道什么？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  近年来，我国小学生的睡眠时间持续减少，80%的学生睡眠时间达不到每天\n10 小时的国家标准，即使在周末，也有七成以上的学生存在缺觉状况。尽管学\n校采取措施推迟上学时间在一定程度上保障了孩子的睡眠时间，但是许多“望子\n成龙”的家长却因“不能输在起跑线上”的心态不断给孩子加压，使孩子的睡眠\n时间不断被挤占。在学习日，过多的课后作业是抢占孩子睡眠的主要因素；而周\n末，主要是过多的课外补习班与兴趣班夺去了孩子的睡眠。\n  缺觉不仅影响学习，还会导致肥胖，影响生长发育。研究发现，与每天睡眠\n在 10 小时以上的孩子相比，长期睡眠不足 10 小时的孩子变成胖墩儿的可能性会\n增加 3.5 倍。因此，保证小学生每天 10 个小时的睡眠是非常重要的。\n13．从文中可以知道，缺觉对小学生有什么不良影响？\n14．这段短文主要告诉我们什么？"}]},"12":{"title":"海外用户玩儿微信。","answers":"1-6： CDC CBB 7-14：ABDA DACB","items":[{"kind":"single","q":1,"text":"男：北京队踢得真棒！看来今天肯定能赢。\n 女：是，只要继续保持这种状态，冠军肯定是我们的！\n 问：关于北京队，可以知道什么？"},{"kind":"single","q":2,"text":"女：小李，我买了台打印机，你能帮我安装一下吗？\n 男：没问题，其实很简单，连上数据线，按电脑上显示的步骤，装上驱动程\n    序就好了。\n 问：女的请小李帮忙做什么？"},{"kind":"single","q":3,"text":"男：你坐这把不是挺好的吗？那把电脑椅滑来滑去，不好写字吧？\n 女：这把椅子低，那把椅子高。\n 问：男的觉得那把电脑椅怎么样？"},{"kind":"single","q":4,"text":"女：我手机里也安装了这个应用，怎么没有你说的这个功能？\n 男：我这是最新的版本，你回去升一下级就行了。\n 问：男的让女的做什么？"},{"kind":"single","q":5,"text":"男：你的邮件我收到了，可是没有看到你的广告计划书呀？\n 女：没有？怎么可能？我立刻看一下，是我忘了粘贴附件吗？\n 问：接下来，女的马上会怎么做？"},{"kind":"single","q":6,"text":"女：你为什么让我把笔记本电脑的电池拆下来？\n 男：在家时插上充电器使用，这样可以延长电池的使用寿命。\n 问：男的为什么建议拆下电池？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"女：爸，您这台电脑太旧了，显示器占这么大地方，我给您换换吧？\n 男：我这不是才用了四五年吗？挺好用的。\n 女：现在都是液晶显示器了，很省空间。\n 男：我习惯了，没觉得不方便。\n 问：女的觉得爸爸的电脑怎么了？"},{"kind":"single","q":8,"text":"男：你有微信吗？我们可以用它联系，很方便。\n 女：有。不过，我不太会添加联系人。\n 男：告诉我你的微信号，我搜索一下。\n 女：我听说有一个“扫一扫”的功能，你知道怎么用吗？\n 问：男的正在用手机做什么？"},{"kind":"single","q":9,"text":"女：数码相片的尺寸你会不会改？\n 男：电脑上有处理图片的软件就能改，怎么了？\n 女：我办签证，要把尺寸改成报名登记表上要求的大小。\n 男：行，你发给我，我帮你处理一下。\n 问：女的让男的帮忙做什么？"},{"kind":"single","q":10,"text":"女：我发现最近电脑变得特别慢，打开一个网页要等半天。\n  男：你安装什么新软件了吗？\n  女：我就收收邮件，或者浏览一下网页，没做别的。\n  男：有时邮件也会带病毒，你用杀毒软件查一下。\n  问：对这台电脑，男的建议女的做什么？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n男：您插上耳机听听声音清不清楚，如果也不清楚，那可能就是硬件的毛病。\n女：我试过了，情况是一样的。\n男：您这台电脑购买了多长时间了？\n女：一年不到，还没过保修期呢。\n男：一年之内，我们是可以上门服务的，您把电脑上的产品编号告诉我，另外说\n  一下您的地址，我记一下。\n11．女的的电脑可能是什么问题？\n12．男的打算怎么解决电脑的问题？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  从前，一位画家给总统画了一幅画像。画好以后，他对总统说：“本人虽不\n是名家，但也不是无能之辈。请您约几个朋友来评价评价，就知道了。”\n  总统接受了他的意见，请了几位朋友来欣赏。大家看了很头疼，如果老实地\n说实话，怕让总统难为情。第一位很狡猾，说：\n                    “方顶帽画得相当像。”第二位说：\n“衣服也很像”。画家急忙插嘴：\n              “帽子和衣服不是主要的，请对面容发表发表意\n见。”第三位把画像与总统反复对比了半天，看着总统盼望的目光，只好说：\n                                 “胡\n子稍微像一点儿。”\n13．从短文中可以知道，这位画家怎么样？\n14．三位朋友评价画像时，为什么不说实话？"}]},"13":{"title":"锯掉生活的“筐底”","answers":"1-6： CAB BCB 7-14：DBAD CDAD","items":[{"kind":"single","q":1,"text":"女：何必这么费劲儿呢？我来帮你做不就行了？\n 男：那太麻烦你了，我还是自己来吧。\n 问：男的是什么意思？"},{"kind":"single","q":2,"text":"男：你给王老师发个短信告诉他一声吧。\n 女：他现在应该在上课，看不了短信；何况现在我们都用微信联系，谁还发\n    短信啊？\n 问：对男的的要求，女的是什么态度？"},{"kind":"single","q":3,"text":"女：你的腿怎么了？摔伤了吗？\n 男：昨天在健身房锻炼的时候用力过大，把肌肉拉伤了。\n 问：男的是怎么受的伤？"},{"kind":"single","q":4,"text":"男：张教练，您能分析一下本次比赛失利的原因吗？\n 女：主要是队员们参赛前缺乏训练。\n 问：张教练他们队最后的比赛结果怎么样？"},{"kind":"single","q":5,"text":"女：我觉得你太不重视我的事了。\n 男：一接到你的电话，我就连忙打车过来了，还不重视啊？\n 问：男的是什么意思？"},{"kind":"single","q":6,"text":"男：高秘书，刘总还在跟小李谈话吗？\n 女：对，气氛好像有点儿紧张，……\n 问：女的接下来最可能说什么？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"女：没想到最后是一个小孩子想出了办法。\n 男：是啊，去掉篮筐的底，这么简单的事，我们怎么都没想到呢？\n 女：有时候，我们把一些事情想得太复杂了。\n 男：说白了，我们的思维，都像篮球一样被篮筐的底挡在了半空中。\n 问：他们在讨论什么话题？"},{"kind":"single","q":8,"text":"男：昨天的球赛你看了吗？\n 女：看了，平安队又赢了。别看他们水平一般，还老赢。\n 男：是啊，论技术他们真不比对手强，就是运气好。\n 女：也不完全是运气，队员们的情绪很稳定。\n 问：男的认为平安队为什么能赢？"},{"kind":"single","q":9,"text":"女：你怎么精神这么差？\n 男：这几天总是失眠。\n 女：是不是工作有压力？情绪紧张容易造成失眠。\n 男：可能吧，最近太忙了。\n 问：男的为什么失眠？"},{"kind":"single","q":10,"text":"男：刘大夫，谢谢您给我开的药，擦了之后很管用。\n  女：现在好点儿了吗？疼得不那么厉害了吧？\n  男：好多了。\n  女：最好还是再休息几天，别急着恢复训练，容易重复拉伤。\n  问：女的建议男的什么？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n女：您好，请问参加潜水活动需要满足什么条件？\n男：首要条件就是身心健康，否则无法在水中安全活动，因为水压可能会加重某\n  些疾病；心理上也需要克服一些紧张情绪。另外，最好有一定的游泳基础，\n  然后在我们这儿接受潜水训练。\n女：对年龄有限制吗？\n男：一般没有限制。但我们不建议 8 岁以下的小朋友潜水；高龄者的话，要提供\n  体检证明。\n女：好的，谢谢您！\n11．下列哪项不是参加潜水活动必须满足的条件？\n12．关于年龄有什么规定？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  网球起源于法国，现在在欧美已经成为仅次于足球的最受欢迎的体育项目。\n目前，国际上著名的网球比赛有男子团体戴维斯杯、女子团体联合会杯以及四大\n单项赛，分别是澳大利亚、温布尔登、法国和美国网球公开赛。网球运动的职业\n化程度相当高，每年都会举行数十次公开赛或大奖赛，有奖金、有积分，一些网\n球高手的年收入可达几千万美元。\n13．根据上文，现在在欧美最受欢迎的体育项目是什么？\n14．关于网球，下列哪项不正确？"}]},"14":{"title":"北京的四合院","answers":"1-6： BAD CAB 7-14：BCDC CADD","items":[{"kind":"single","q":1,"text":"女：你家院子里种了些什么？\n 男：有花，有竹子，而且我们还养了几条金鱼。\n 问：他家院子里没有什么？"},{"kind":"single","q":2,"text":"男：这就是我们家乡的标志性建筑。\n 女：那咱们在这儿合张影留作纪念吧，毕竟我来旅游了一趟。\n 问：他们现在在哪儿？"},{"kind":"single","q":3,"text":"女：关于新产品，你有什么看法？\n 男：相对而言，如果定价不能太高的话，我觉得功能比形式重要。\n 问：男的更重视什么？"},{"kind":"single","q":4,"text":"男：这些建筑已经有三百多年历史了。\n 女：历史这么长，规模这么大，还能保存完好，真是太不容易了。\n 问：女的觉得这些建筑怎么样？"},{"kind":"single","q":5,"text":"女：这就是你所谓的营销方案——出去发发小广告？\n 男：别小看小广告，它作用大着呢。\n 问：听了男的的话，女的是什么反应？"},{"kind":"single","q":6,"text":"男：这是我第一次负责接待这么大的一个代表团，有点儿紧张。\n 女：没事，大家都是这么过来的。\n 问：女的是什么意思？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"女：您太客气了，出去旅行还想着给我们带礼物。\n 男：这是当地最有名的小吃，大家都尝尝。\n 女：您对济南印象怎么样？\n 男：历史悠久，风景优美，是个好地方。\n 问：男的为什么要带礼物？"},{"kind":"single","q":8,"text":"男：你觉得这台空调怎么样？\n 女：功能倒是挺强大，价钱也便宜。\n 男：那就买这个吧？\n 女：但是这个样式，好像不太适合我们家的装修风格。\n 问：女的对什么不满意？"},{"kind":"single","q":9,"text":"女：终于搬进新家了！\n 男：从平房到楼房，条件是好了，但邻里关系没有以前那么密切了。\n 女：这有什么关系？再说跟以前的邻居也不是没矛盾。\n 男：我还是挺喜欢院子里的那种气氛。\n 问：男的是什么意思？"},{"kind":"single","q":10,"text":"男：他三年就打下这么大一片市场，真是没想到。\n  女：是啊，听说他还没有任何背景，都靠自己。\n  男：对，完全是白手起家。\n  女：真是创造了一个奇迹。\n  问：“白手起家”的意思可能是什么？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n女：什么是四合院？\n男：四合院是中国华北地区民居中的一种建筑形式。\n女：我的意思是问为什么叫“四合”院。\n男：\n “四”指东、西、南、北四面，\n              “合”就是四面房屋围在一起，中间形成一个\n  方形的院子。\n女：哦，谢谢你，我明白了。\n11．四合院主要分布在中国什么地方？\n12．“四合院”中的“合”是什么意思？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  为什么明清时期描写北京历史风貌的文章，作者多数是外地人，特别是江南\n人呢？因为那时北京已成为全国的首都，有识之士纷纷从外地来到北京，这里的\n宏伟建筑、优美风光深深地吸引着他们，使他们耳目一新。这些人心有所感，自\n然要用笔记录下来。至于为什么北京人自己写得少，这恐怕与他们自小生活在这\n里，对各种事物都习以为常有关，并不等于北京本地缺少才子。\n13．为什么描写北京的文章，多数是外地人写的？\n14. 根据这段话，下列哪项正确？"}]},"15":{"title":"纸上谈兵","answers":"1-6： BDA CBC 7-14：DBCD CDBC","items":[{"kind":"single","q":1,"text":"女：老板派咱儿子去完成这次的任务不是好事吗？你为什么这么不高兴？\n 男：儿子的毛病是只会讲大道理，缺乏实际锻炼。如果让他去，八成儿会把\n    事情弄糟。\n 问：对于儿子去完成这次任务，父亲的态度是什么？"},{"kind":"single","q":2,"text":"男：你为什么不想去幼儿园呢？\n 女：小朋友们骂我是胆小鬼，不跟我玩儿。\n 问：女孩儿为什么不愿意去幼儿园？"},{"kind":"single","q":3,"text":"女：这次夏令营是一个挑战，看看你是不是真的可以独立了。\n 男：您放心吧，我一定没问题。\n 问：他们最可能是什么关系？"},{"kind":"single","q":4,"text":"男：今天的会议有什么重要内容？\n 女：我跟你一样，没有参加会议的资格。\n 问：女的是什么意思？"},{"kind":"single","q":5,"text":"女：这孩子整天这么没脑子，以后可怎么办哪？\n 男：没关系，长大了慢慢就会懂事了。\n 问：女的觉得孩子怎么样？"},{"kind":"single","q":6,"text":"男：战国时期，各个国家之间的竞争非常激烈。\n 女：其实哪个时代都一样，那时候人才也是关键。\n 问：女的想说明什么？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"女：老王不在你们公司工作了吗？\n 男：他被派到上海分公司去任总经理了。\n 女：原来是升官了啊！\n 男：是啊，干了这么多年，也该轮到他了。\n 问：关于老王，可以知道什么？"},{"kind":"single","q":8,"text":"男：太倒霉了！这次真是上了个大当！\n 女：之前我就再三地阻止你，你不听我的，能怪谁呢？\n 男：是啊，早知道听你的就好了。\n 女：现在后悔也晚了。\n 问：男的怎么了？"},{"kind":"single","q":9,"text":"女：我们为什么不主动去跟他们竞争呢？\n 男：现在的形势是敌强我弱，我们要做的就是坚守阵地。\n 女：我觉得你太小心谨慎了。\n 男：谨慎总比冒险好。\n 问：男的是什么意思？"},{"kind":"single","q":10,"text":"男：为什么每次老张骂你，你都不出声？\n  女：我懒得跟他吵。\n  男：什么懒得跟他吵，我看你明明是吵不过他。\n  女：他年纪比我大，资历比我老，我当然只能让着他了。\n  问：关于女的，可以知道什么？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n女：昨天你不是说先等等，看看对方的反应怎么样吗？\n男：我又想了想，觉得这件事迟早是要解决的，还不如先拿出一个有利于我们自\n  己的方案。\n女：你这主意改得可真快。\n男：别说这么多了，还是快想办法吧。\n女：知己知彼才能百战百胜呢，现在我们完全不了解对方的情况，怎么拿方案啊？\n  这不是纸上谈兵嘛！\n11．男的原来的想法是什么？\n12．女的是什么意思？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  有些中国人言必称汉唐，因为汉朝和唐朝确实是中国古代历史上最值得骄\n傲的两个朝代，经济条件好，军事力量强。不过仔细想一想，其实这两代也并\n不是从头到尾都繁荣富强。汉朝最值得称赞的主要是汉高祖以后的一百多年，\n代表人物是汉文帝和汉武帝；唐朝也一样，总共约三百年江山，最令后人怀念\n的大概也只有唐太宗的“贞观之治”和唐玄宗的“开元之治”两段时间。\n13．说话人认为汉朝和唐朝怎么样？\n14．根据这段话，下列哪项正确？"}]},"16":{"title":"体重与节食","answers":"1-6： BBA CCA 7-14：ACDB ABCD","items":[{"kind":"single","q":1,"text":"女：一到周一，我就发现这体重又上去不少，真没办法。\n 男：还说呢，周末又在家做什么好吃的了吧？\n 问：男的是什么意思？"},{"kind":"single","q":2,"text":"男：小明吃坏肚子了，又吐又拉。\n 女：那你赶紧带他去看急诊吧。\n 问：小明怎么了？"},{"kind":"single","q":3,"text":"男：昨天散步碰到你舅舅了。他气色不错，走起路来挺有精神的。\n 女：得谢谢您介绍了那位专家，吃了他开的汤药，我舅舅现在好多了。\n 问：关于舅舅，可以知道什么？"},{"kind":"single","q":4,"text":"男：最近，胃总不舒服，想去人民医院看看，又怕排队人多，挂不上号。\n 女：你可以预约呀，打个电话或上网都很方便。\n 问：关于挂号，女的建议怎么办？"},{"kind":"single","q":5,"text":"男：刘大夫，手术做完都一个星期了，我什么时候可以出院？\n 女：昨天检查报告出来了，没问题。明天拆线，后天就可以办手续了。\n 问：女的是什么意思？"},{"kind":"single","q":6,"text":"女：小李，你腿上的伤是怎么弄的？还在流血呢。\n 男：不要紧，打网球时不小心摔倒了，过几天就好了。\n 问：小李的腿是怎么受伤的？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"男：今天有客户来谈合同，恐怕我接不了孩子了。\n 女：不行，我下午有课，要 4 点才能完。\n 男：今天不是周三吗？他有篮球课，4 点 50 才下课呢。\n 女：我怎么给忘了，那没问题了，我去吧。\n 问：他们在商量什么事？"},{"kind":"single","q":8,"text":"女：明明，你每天早上刷牙太快了，刷不干净。\n 男：我赶时间嘛，不然，上课要迟到了。\n 女：医生说，必须持续三分钟，三个面都刷到，才能保证所有牙齿都刷干净。\n 男：好吧，下次我注意。\n 问：女的建议男的怎么刷牙？"},{"kind":"single","q":9,"text":"男：大妈，请问您要办理什么业务？\n 女：我要查一笔钱是不是到账了。\n 男：柜台排队的人比较多，如果是卡的话，您在那边的自助机上也可以。\n 女：我不太会操作，还是麻烦你帮我取个号吧。\n 问：男的是做什么工作的？"},{"kind":"single","q":10,"text":"女：大夫，我脸上又红又痒，眼睛也痒得不行。\n  男：多长时间了？这两天吃了什么？\n  女：昨天去海边玩儿，吃了海鲜，晚上就发现不对了。\n  男：我怀疑你是过敏了，先去做个检查吧。\n  问：医生怀疑女的怎么了？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n男：从你的片子上看，骨头没问题，腰疼是肌肉劳损的原因。\n女：那您说，我该怎么治疗呢？\n男：卧床休息，可以擦点儿缓解疼痛的药膏，好了以后加强腰背部的肌肉训练。\n女：大夫，能开点儿止疼药吗？\n男：可以是可以，但我们一般不建议吃，除非疼得受不了。\n女：那我还是忍一忍吧。\n11．女的怎么了？\n12．医生让她做什么治疗？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  上世纪四十年代，国外有研究机构发表的报告称，我们每吃 1 卡路里的食\n物就需要补充 1 毫升的水。这种说法迅速传播开来，到了我们耳朵里，它就成\n了“每天应该喝8 杯水”。\n  一位运动学家称：“每天 8 杯水的量，相当于我们每天要补充 2.5 升液体。”\n但他表示，“液体并不一定非水不可。其中大约 750 毫升液体来自我们每天所吃\n的食物”。这个量其实很容易就达到了。所以我们常说的所谓“8 杯水”，只是在\n提醒我们应该多喝水，而且最好在口渴之前主动喝水。\n  事实上，过量饮水反而容易引起身体水肿。在体育界，人们并不鼓励运动员\n在训练时过多补水，至今，也从未有过体育运动中由于脱水致死的报道。\n  所以，在饮水问题上，适量就好。每个人身体的承受能力并不同，如果“8\n杯水”对你来说实在很难接受，那么可能“8 杯水”就会导致你饮水过量。\n13．关于补水，我们可以知道什么？\n14．这段短文主要想告诉我们什么？"}]},"17":{"title":"在最美好的时刻离开","answers":"1-6： DDA CCD 7-14：ACBA CBCA","items":[{"kind":"single","q":1,"text":"女：这个胃药你晨起和入睡前各一次，一次两片。记住了吗？\n 男：好的，我明白了，谢谢大夫。\n 问：胃药应该怎么吃？"},{"kind":"single","q":2,"text":"男：亮亮是不是感冒了？一直打喷嚏。\n 女：是，幼儿园这段时间感冒的小朋友特别多，肯定被传染上了。\n 问：亮亮是怎么感冒的？"},{"kind":"single","q":3,"text":"男：老婆，我的腰带用最里面的洞眼也有点儿松了，你得帮我再打个洞了。\n 女：好的。看来，你这段时间减肥很有效果嘛。\n 问：从对话中，可以知道男的什么？"},{"kind":"single","q":4,"text":"男：看你今天还是不怎么动筷子，是拔的那颗牙还疼吗？要不要给你做碗面\n    条儿？\n 女：是还有点儿疼。看着什么都没胃口。\n 问：女的是什么意思？"},{"kind":"single","q":5,"text":"女：小刘怎么辞职了？\n 男：干我们这行业的，生活不规律，她孩子小，离不开人。\n 问：关于小刘，可以知道什么？"},{"kind":"single","q":6,"text":"男：昨天的电影你觉得怎么样？\n 女：开头部分还挺精彩，但结尾部分太平常了，有点儿乏味。\n 问：女的觉得电影怎么样？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"男：准备什么时候登记呀？\n 女：就我生日那天吧，以后生日和结婚纪念日一块儿过，好记。\n 男：哟，那马上就要到了，要你妈过去陪陪你吗？\n 女：不用，等婚礼的时候您跟妈再过来吧。\n 问：女的马上就要做什么了？"},{"kind":"single","q":8,"text":"女：行李都准备好了吗？要我给你叫个车吗？\n 男：不用，一会儿公司刘秘书开车来接我。\n 女：你换好登机牌了吗？\n 男：换好了，昨晚就打印出来了。放心吧。\n 女：到了给我来个短信。\n 问：他们现在最可能在哪儿？"},{"kind":"single","q":9,"text":"女：彤彤高考填报志愿的事，我怎么都觉得她那么报不太好。\n 男：女儿大了，这事我们还是应该尊重她的愿望。\n 女：家里还有安眠药吗？这两天总睡不着。\n 男：我看你是心事太重了，你少操点儿心比吃什么药都强。\n 问：女的这两天为什么睡不好？"},{"kind":"single","q":10,"text":"男：小李精神状态不太好，抽空儿你找他聊聊，安慰一下。\n  女：他怎么了？\n  男：最近，公司业务不太顺利，心理压力比较大。\n  女：我看最好的办法是放他几天假，出去玩儿玩儿。\n  问：女的觉得小李现在需要做什么？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n女：夏天冰箱里保存的东西一多，就特别容易有异味。\n男：我听说拿几块新鲜的桔子皮放在冰箱里，可以去掉异味。\n女：这季节哪儿来的桔子啊？据说，茶叶也能吸收异味。\n男：你别打我那龙井茶的主意，我都舍不得喝，能给你这么浪费？\n女：看你小气的。\n男：我们同事说，拿一小块生面放冰箱里，效果也不错，你试试。\n女：这倒是从没听说过，那晚上做馒头时，我留一块。\n11．这两个人主要在讨论什么事？\n12．关于男的，从对话中可以知道什么？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  我们的皮肤就像一个袋子把我们包裹在里面。我们的身体里大部分都是水分，\n同海水一样，我们身体里的水也是咸的，也会蒸发。风和阳光都会带走体内的水\n分，而皮肤能阻止身体里的水分流失。太强的阳光会伤害我们，皮肤则可以保护\n我们避免受到日晒。同样，皮肤也可以让我们远离那些脏东西，这是非常重要\n的，因为有些脏东西会让我们生病。皮肤还可以感受外界事物，它能感知冷暖，\n感受到疼痛。例如：篝火让我们觉得温暖，而砸在脸上的雪球则会让我们觉得冰\n冷和疼痛。\n13．关于皮肤，下列哪项正确？\n14．这段短文主要介绍的是皮肤的什么？"}]},"18":{"title":"抽象艺术美不美？","answers":"1-6： DAB BAC 7-14：BBCA ACAD","items":[{"kind":"single","q":1,"text":"女：你拍的这些人物照片，构图、光线都很专业，真让人佩服！\n 男：还差得远呢，摄影只不过是我的业余爱好。\n 问：男的说话时，态度怎么样？"},{"kind":"single","q":2,"text":"男：小李会好多种乐器，弹钢琴、拉二胡，真是多才多艺啊！\n 女：她还是我们合唱团的领唱呢。\n 问：关于小李，下列哪项正确？"},{"kind":"single","q":3,"text":"女：刘主任，这次的展览我们准备的作品很丰富。\n 男：你们的设计方案我很满意。看得出是下了很大功夫的，辛苦啦！\n 问：他们谈论的是什么事？"},{"kind":"single","q":4,"text":"男：你怎么还去电视台，你唱的那首歌昨天不是录完了吗？\n 女：导演来电话，说昨天漏了一段，让我再去补录一下。\n 问：女的为什么要去电视台？"},{"kind":"single","q":5,"text":"女：听说这次来复试的考生，有一大半专业基础课考试都没通过。\n 男：你别在这儿制造紧张气氛，我对咱们儿子很有信心。\n 问：说话的人是什么关系？"},{"kind":"single","q":6,"text":"男：这是什么画展啊？说实话，我一幅也看不懂。\n 女：你不懂就别乱说，这可都是抽象派大师的作品。\n 问：女的认为男的怎么样？\n                                  第二部分\n第 7-14 题：请选出正确答案。现在开始第 7 题。"},{"kind":"single","q":7,"text":"男：妈，您要喝点儿什么？冰箱里有冷饮。\n 女：不着急，结婚证呢？快让我看看！\n 男：瞧把您急的，好像去登记结婚的是您不是我。\n 女：我这不是不放心吗？你快点儿！\n 问：妈妈着急要做什么？"},{"kind":"single","q":8,"text":"男：现在很多影院都有网站，上网就可以订票，还可以挑选座位。\n 女：那我怎么付钱呢？\n 男：你可以通过网银付，也可以到影院取票时付。\n 女：这还真方便，我也来试试。\n 问：女的接下来想要做什么？"},{"kind":"single","q":9,"text":"女：最近有个纪录片正在热播。\n 男：是什么方面的？好看吗？\n 女：片名叫《风味》，不但介绍美食，还介绍了各地的风俗文化以及相关厨师\n    的个人成长经历，值得一看。\n 问：这是一部关于什么内容的纪录片？"},{"kind":"single","q":10,"text":"男：影视频道今晚播出一个新的连续剧，是李京主演的。\n  女：这个李京是挺会演戏的，上次演的那个医生也很好。\n  男：他可是现在最红的男演员，片约不断。\n  女：这次他演个什么角色？\n  男：好像是个工厂的车间主任。\n  问：关于李京，可以知道什么？"},{"kind":"group","q":"11-12","text":"第 11 到 12 题是根据下面一段对话：\n男：你刚吹的乐器是叫笛子吗？\n女：对，这是中国传统的民族乐器，是用竹子制作的。\n男：你吹的曲子真好听，叫什么名字？\n女：《小放牛》，这是一首经典的笛子独奏曲。\n男：我学过钢琴，不知道笛子难不难学？\n女：你有音乐基础，手指也灵活，学起来会很快，我教你。\n11．关于笛子，可以知道什么？\n12．女的为什么认为男的会学得很快？"},{"kind":"group","q":"13-14","text":"第 13 到 14 题是根据下面一段话：\n  一位学画画儿的年轻人带着自己花了整整一年时间才画成的一幅瀑布画儿\n去求见书画大师，想请他指导。大师看了那幅画儿后，摇摇头说：“还好，只是\n没能画出瀑布的声音！”\n  一年后，年轻人又来求见大师，将一幅自以为更好的瀑布画儿交给大师。大\n师看了，还是摇摇头说：“很遗憾，问题还是一样。”\n  又过了一年，这位年轻人很有信心地再次求见大师，将一幅自以为完美无缺\n的瀑布画儿捧给大师。大师看后，又一次摇摇头说：“年轻人，你还是没能画出\n瀑布的声音！\n     ”\n  年轻人糊涂了，他诚恳地问：“大师，晚辈确实不能明白其中的道理，请您\n指教！\n  ”\n  大师提起画笔，在年轻人的画儿上画了起来，他在瀑布下的水潭边画了两个\n相对而立的人，其中一个人双手拢音大声喊，另一个人伸着耳朵仔细听。\n  就这样，年轻人明白了怎样才能画出瀑布的声音，也终于理解了书画的真谛。\n13．关于年轻人第一次带去的画儿，可以知道什么？\n14．关于这位年轻人，下列哪项正确？"}]}};
+  try{for(var _j=11;_j<=18;_j++){ if(HSK5_LISTENING_SCRIPT[_j]) HSK5_LISTENING_SCRIPT[_j+10]=HSK5_LISTENING_SCRIPT[_j]; }}catch(e){}
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function isHsk5Course(){ return !window.CURRENT_COURSE || window.CURRENT_COURSE==='hsk5'; }
   function chineseEduLink(id){ return 'https://chinese.edu.vn/bai-'+id+'-loi-giai-va-dap-an-sach-bai-tap-giao-trinh-chuan-hsk-5-tap-1.html'; }
