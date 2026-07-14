@@ -830,6 +830,7 @@ audio.ex-player { height:34px;border-radius:8px;outline:none;flex:1;min-width:0;
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 </head>
 <body>
 
@@ -6379,7 +6380,7 @@ function renderReadingAudioBlock(lesson) {
     </div>
     ${tracks.map(([label,rid])=>`<div class="reading-audio-row">
       <span class="reading-audio-label">${label}</span>
-      <audio class="ex-player" controls preload="none" src="${blcupAudioURL(rid)}">Trình duyệt không hỗ trợ audio.</audio>
+      <audio class="ex-player" controls preload="metadata" src="${blcupAudioURL(rid)}">Trình duyệt không hỗ trợ audio.</audio>
       <a class="reading-audio-link" href="${blcupResourceURL(rid)}" target="_blank">nguồn ↗</a>
     </div>`).join('')}
     <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -10592,7 +10593,7 @@ function renderExercisesTab(lesson) {
         <div class="ex-audio-block">
           <span class="ex-audio-label">第一部分</span>
           <span class="ex-audio-desc">Nghe đơn lẻ (6 câu)</span>
-          <audio class="ex-player" controls preload="none" src="${audio1}">
+          <audio class="ex-player" controls preload="metadata" src="${audio1}">
             Trình duyệt không hỗ trợ audio.
           </audio>
           <span class="ex-audio-tag">Track ${n}-1</span>
@@ -10600,7 +10601,7 @@ function renderExercisesTab(lesson) {
         <div class="ex-audio-block">
           <span class="ex-audio-label">第二部分</span>
           <span class="ex-audio-desc">Nghe hội thoại dài (8 câu)</span>
-          <audio class="ex-player" controls preload="none" src="${audio2}">
+          <audio class="ex-player" controls preload="metadata" src="${audio2}">
             Trình duyệt không hỗ trợ audio.
           </audio>
           <span class="ex-audio-tag">Track ${n}-2</span>
@@ -14002,7 +14003,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var rows=[];
     for(var i=1;i<=count;i++){
       var label = labels && labels[i-1] ? labels[i-1] : ((kind==='bt'?'练习册':'课本')+' '+pad2(lessonId)+'-'+i);
-      rows.push('<div class="hsk1-audio-row"><div class="hsk1-audio-meta"><b>'+esc(label)+'</b><span>'+esc(kind==='bt'?'Sách bài tập · MP3 người nói':'Giáo trình · MP3 người nói')+'</span></div><audio controls preload="none" src="'+hsk1AudioUrl(kind,lessonId,i)+'"></audio><a href="'+hsk1AudioUrl(kind,lessonId,i)+'" target="_blank" title="Mở file MP3">↗</a></div>');
+      rows.push('<div class="hsk1-audio-row"><div class="hsk1-audio-meta"><b>'+esc(label)+'</b><span>'+esc(kind==='bt'?'Sách bài tập · MP3 người nói':'Giáo trình · MP3 người nói')+'</span></div><audio controls preload="metadata" src="'+hsk1AudioUrl(kind,lessonId,i)+'"></audio><a href="'+hsk1AudioUrl(kind,lessonId,i)+'" target="_blank" title="Mở file MP3">↗</a></div>');
     }
     return rows.join('');
   }
@@ -14268,7 +14269,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var html='';
     for(var i=from;i<=to;i++){
       var label = labels && labels[i-from] ? labels[i-from] : (pad2(id)+'-'+i);
-      html += '<div class="h1-audio-row"><div><b>'+esc(label)+'</b><span>'+ (kind==='bh'?'课本音频':'练习册音频') +'</span></div><audio controls preload="none" src="'+audioUrl(kind,id,i)+'"></audio><a href="'+audioUrl(kind,id,i)+'" target="_blank">MP3</a></div>';
+      html += '<div class="h1-audio-row"><div><b>'+esc(label)+'</b><span>'+ (kind==='bh'?'课本音频':'练习册音频') +'</span></div><audio controls preload="metadata" src="'+audioUrl(kind,id,i)+'"></audio><a href="'+audioUrl(kind,id,i)+'" target="_blank">MP3</a></div>';
     }
     return html || '<div class="h1-muted">Chưa có audio cho mục này.</div>';
   }
@@ -14477,7 +14478,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     return '<div class="hsk1-audio-list hsk1-audio-list-clean">'+tracks.map(function(t,idx){
       var url = audioUrl(kind, lessonId, t);
       var label = labels[idx] || (pad2(lessonId)+'-'+t);
-      return '<div class="hsk1-audio-row"><div class="hsk1-audio-meta"><b>'+esc(label)+'</b><span>'+(kind==='bt'?'练习册 · Sách bài tập':'课本 · Giáo trình')+'</span></div><audio controls preload="none" src="'+url+'"></audio><a href="'+url+'" target="_blank">↗</a></div>';
+      return '<div class="hsk1-audio-row"><div class="hsk1-audio-meta"><b>'+esc(label)+'</b><span>'+(kind==='bt'?'练习册 · Sách bài tập':'课本 · Giáo trình')+'</span></div><audio controls preload="metadata" src="'+url+'"></audio><a href="'+url+'" target="_blank">↗</a></div>';
     }).join('')+'</div>';
   }
   function lessonTextTracks(lesson){
@@ -14799,7 +14800,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   }
   function audioRow(kind, lessonId, n, label){
     var src = hxAudio(kind, lessonId, n);
-    return '<div class="hsk1-tb-audio-row"><div class="hsk1-tb-audio-label"><b>'+hxEsc(label)+'</b><span>'+(kind==='bt'?'练习册 MP3':'课本 MP3')+' · '+pad2x(lessonId)+'-'+n+'</span></div><audio controls preload="none" src="'+src+'"></audio><a href="'+src+'" target="_blank">↗</a></div>';
+    return '<div class="hsk1-tb-audio-row"><div class="hsk1-tb-audio-label"><b>'+hxEsc(label)+'</b><span>'+(kind==='bt'?'练习册 MP3':'课本 MP3')+' · '+pad2x(lessonId)+'-'+n+'</span></div><audio controls preload="metadata" src="'+src+'"></audio><a href="'+src+'" target="_blank">↗</a></div>';
   }
   function audioList(kind, lessonId, tracks, labels){
     return '<div class="hsk1-tb-audio-list">'+tracks.map(function(n,idx){ return audioRow(kind, lessonId, n, (labels && labels[idx]) || (pad2x(lessonId)+'-'+n)); }).join('')+'</div>';
@@ -15131,7 +15132,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   }
   function audioRow(kind,lessonId,track,label,sub){
     var src=audioUrl(kind,lessonId,track);
-    return '<div class="h1-audio-row"><div><b>'+esc(label)+'</b><small>'+esc(sub||((kind==='bt'?'练习册 · Sách bài tập':'课本 · Giáo trình')+' MP3 '+pad2(lessonId)+'-'+track))+'</small></div><audio controls preload="none" src="'+src+'"></audio><a href="'+src+'" target="_blank" title="Mở MP3">↗</a></div>';
+    return '<div class="h1-audio-row"><div><b>'+esc(label)+'</b><small>'+esc(sub||((kind==='bt'?'练习册 · Sách bài tập':'课本 · Giáo trình')+' MP3 '+pad2(lessonId)+'-'+track))+'</small></div><audio controls preload="metadata" src="'+src+'"></audio><a href="'+src+'" target="_blank" title="Mở MP3">↗</a></div>';
   }
   function getTextTracks(id){return [1,2,3].filter(function(n){return n <= (BH_COUNTS[id]||0);});}
   function getClassroomTracks(id){return id===1?[9]:(id===2?[10]:[]);}
@@ -15366,7 +15367,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   }
   function audioRowInline(kind, lessonId, trackNo, label){
     var src = audioUrl(kind, lessonId, trackNo);
-    return '<div class="hsk1-audio-inline"><div class="hsk1-audio-title"><b>'+esc(label)+'</b><span>'+(kind==='bt'?'练习册/Sách bài tập':'课本/Giáo trình')+' · '+pad2(lessonId)+'-'+trackNo+'</span></div><audio controls preload="none" src="'+src+'"></audio><a href="'+src+'" target="_blank">MP3 ↗</a></div>';
+    return '<div class="hsk1-audio-inline"><div class="hsk1-audio-title"><b>'+esc(label)+'</b><span>'+(kind==='bt'?'练习册/Sách bài tập':'课本/Giáo trình')+' · '+pad2(lessonId)+'-'+trackNo+'</span></div><audio controls preload="metadata" src="'+src+'"></audio><a href="'+src+'" target="_blank">MP3 ↗</a></div>';
   }
   function getLesson(){ return (Array.isArray(LESSONS)?LESSONS.find(function(l){return l.id===STATE.currentLesson;}):null) || {}; }
   function getTextTracks(lessonId){ return [1,2,3].filter(function(n){return n <= (BH_COUNTS[lessonId]||0);}); }
@@ -15611,7 +15612,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   function pinyinText(text, lesson){var d=buildDict(lesson), keys=Object.keys(d).sort(function(a,b){return b.length-a.length;}); var t=String(text||'').replace(/[，。？！、：:]/g,'').trim(), out=[]; while(t.length){var ok=false; for(var i=0;i<keys.length;i++){var k=keys[i]; if(t.indexOf(k)===0){out.push(d[k]); t=t.slice(k.length); ok=true; break;}} if(!ok){var ch=t[0]; if(CHAR_PY[ch]) out.push(CHAR_PY[ch]); t=t.slice(1);}} return out.join(' ').replace(/\s+/g,' ').trim();}
   function viText(text,lesson){var c=stripRole(text); if(VI_LINES[c])return VI_LINES[c]; var hits=(lesson.vocab||[]).filter(function(w){return c.indexOf(w.zh)>=0;}).map(function(w){return w.zh+' = '+w.vi;}); return hits.length?'Từ khóa: '+hits.join('; '):'Luyện đọc theo ngữ cảnh bài học.';}
   function getLesson(){return (Array.isArray(window.LESSONS)?window.LESSONS.find(function(l){return l.id===STATE.currentLesson;}):null)||{};}
-  function audioBar(kind, lessonId, track, title, sub){var src=audioUrl(kind,lessonId,track); return '<div class="h1c-audio"><div><b>'+esc(title)+'</b><span>'+esc(sub||((kind==='bt'?'练习册/Sách bài tập':'课本/Giáo trình')+' '+pad2(lessonId)+'-'+track))+'</span></div><audio controls preload="none" src="'+src+'"></audio><a href="'+src+'" target="_blank">MP3</a></div>';}
+  function audioBar(kind, lessonId, track, title, sub){var src=audioUrl(kind,lessonId,track); return '<div class="h1c-audio"><div><b>'+esc(title)+'</b><span>'+esc(sub||((kind==='bt'?'练习册/Sách bài tập':'课本/Giáo trình')+' '+pad2(lessonId)+'-'+track))+'</span></div><audio controls preload="metadata" src="'+src+'"></audio><a href="'+src+'" target="_blank">MP3</a></div>';}
   function sceneEmoji(lessonId,idx){var sets={1:['🤝','👋👋','🙇‍♂️'],2:['🙏','🍵','👋'],3:['👩‍🏫','🧑‍🎓','🌏'],4:['👩‍🏫','🇺🇸','👥'],5:['👨‍👩‍👧','🎂','👧'],6:['🗣️','🍜','✍️'],7:['📅','📖','☕'],8:['🍚🍵','🛒','💰'],9:['🐱','🏥','📞'],10:['💻','🏃','📚'],11:['🕘','🏠','🎬'],12:['🌤️','🌧️','💧'],13:['📞','🍳','🏫'],14:['🍎','🚗','🛍️'],15:['🎓','🚕','✈️']}; var arr=sets[lessonId]||['🇨🇳','📚','💬']; return arr[idx%arr.length];}
   function generatedIllustration(lessonId,idx,label){return '<div class="h1c-scene"><div class="h1c-scene-emoji">'+sceneEmoji(lessonId,idx)+'</div><div class="h1c-scene-label">Hình minh họa tự tạo · '+esc(label||'luyện nói')+'</div></div>';}
 
@@ -15729,7 +15730,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   function getLesson(id){return (Array.isArray(window.LESSONS)?window.LESSONS:[]).find(function(l){return Number(l.id)===Number(id);})||{};}
   function aurl(kind,id,track){return AUDIO_BASE+(kind==='bt'?'HSK1BT':'HSK1BH')+'-'+pad(id)+'-'+track+'.mp3';}
   function audioBlock(kind,id,track,title,sub){
-    return '<div class="h1kid-audio"><div><b>'+E(title)+'</b><span>'+E(sub||'Nghe người thật, sau đó đọc phần ngay bên dưới.')+'</span></div><audio controls preload="none" src="'+aurl(kind,id,track)+'"></audio><a target="_blank" rel="noopener" href="'+aurl(kind,id,track)+'">MP3</a></div>';
+    return '<div class="h1kid-audio"><div><b>'+E(title)+'</b><span>'+E(sub||'Nghe người thật, sau đó đọc phần ngay bên dưới.')+'</span></div><audio controls preload="metadata" src="'+aurl(kind,id,track)+'"></audio><a target="_blank" rel="noopener" href="'+aurl(kind,id,track)+'">MP3</a></div>';
   }
   function wordInfo(lesson,zh){
     var v=(lesson.vocab||[]).find(function(w){return w.zh===zh || zh.indexOf(w.zh)>=0 || (w.zh&&w.zh.indexOf(zh)>=0);});
@@ -15971,7 +15972,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var m=raw.match(/^([AB])[:：](.*)$/); var role=m?m[1]:''; var text=m?m[2].trim():raw;
     return '<div class="h1-line"><div class="h1-role">'+esc(role||'•')+'</div><div><div class="zh h1-zh">'+esc(text)+'</div><div class="h1-py">'+esc(linePinyin(lesson,text))+'</div><div class="h1-vi">'+esc(lineVi(raw))+'</div></div></div>';
   }
-  function audioRow(kind,lesson,track,title,sub){return '<div class="h1-audio"><div><b>'+esc(title)+'</b><span>'+esc(sub||'MP3 người nói')+'</span></div><audio controls preload="none" src="'+audioUrl(kind,lesson,track)+'"></audio><a target="_blank" href="'+audioUrl(kind,lesson,track)+'">MP3 ↗</a></div>';}
+  function audioRow(kind,lesson,track,title,sub){return '<div class="h1-audio"><div><b>'+esc(title)+'</b><span>'+esc(sub||'MP3 người nói')+'</span></div><audio controls preload="metadata" src="'+audioUrl(kind,lesson,track)+'"></audio><a target="_blank" href="'+audioUrl(kind,lesson,track)+'">MP3 ↗</a></div>';}
   function panel(title,sub,body,klass){return '<section class="h1-panel '+(klass||'')+'"><div class="h1-panel-head"><div><b>'+title+'</b>'+(sub?'<span>'+sub+'</span>':'')+'</div></div>'+body+'</section>';}
   function lessonTextTracks(id){return id<=2?[1,2,3]:[1,2,3];}
   function pinyinTracks(id){if(id===1)return [4,5,6,7,8]; if(id===2)return [4,5,6,7,8,9]; var n=BH_COUNTS[id]||0; var arr=[]; for(var i=4;i<=n;i++)arr.push(i); return arr.length?arr:[1];}
@@ -16130,7 +16131,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   var HSK1_BT_COUNTS = {1:5,2:5,3:2,4:2,5:2,6:2,7:2,8:2,9:2,10:2,11:2,12:2,13:2,14:2,15:2};
   function audioUrl(kind, lessonId, track){ return HSK1_AUDIO_BASE + (kind === 'bt' ? 'HSK1BT' : 'HSK1BH') + '-' + pad2(lessonId) + '-' + track + '.mp3'; }
   function audioBlock(kind, lessonId, track, title, subtitle){
-    return '<div class="h1fix-audio"><div><b>'+esc(title)+'</b><span>'+esc(subtitle || '')+'</span></div><audio controls preload="none" src="'+audioUrl(kind, lessonId, track)+'"></audio><a href="'+audioUrl(kind, lessonId, track)+'" target="_blank">mp3</a></div>';
+    return '<div class="h1fix-audio"><div><b>'+esc(title)+'</b><span>'+esc(subtitle || '')+'</span></div><audio controls preload="metadata" src="'+audioUrl(kind, lessonId, track)+'"></audio><a href="'+audioUrl(kind, lessonId, track)+'" target="_blank">mp3</a></div>';
   }
   function getWord(lesson, zh){
     var arr = lesson && Array.isArray(lesson.vocab) ? lesson.vocab : [];
@@ -16402,7 +16403,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   var AUDIO_BASE = 'https://tiengtrungquoc.net/wp-content/uploads/2023/02/';
   function audioUrl(kind, id, track){ return AUDIO_BASE + (kind === 'bt' ? 'HSK1BT' : 'HSK1BH') + '-' + pad2(id) + '-' + track + '.mp3'; }
   function audioBox(kind, id, track, title, desc){
-    return '<div class="h1stable-audio"><div><b>'+E(title)+'</b><span>'+E(desc||'')+'</span></div><audio controls preload="none" src="'+audioUrl(kind,id,track)+'"></audio><a href="'+audioUrl(kind,id,track)+'" target="_blank">MP3</a></div>';
+    return '<div class="h1stable-audio"><div><b>'+E(title)+'</b><span>'+E(desc||'')+'</span></div><audio controls preload="metadata" src="'+audioUrl(kind,id,track)+'"></audio><a href="'+audioUrl(kind,id,track)+'" target="_blank">MP3</a></div>';
   }
   function lessonCompleted(id){
     var st = getState();
@@ -16724,7 +16725,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
   }
   function audioBox(kind,id,track,title,desc){
     var url=audioUrl(kind,id,track);
-    return '<div class="h1stable-audio"><div><b>'+E(title)+'</b><span>'+E(desc||'')+'</span></div><audio controls preload="none" src="'+url+'"></audio><a href="'+url+'" target="_blank">MP3</a></div>';
+    return '<div class="h1stable-audio"><div><b>'+E(title)+'</b><span>'+E(desc||'')+'</span></div><audio controls preload="metadata" src="'+url+'"></audio><a href="'+url+'" target="_blank">MP3</a></div>';
   }
   function renderImprovedWorkbook(lesson){
     var id=Number(lesson.id)||1;
@@ -21803,7 +21804,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var nn=pad2(d.lessonNo);
     return '<div class="ex-section ex-listening-section"><div class="ex-section-header ex-header-listening">🎧 一、听力 · Luyện nghe</div><div class="ex-audio-player ex-audio-sticky">'+[1,2].map(function(p){
       var u=audioURL(d,p);
-      return '<div class="ex-audio-block"><span class="ex-audio-label">'+(p===1?'第一部分':'第二部分')+'</span><span class="ex-audio-desc">Track '+nn+'-'+p+'</span><audio class="ex-player" controls preload="none" src="'+esc(u)+'">Trình duyệt không hỗ trợ audio.</audio><span class="ex-audio-tag">'+nn+'-'+p+'</span></div>';
+      return '<div class="ex-audio-block"><span class="ex-audio-label">'+(p===1?'第一部分':'第二部分')+'</span><span class="ex-audio-desc">Track '+nn+'-'+p+'</span><audio class="ex-player" controls preload="metadata" src="'+esc(u)+'">Trình duyệt không hỗ trợ audio.</audio><span class="ex-audio-tag">'+nn+'-'+p+'</span></div>';
     }).join('')+'<div class="ex-audio-note">📌 Làm câu 1–14 trong phần 听力 bên dưới. Audio vẫn bám trên màn hình giống bài 1–10.</div></div>';
   }
   window.hsk5RebuildPick=function(btn, appId, sec, qno, letter){
@@ -22119,7 +22120,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     const n=String(d.lessonNo||id).padStart(2,'0');
     const title=d.title || (lesson&&lesson.zh) || '';
     let html='<div style="margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div style="font-size:13px;color:var(--muted)">Bài tập sách bài tập HSK 5 · Bài '+esc(d.lessonNo||id)+': <strong class="zh">'+esc(title)+'</strong></div><a href="https://archive.org/details/hsk-5-11-2" target="_blank" style="font-size:12px;color:var(--blue)">Nguồn audio ↗</a><span class="chip chip-teal">Dạng tương tác như bài 1–10</span></div>';
-    html+='<div class="ex-section ex-listening-section"><div class="ex-section-header ex-header-listening">🎧 一、听力 · Luyện nghe</div><div class="ex-audio-player ex-audio-sticky">'+[1,2].map(p=>'<div class="ex-audio-block"><span class="ex-audio-label">'+(p===1?'第一部分':'第二部分')+'</span><span class="ex-audio-desc">'+(p===1?'Nghe đơn lẻ (6 câu)':'Nghe hội thoại/đoạn văn (8 câu)')+'</span><audio class="ex-player" controls preload="none" src="'+esc(getAudio(id,p))+'">Trình duyệt không hỗ trợ audio.</audio><span class="ex-audio-tag">Track '+n+'-'+p+'</span></div>').join('')+'<div class="ex-audio-note">📌 Thanh nghe bám phía trên khi làm bài, giống bài 1–10.</div></div>';
+    html+='<div class="ex-section ex-listening-section"><div class="ex-section-header ex-header-listening">🎧 一、听力 · Luyện nghe</div><div class="ex-audio-player ex-audio-sticky">'+[1,2].map(p=>'<div class="ex-audio-block"><span class="ex-audio-label">'+(p===1?'第一部分':'第二部分')+'</span><span class="ex-audio-desc">'+(p===1?'Nghe đơn lẻ (6 câu)':'Nghe hội thoại/đoạn văn (8 câu)')+'</span><audio class="ex-player" controls preload="metadata" src="'+esc(getAudio(id,p))+'">Trình duyệt không hỗ trợ audio.</audio><span class="ex-audio-tag">Track '+n+'-'+p+'</span></div>').join('')+'<div class="ex-audio-note">📌 Thanh nghe bám phía trên khi làm bài, giống bài 1–10.</div></div>';
     html+='<div class="ex-part-card"><div class="ex-part-header">📻 '+esc(ex.listening.p1.label)+' — '+esc(ex.listening.p1.desc)+'</div><div class="ex-part-body">'+ex.listening.p1.questions.map((q,qi)=>renderMCQ(id,'l1',qi,q)).join('')+'</div></div>';
     html+='<div class="ex-part-card"><div class="ex-part-header">📻 '+esc(ex.listening.p2.label)+' — '+esc(ex.listening.p2.desc)+'</div><div class="ex-part-body">'+ex.listening.p2.questions.map((q,qi)=>renderMCQ(id,'l2',qi,q)).join('')+'</div></div></div>';
     html+='<div class="ex-section"><div class="ex-section-header ex-header-reading">📖 二、阅读 · Luyện đọc</div>';
@@ -22239,7 +22240,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
         ${[1,2].map(p=>`<div class="ex-audio-block">
           <span class="ex-audio-label">${p===1?'第一部分':'第二部分'}</span>
           <span class="ex-audio-desc">${p===1?'Nghe đơn lẻ (6 câu)':'Nghe hội thoại/đoạn văn (8 câu)'}</span>
-          <audio class="ex-player" controls preload="none" src="${esc(getAudioSafe(id,p))}">Trình duyệt không hỗ trợ audio.</audio>
+          <audio class="ex-player" controls preload="metadata" src="${esc(getAudioSafe(id,p))}">Trình duyệt không hỗ trợ audio.</audio>
           <span class="ex-audio-tag">Track ${n}-${p}</span>
         </div>`).join('')}
         <div class="ex-audio-note">📌 Thanh nghe bám phía trên khi làm bài.</div>
@@ -22395,7 +22396,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
       const seriesUrl = no >= 19 ? 'https://www.blcup.com/MobileResSeries?rid=0bc32706-d86f-419e-abf1-dcc107a1a35a' : 'https://www.blcup.com/MobileResSeries?rid=f0ddbb9f-4994-4f25-8a95-ef93a3eb4f87';
       html = html.replace(/<a href="https:\/\/archive\.org\/details\/hsk-5-11-2" target="_blank" style="font-size:12px;color:var\(--blue\)">Ngu[^<]*<\/a>/g,
         '<a href="' + seriesUrl + '" target="_blank" style="font-size:12px;color:var(--blue)">Nguon audio chinh thuc BLCUP</a>');
-      html = html.replace(/(<audio class="ex-player" controls preload="none" src="([^"]+)">Tr\u00ecnh duy\u1ec7t kh\u00f4ng h\u1ed7 tr\u1ee3 audio\.<\/audio>)\s*<span class="ex-audio-tag">Track ([^<]+)<\/span>/g,
+      html = html.replace(/(<audio class="ex-player" controls preload="metadata" src="([^"]+)">Tr\u00ecnh duy\u1ec7t kh\u00f4ng h\u1ed7 tr\u1ee3 audio\.<\/audio>)\s*<span class="ex-audio-tag">Track ([^<]+)<\/span>/g,
         function(match, audio, src, label){ return audio + '<a class="ex-audio-tag" style="text-decoration:none" href="' + src + '" target="_blank">MP3</a><span class="ex-audio-tag">Track ' + label + '</span>'; });
       html = html.replace('Thanh nghe bám phía trên khi làm bài.', 'Audio da gan lai nguon chinh thuc BLCUP. Neu trinh duyet chan phat truc tiep, bam MP3 de mo file nghe.');
       return html;
@@ -23205,6 +23206,182 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
 </script>
 <!-- JING_LISTEN_READING_FIXED_END -->
 
+
+
+
+<!-- HSK Albert native audio bar seek fix: only browser audio control bar, no extra rewind UI -->
+<style id="hsk-native-audio-bar-style">
+/* Keep only the browser's native audio bar. */
+.audio-rewind-tools,.hsk-online-rewind-tools,.audio-rewind-status,.hsk-online-status,
+.audio-rewind-btn,.hsk-online-btn,.audio-rewind-scrub,.hsk-online-scrub,.audio-rewind-time,.hsk-online-time{display:none!important;}
+.audio-rewind-wrap,.hsk-online-audio-wrap{display:block!important;width:100%!important;min-width:0!important;}
+.audio-rewind-wrap audio,.hsk-online-audio-wrap audio,
+.ex-audio-block audio.ex-player,.reading-audio-row audio.ex-player{width:100%!important;max-width:none!important;min-width:0!important;height:38px!important;display:block!important;}
+.ex-audio-block{grid-template-columns:96px minmax(130px,190px) minmax(260px,1fr) auto!important;}
+@media(max-width:900px){.ex-audio-block{grid-template-columns:88px 1fr!important}.ex-audio-block audio.ex-player{grid-column:1/-1!important;}}
+</style>
+<script id="hsk-native-audio-bar-seek-script">
+(function(){
+  if(window.HSK_NATIVE_AUDIO_BAR_SEEK_FIXED) return;
+  window.HSK_NATIVE_AUDIO_BAR_SEEK_FIXED = true;
+
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function enc(s){ return encodeURIComponent(s); }
+  function archiveWorkbookUrl(no, part){
+    no = Number(no); part = Number(part);
+    var nn = pad2(no);
+    var base = 'https://archive.org/download/hsk-5-11-2/';
+    if(no >= 19){
+      var folder = 'HSK 5下 Workbook Audio/HSK 5下 Workbook Unit ' + no;
+      var file = 'HSK5下练习册+' + nn + '-' + part + '.mp3';
+      return base + folder.split('/').map(enc).join('/') + '/' + enc(file);
+    }
+    var folder = 'HSK 5上 Workbook Audio/HSK 5上 Workbook Unit ' + no;
+    var file = 'HSK标准教程+5（上）练习册音频+' + nn + '-' + part + '.mp3';
+    return base + folder.split('/').map(enc).join('/') + '/' + enc(file);
+  }
+  window.hskNativeWorkbookAudioUrl = archiveWorkbookUrl;
+
+  function currentCourse(){
+    try { return window.CURRENT_COURSE || localStorage.getItem('hsk_course') || 'hsk5'; } catch(e){ return 'hsk5'; }
+  }
+  function workbookNo(lessonId){
+    var id = Number(lessonId);
+    try{
+      if(typeof window.getWorkbookLessonNoFixed === 'function'){
+        var n = Number(window.getWorkbookLessonNoFixed(id));
+        if(isFinite(n) && n > 0) return n;
+      }
+    }catch(e){}
+    try{
+      var arr = window.LESSONS || (typeof LESSONS !== 'undefined' ? LESSONS : []);
+      var lesson = (arr||[]).find(function(l){ return Number(l.id) === id; });
+      if(lesson && lesson.disp != null && Number(lesson.disp) > 0) return Number(lesson.disp);
+      if(lesson && Number(lesson.vol) === 2 && id >= 11 && id <= 20) return id + 8;
+    }catch(e){}
+    if(id >= 21 && id <= 46) return id - 10;
+    return id;
+  }
+
+  var oldGetAudioURL = window.getAudioURL || (typeof getAudioURL === 'function' ? getAudioURL : null);
+  window.getAudioURL = function(lessonId, part){
+    if(currentCourse() === 'hsk1' && oldGetAudioURL) return oldGetAudioURL.apply(this, arguments);
+    var no = workbookNo(lessonId);
+    part = Number(part);
+    if(no >= 1 && no <= 36 && part >= 1 && part <= 4) return archiveWorkbookUrl(no, part);
+    return oldGetAudioURL ? oldGetAudioURL.apply(this, arguments) : '';
+  };
+  window.getAudioResourceURL = function(lessonId, part){
+    if(currentCourse() === 'hsk1' && oldGetAudioURL) return oldGetAudioURL.apply(this, arguments);
+    var no = workbookNo(lessonId);
+    part = Number(part);
+    if(no >= 1 && no <= 36 && part >= 1 && part <= 4) return archiveWorkbookUrl(no, part);
+    return window.getAudioURL(lessonId, part);
+  };
+  try { getAudioURL = window.getAudioURL; } catch(e) {}
+
+  var previousRenderer = window.renderExercisesTab || (typeof renderExercisesTab !== 'undefined' ? renderExercisesTab : null);
+  if(previousRenderer && !previousRenderer.__nativeAudioBarWrapped){
+    var wrapped = function(lesson){
+      var html = previousRenderer.apply(this, arguments);
+      if(currentCourse() !== 'hsk5' || !lesson) return html;
+      html = String(html).replace(/preload="metadata"/g, 'preload="auto"');
+      html = html.replace(/Nạp online để tua|Nạp để tua|⟲ 15s|⟲ 5s|5s ⟳|Về đầu/g, '');
+      html = html.replace(/<div class="ex-audio-note">[^<]*<\/div>/g,
+        '<div class="ex-audio-note">📌 Kéo trực tiếp trên thanh audio để tua lại/nghe lại. Nguồn MP3 online đã đổi sang dạng hỗ trợ seek.</div>');
+      return html;
+    };
+    wrapped.__nativeAudioBarWrapped = true;
+    window.renderExercisesTab = wrapped;
+    try { renderExercisesTab = window.renderExercisesTab; } catch(e) {}
+  }
+
+  function cleanupOldCustomUI(root){
+    root = root || document;
+    root.querySelectorAll('.audio-rewind-tools,.hsk-online-rewind-tools,.audio-rewind-status,.hsk-online-status').forEach(function(el){ try{ el.remove(); }catch(e){} });
+    root.querySelectorAll('.audio-rewind-wrap,.hsk-online-audio-wrap').forEach(function(wrap){
+      var a = wrap.querySelector('audio');
+      if(a && wrap.parentNode){
+        try{ wrap.parentNode.insertBefore(a, wrap); wrap.remove(); }catch(e){}
+      }
+    });
+  }
+
+  function setSrcIfNeeded(a, src){
+    if(!a || !src) return;
+    var cur = a.getAttribute('src') || a.currentSrc || '';
+    if(cur === src) return;
+    var wasPlaying = false, pos = 0;
+    try{ wasPlaying = !a.paused; pos = Number(a.currentTime) || 0; }catch(e){}
+    try{ a.pause(); }catch(e){}
+    a.src = src;
+    a.setAttribute('src', src);
+    a.preload = 'auto';
+    a.setAttribute('preload','auto');
+    a.controls = true;
+    try{ a.load(); }catch(e){}
+    a.addEventListener('loadedmetadata', function once(){
+      a.removeEventListener('loadedmetadata', once);
+      if(pos > 0 && isFinite(a.duration) && a.duration > pos){ try{ a.currentTime = pos; }catch(e){} }
+      if(wasPlaying){ try{ a.play(); }catch(e){} }
+    });
+  }
+
+  function fixHsk5ExerciseAudios(){
+    if(currentCourse() !== 'hsk5') return;
+    var lessonId = 0;
+    try{ lessonId = Number(window.STATE && window.STATE.currentLesson); }catch(e){}
+    if(!lessonId) return;
+    var no = workbookNo(lessonId);
+    var player = document.querySelector('#exercises-tab .ex-audio-player') || document.querySelector('.ex-audio-player');
+    if(!player) return;
+    var blocks = Array.prototype.slice.call(player.querySelectorAll('.ex-audio-block'));
+    blocks.forEach(function(block, idx){
+      var a = block.querySelector('audio');
+      var part = idx + 1;
+      if(!a || part < 1 || part > 4) return;
+      setSrcIfNeeded(a, archiveWorkbookUrl(no, part));
+      try{ a.dataset.hskNativeBarAudio = '1'; a.removeAttribute('data-hsk-online-rewind-v2'); a.removeAttribute('data-hsk-seek-fixed'); }catch(e){}
+      try{
+        var mp3 = block.querySelector('a.ex-audio-tag[href]');
+        if(mp3) mp3.href = archiveWorkbookUrl(no, part);
+        var tags = block.querySelectorAll('.ex-audio-tag');
+        if(tags && tags.length) tags[tags.length-1].textContent = 'Track ' + no + '-' + part;
+      }catch(e){}
+    });
+  }
+
+  function nativeBarOnly(){
+    cleanupOldCustomUI(document);
+    document.querySelectorAll('audio').forEach(function(a){
+      try{
+        a.controls = true;
+        a.preload = 'auto';
+        a.setAttribute('preload','auto');
+        a.style.width = '100%';
+        a.style.maxWidth = 'none';
+      }catch(e){}
+    });
+    fixHsk5ExerciseAudios();
+  }
+  window.hskNativeAudioBarOnly = nativeBarOnly;
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', nativeBarOnly); else nativeBarOnly();
+  try{ new MutationObserver(function(){ nativeBarOnly(); }).observe(document.documentElement,{childList:true,subtree:true}); }catch(e){}
+  setInterval(nativeBarOnly, 1500);
+
+  // If the exercise tab is already open when this script loads, render it once again so the native audio bar uses seekable MP3 URLs immediately.
+  setTimeout(function(){
+    try{
+      var id = Number(window.STATE && window.STATE.currentLesson);
+      var lesson = (window.LESSONS || []).find(function(l){ return Number(l.id) === id; });
+      var tab = document.getElementById('exercises-tab');
+      if(id && lesson && tab && typeof window.renderExercisesTab === 'function') tab.innerHTML = window.renderExercisesTab(lesson);
+      nativeBarOnly();
+    }catch(e){}
+  }, 300);
+})();
+</script>
+
 </body>
 </html>
 
@@ -23299,3 +23476,4 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
 })();
 </script>
 <!-- JING_READING_GROUPS_PRECISE_PATCH_END -->
+
