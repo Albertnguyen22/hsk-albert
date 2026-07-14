@@ -23477,3 +23477,255 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
 </script>
 <!-- JING_READING_GROUPS_PRECISE_PATCH_END -->
 
+
+<!-- HSK Albert patch: Anki grammar review in Ôn tập -->
+<style>
+/* ===== HSK Albert · Anki Ngữ pháp ===== */
+.review-mode-switch{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;background:white;border:1px solid var(--border);border-radius:14px;padding:10px 12px;position:sticky;top:0;z-index:5;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.review-mode-switch .mode-pill{border:1.5px solid var(--border);background:var(--paper2);border-radius:999px;padding:8px 14px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;color:var(--ink)}
+.review-mode-switch .mode-pill.active{background:var(--ink);border-color:var(--ink);color:white}
+.grammar-review-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:18px}
+.grammar-review-card{background:white;border:1px solid var(--border);border-radius:16px;padding:16px 18px;box-shadow:0 1px 0 rgba(0,0,0,.02)}
+.grammar-review-card.action{cursor:pointer;transition:all .16s}.grammar-review-card.action:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.10);border-color:var(--teal)}
+.grammar-review-card .big{font-size:28px;font-weight:900;line-height:1;color:var(--teal);margin-bottom:6px}.grammar-review-card .lbl{font-size:12px;color:var(--muted);font-weight:700}.grammar-review-card .title{font-size:15px;font-weight:900;margin-bottom:6px;color:var(--ink)}.grammar-review-card .desc{font-size:12.5px;color:var(--muted);line-height:1.7}
+.grammar-filter-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}.grammar-filter-row select,.grammar-filter-row input{padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;background:white;font-size:13px}.grammar-filter-row input{min-width:220px;flex:1}
+.grammar-due-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}.grammar-mini-card{background:white;border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}.grammar-mini-card .zh{font-weight:900;color:var(--red);font-size:16px}.grammar-mini-card .meta{font-size:11px;color:var(--muted);margin-top:2px}.grammar-mini-card .use{font-size:12px;line-height:1.6;margin-top:4px;color:var(--ink2)}
+.grammar-study-shell{max-width:860px;margin:0 auto}.grammar-study-top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px;color:var(--muted);font-size:12px}.grammar-study-card{background:white;border:2px solid var(--border);border-radius:20px;padding:28px;box-shadow:0 6px 24px rgba(0,0,0,.08);min-height:250px}.grammar-front-pattern{font-family:'Noto Serif SC',serif;font-size:42px;font-weight:900;color:var(--red);text-align:center;margin:20px 0 10px}.grammar-front-prompt{text-align:center;font-size:13px;color:var(--muted)}.grammar-answer-box{display:none;margin-top:18px;border-top:1px dashed var(--border);padding-top:16px}.grammar-answer-box.show{display:block}.grammar-ex{background:var(--paper2);border-left:3px solid var(--teal);border-radius:8px;padding:10px 12px;margin:8px 0}.grammar-ex .zh{font-size:15px;line-height:1.9}.grammar-ex .vi{font-size:12px;color:var(--muted)}.grammar-tip{background:var(--gold-light);border:1px solid #f0d060;border-radius:10px;padding:10px 12px;margin-top:12px;font-size:12.5px;line-height:1.7;color:#664a00}.grammar-rating-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.grammar-quiz-card{background:white;border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px}.grammar-quiz-head{background:var(--paper2);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}.grammar-quiz-body{padding:16px}.grammar-quiz-stem{font-size:16px;font-weight:800;margin-bottom:14px;line-height:1.7}.grammar-quiz-options{display:grid;grid-template-columns:1fr;gap:8px}.grammar-quiz-option{border:1.5px solid var(--border);background:white;border-radius:12px;padding:12px 14px;text-align:left;font-family:inherit;cursor:pointer;line-height:1.65}.grammar-quiz-option:hover{border-color:var(--ink);background:var(--paper2)}.grammar-quiz-option.correct{border-color:var(--teal);background:var(--teal-light)}.grammar-quiz-option.wrong{border-color:var(--red);background:var(--red-light)}.grammar-explain-after{display:none;margin-top:12px;background:var(--blue-light);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--blue);line-height:1.7}.grammar-explain-after.show{display:block}
+.grammar-match-grid{display:grid;grid-template-columns:minmax(220px,1fr) minmax(260px,1.4fr);gap:12px}.grammar-match-left,.grammar-match-right{background:white;border:1px solid var(--border);border-radius:14px;padding:12px}.grammar-match-item{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:center;padding:8px;border-bottom:1px solid var(--border)}.grammar-match-item:last-child{border-bottom:none}.grammar-match-item select{width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;background:white;font-family:inherit}.grammar-use-tile{padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--paper2);margin-bottom:8px;font-size:12.5px;line-height:1.6}.grammar-use-tile b{color:var(--teal)}
+.grammar-arrange-area{min-height:56px;border:2px dashed var(--border);border-radius:12px;background:white;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.grammar-arrange-token,.grammar-arrange-chip{font-family:'Noto Serif SC',serif;border:1.5px solid var(--border);border-radius:999px;background:var(--paper2);padding:7px 12px;font-size:15px;cursor:pointer}.grammar-arrange-token{background:var(--teal-light);border-color:var(--teal)}.grammar-arrange-chip.used{opacity:.35;pointer-events:none}.grammar-write-card{background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:14px}.grammar-write-card textarea{width:100%;min-height:92px;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-family:'Noto Serif SC',serif;font-size:15px;line-height:1.8;resize:vertical;outline:none}.grammar-write-card textarea:focus{border-color:var(--teal)}
+@media(max-width:760px){.grammar-match-grid{grid-template-columns:1fr}.grammar-front-pattern{font-size:32px}.grammar-study-card{padding:20px}.review-mode-switch{position:relative}.grammar-quiz-options{grid-template-columns:1fr}}
+</style>
+<script>
+(function(){
+  if(window.HSK_GRAMMAR_REVIEW_PATCHED) return;
+  window.HSK_GRAMMAR_REVIEW_PATCHED = true;
+
+  var ORIGINAL_REVIEW = {
+    render: (typeof renderReview === 'function') ? renderReview : null,
+    start: (typeof startReview === 'function') ? startReview : null,
+    shuffle: (typeof shuffleCards === 'function') ? shuffleCards : null
+  };
+  var GR_KEY = 'hsk_albert_grammar_review_v2';
+  var GR_MODE_KEY = 'hsk_albert_review_mode';
+  var grSession = {mode:'home', cards:[], questions:[], idx:0, score:0, flipped:false, answered:false, match:null, arrange:null};
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function clean(s){return String(s||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();}
+  function shortText(s,n){s=clean(s); if(!s) return ''; return s.length>n?s.slice(0,n-1)+'…':s;}
+  function getLessons(){try{ if(typeof LESSONS !== 'undefined' && Array.isArray(LESSONS)) return LESSONS; }catch(e){} return Array.isArray(window.LESSONS)?window.LESSONS:[];}
+  function course(){return window.CURRENT_COURSE || 'hsk5';}
+  function lessonNo(l){return l ? (l.disp || l.id || '') : '';}
+  function lessonLabel(l){return (course()==='hsk1'?'HSK1 · ':'')+'Bài '+lessonNo(l)+(l&&l.zh?' · '+l.zh:'');}
+  function loadGR(){try{return JSON.parse(localStorage.getItem(GR_KEY)||'{}')||{};}catch(e){return {};}}
+  function saveGR(st){try{localStorage.setItem(GR_KEY,JSON.stringify(st||{}));}catch(e){}}
+  function getMode(){return localStorage.getItem(GR_MODE_KEY)||'vocab';}
+  function setMode(m){localStorage.setItem(GR_MODE_KEY,m);}
+
+  function getExamples(g){
+    var arr=[];
+    (g.senses||[]).forEach(function(s){(s.examples||[]).forEach(function(e){arr.push({zh:clean(e.zh||e),vi:clean(e.vi||'')});});});
+    (g.examples||[]).forEach(function(e){arr.push({zh:clean(e.zh||e),vi:clean(e.vi||'')});});
+    return arr.filter(function(e){return e.zh;}).slice(0,4);
+  }
+  function makeSummary(g){
+    var ex = clean(g.explanation || '');
+    if(!ex && g.full) ex = clean(g.full).replace(/^.*?[—-]/,'');
+    if(!ex && g.senses && g.senses.length) ex = clean(g.senses.map(function(s){return s.label||'';}).join('；'));
+    if(!ex) ex = 'Nhận diện cách dùng và vị trí của mẫu ngữ pháp này trong câu.';
+    return shortText(ex, 120);
+  }
+  function makeUseLabel(g){
+    var labels = (g.senses||[]).map(function(s){return clean(s.label||'');}).filter(Boolean);
+    if(labels.length) return shortText(labels.join('；'), 115);
+    return makeSummary(g);
+  }
+  function cardStatus(key){var st=loadGR(); return (st.cards&&st.cards[key]) || {rating:'new', next:0, reps:0, mistakes:0};}
+  function buildGrammarDeck(){
+    var deck=[];
+    getLessons().forEach(function(l){
+      var details = Array.isArray(l.grammarDetail) ? l.grammarDetail : [];
+      if(!details.length && Array.isArray(l.grammar)) details = l.grammar.map(function(p){return {pattern:p, full:p, explanation:'Mẫu ngữ pháp/từ khóa trong bài '+lessonNo(l)+'. Hãy ôn cách dùng, vị trí trong câu và ví dụ trong bài.'};});
+      details.forEach(function(g,idx){
+        if(!g || !clean(g.pattern||g.full)) return;
+        var pat = clean(g.pattern || g.full);
+        var key = course()+'::'+(l.id||idx)+'::'+idx+'::'+pat;
+        var exs = getExamples(g);
+        deck.push({key:key, lessonId:l.id, lesson:l, pattern:pat, full:clean(g.full||pat), explanation:clean(g.explanation||''), summary:makeSummary(g), use:makeUseLabel(g), tip:clean(g.tip||''), examples:exs, raw:g});
+      });
+    });
+    return deck;
+  }
+  function shuffle(a){return a.map(function(x){return [Math.random(),x];}).sort(function(a,b){return a[0]-b[0];}).map(function(x){return x[1];});}
+  function pickCards(count, filter){
+    var deck = buildGrammarDeck();
+    if(filter==='confuse') deck = deck.filter(function(c){return /[\/／]|与其|不如|除非|总算|终于|公平|平等|独自|单独|反映|反应|特殊|特别|轻易|容易/.test(c.pattern+' '+c.full);});
+    if(!deck.length) deck = buildGrammarDeck();
+    var st = loadGR(), now=Date.now();
+    deck.sort(function(a,b){
+      var sa=(st.cards&&st.cards[a.key])||{}, sb=(st.cards&&st.cards[b.key])||{};
+      var da = (!sa.next || sa.next<=now) ? 0 : 1;
+      var db = (!sb.next || sb.next<=now) ? 0 : 1;
+      if(da!==db) return da-db;
+      return (sb.mistakes||0)-(sa.mistakes||0) || (sa.reps||0)-(sb.reps||0);
+    });
+    return shuffle(deck.slice(0, Math.max(count*3, count))).slice(0,count);
+  }
+  function rateGrammarCard(card, rating){
+    var st=loadGR(); st.cards = st.cards || {};
+    var cur=st.cards[card.key] || {rating:'new', next:0, reps:0, mistakes:0};
+    var now=Date.now();
+    var intervals = {again:10*60*1000, hard:24*60*60*1000, good:3*24*60*60*1000, easy:7*24*60*60*1000};
+    cur.rating=rating; cur.reps=(cur.reps||0)+1; if(rating==='again'||rating==='hard') cur.mistakes=(cur.mistakes||0)+1; cur.next=now+(intervals[rating]||intervals.good); cur.last=now;
+    st.cards[card.key]=cur; saveGR(st);
+  }
+  function stats(){
+    var deck=buildGrammarDeck(), st=loadGR(), now=Date.now(), due=0, weak=0, mastered=0;
+    deck.forEach(function(c){var s=(st.cards&&st.cards[c.key])||{}; if(!s.next||s.next<=now) due++; if((s.mistakes||0)>1||s.rating==='again'||s.rating==='hard') weak++; if(s.rating==='easy'||(s.rating==='good'&&(s.reps||0)>=2)) mastered++;});
+    return {total:deck.length,due:due,weak:weak,mastered:mastered};
+  }
+
+  function reviewSwitch(active){
+    return '<div class="review-mode-switch"><button class="mode-pill '+(active==='vocab'?'active':'')+'" onclick="hskReviewSetMode(\'vocab\')">📚 Anki từ vựng</button><button class="mode-pill '+(active==='grammar'?'active':'')+'" onclick="hskReviewSetMode(\'grammar\')">🧩 Anki ngữ pháp</button><span style="margin-left:auto;color:var(--muted);font-size:12px">Nhớ cách dùng, không chỉ nhớ nghĩa</span></div>';
+  }
+  function setTopbar(active){
+    var title=document.querySelector('#page-review .topbar-title');
+    var sub=document.getElementById('review-sub');
+    var actions=document.querySelector('#page-review .topbar-actions');
+    if(title) title.textContent = active==='grammar' ? 'Ôn tập ngữ pháp' : 'Ôn tập Flashcard';
+    if(sub) sub.textContent = active==='grammar' ? 'Anki-style · cách dùng · nối cột · sắp xếp · AI chấm câu' : 'Spaced Repetition · Anki-style';
+    if(actions){
+      if(active==='grammar') actions.innerHTML = '<button class="btn btn-outline" onclick="hskReviewSetMode(\'vocab\')">📚 Từ vựng</button><button class="btn btn-outline" onclick="hskStartGrammarMatch()">Nối cột</button><button class="btn btn-outline" onclick="hskStartGrammarArrange()">Sắp xếp</button><button class="btn btn-teal" onclick="hskStartGrammarQuiz()">Ôn nhanh</button>';
+      else actions.innerHTML = '<button class="btn btn-outline" onclick="shuffleCards()">🔀 Trộn bài</button><button class="btn btn-outline" onclick="hskReviewSetMode(\'grammar\')">🧩 Ngữ pháp</button><button class="btn btn-teal" onclick="startReview()">Bắt đầu ôn</button>';
+    }
+  }
+  function prependSwitch(){
+    var c=document.getElementById('review-content'); if(!c) return;
+    if(!c.querySelector('.review-mode-switch')) c.insertAdjacentHTML('afterbegin', reviewSwitch('vocab'));
+  }
+  function renderVocab(){setMode('vocab'); setTopbar('vocab'); if(ORIGINAL_REVIEW.render) ORIGINAL_REVIEW.render(); prependSwitch();}
+
+  function renderGrammarHome(){
+    setMode('grammar'); setTopbar('grammar');
+    var s=stats(), deck=buildGrammarDeck();
+    var st=loadGR(), now=Date.now();
+    var dueCards=deck.filter(function(c){var x=(st.cards&&st.cards[c.key])||{}; return !x.next||x.next<=now;}).slice(0,12);
+    var lessonOpts=getLessons().map(function(l){return '<option value="'+esc(l.id)+'">'+esc(lessonLabel(l))+'</option>';}).join('');
+    var list=dueCards.map(function(c){var cs=cardStatus(c.key); return '<div class="grammar-mini-card"><div><div class="zh">'+esc(c.pattern)+'</div><div class="meta">'+esc(lessonLabel(c.lesson))+' · '+esc(cs.rating||'new')+'</div><div class="use">'+esc(c.summary)+'</div></div></div>';}).join('') || '<div class="empty-state" style="padding:20px">Chưa có thẻ ngữ pháp đến hạn. Bạn vẫn có thể bấm Ôn nhanh để luyện trộn.</div>';
+    document.getElementById('review-content').innerHTML = reviewSwitch('grammar')+
+      '<div class="grammar-review-grid">'+
+        '<div class="grammar-review-card"><div class="big">'+s.total+'</div><div class="lbl">mẫu ngữ pháp</div></div>'+
+        '<div class="grammar-review-card"><div class="big">'+s.due+'</div><div class="lbl">cần ôn hôm nay</div></div>'+
+        '<div class="grammar-review-card"><div class="big" style="color:var(--red)">'+s.weak+'</div><div class="lbl">hay sai</div></div>'+
+        '<div class="grammar-review-card"><div class="big" style="color:var(--gold)">'+s.mastered+'</div><div class="lbl">gần thuộc/đã thuộc</div></div>'+
+      '</div>'+
+      '<div class="grammar-review-grid">'+
+        '<div class="grammar-review-card action" onclick="hskStartGrammarFlashcards()"><div class="title">🃏 Thẻ Anki ngữ pháp</div><div class="desc">Lật thẻ: mẫu này dùng để làm gì, đặt ở đâu, ví dụ trong bài. Sau đó chọn Quên / Khó / Nhớ / Dễ.</div></div>'+
+        '<div class="grammar-review-card action" onclick="hskStartGrammarQuiz()"><div class="title">✅ Ôn nhanh A/B/C/D</div><div class="desc">Chọn công dụng đúng, chọn mẫu phù hợp với mục đích, hoặc nhận diện mẫu trong câu ví dụ.</div></div>'+
+        '<div class="grammar-review-card action" onclick="hskStartGrammarMatch()"><div class="title">🔗 Nối cột A–B</div><div class="desc">Nối ngữ pháp với cách dùng/mục đích. Phù hợp để ôn nhiều mẫu trong một màn hình.</div></div>'+
+        '<div class="grammar-review-card action" onclick="hskStartGrammarArrange()"><div class="title">🧱 Sắp xếp cấu trúc</div><div class="desc">Ghép các mảnh cấu trúc như 与其…不如…, V+得/不+起, 除非…否则… theo đúng thứ tự.</div></div>'+
+        '<div class="grammar-review-card action" onclick="hskStartGrammarConfuse()"><div class="title">⚖️ Dễ nhầm</div><div class="desc">Tập trung vào các cặp như 总算/终于, 公平/平等, 反映/反应, 特殊/特别.</div></div>'+
+        '<div class="grammar-review-card action" onclick="hskStartGrammarWrite()"><div class="title">✍️ Tự đặt câu + AI chấm</div><div class="desc">Viết câu với mẫu được yêu cầu. AI chỉ chấm phần tự đặt câu, còn thẻ/quiz chấm theo dữ liệu trong app.</div></div>'+
+      '</div>'+
+      '<div class="section-card"><div class="section-card-header">🎯 Bộ lọc theo dõi</div><div class="section-card-body"><div class="grammar-filter-row"><select id="gr-lesson-filter" onchange="hskRenderGrammarFiltered()"><option value="all">Tất cả bài</option>'+lessonOpts+'</select><select id="gr-status-filter" onchange="hskRenderGrammarFiltered()"><option value="all">Tất cả trạng thái</option><option value="due">Cần ôn</option><option value="weak">Hay sai</option><option value="mastered">Đã thuộc</option></select><input id="gr-search" placeholder="Tìm mẫu ngữ pháp..." oninput="hskRenderGrammarFiltered()"></div><div id="gr-filtered-list" class="grammar-due-list">'+list+'</div></div></div>';
+  }
+
+  window.hskRenderGrammarFiltered = function(){
+    var lesson=document.getElementById('gr-lesson-filter')?.value || 'all', status=document.getElementById('gr-status-filter')?.value || 'all', q=(document.getElementById('gr-search')?.value||'').toLowerCase().trim();
+    var st=loadGR(), now=Date.now();
+    var cards=buildGrammarDeck().filter(function(c){
+      var s=(st.cards&&st.cards[c.key])||{};
+      if(lesson!=='all' && String(c.lessonId)!==String(lesson)) return false;
+      if(q && (c.pattern+' '+c.full+' '+c.summary).toLowerCase().indexOf(q)<0) return false;
+      if(status==='due' && s.next && s.next>now) return false;
+      if(status==='weak' && !((s.mistakes||0)>1||s.rating==='again'||s.rating==='hard')) return false;
+      if(status==='mastered' && !(s.rating==='easy'||(s.rating==='good'&&(s.reps||0)>=2))) return false;
+      return true;
+    }).slice(0,60);
+    var el=document.getElementById('gr-filtered-list'); if(!el) return;
+    el.innerHTML = cards.map(function(c){var s=(st.cards&&st.cards[c.key])||{rating:'new'}; return '<div class="grammar-mini-card"><div><div class="zh">'+esc(c.pattern)+'</div><div class="meta">'+esc(lessonLabel(c.lesson))+' · '+esc(s.rating||'new')+' · sai '+(s.mistakes||0)+'</div><div class="use">'+esc(c.summary)+'</div></div></div>';}).join('') || '<div class="empty-state" style="padding:20px">Không có thẻ phù hợp bộ lọc.</div>';
+  };
+
+  window.hskReviewSetMode = function(m){ if(m==='grammar') renderGrammarHome(); else renderVocab(); };
+  window.renderReview = renderReview = function(){ if(getMode()==='grammar') renderGrammarHome(); else renderVocab(); };
+  window.startReview = startReview = function(){ if(getMode()==='grammar') hskStartGrammarFlashcards(); else if(ORIGINAL_REVIEW.start) ORIGINAL_REVIEW.start(); prependSwitch(); };
+  window.shuffleCards = shuffleCards = function(){ if(getMode()==='grammar') hskStartGrammarQuiz(); else if(ORIGINAL_REVIEW.shuffle) ORIGINAL_REVIEW.shuffle(); prependSwitch(); };
+
+  window.hskStartGrammarFlashcards = function(){ grSession={mode:'flash', cards:pickCards(20), idx:0, flipped:false}; renderGrammarFlashcard(); };
+  function renderGrammarFlashcard(){
+    setTopbar('grammar'); var ctn=document.getElementById('review-content'); if(!ctn) return;
+    var cards=grSession.cards||[], idx=grSession.idx||0;
+    if(!cards.length){ctn.innerHTML=reviewSwitch('grammar')+'<div class="empty-state"><div class="icon">🧩</div><div>Chưa có dữ liệu ngữ pháp để ôn.</div></div>'; return;}
+    if(idx>=cards.length){ctn.innerHTML=reviewSwitch('grammar')+'<div class="empty-state"><div class="icon">✅</div><div style="font-size:18px;font-weight:800;margin-bottom:8px">Xong lô ngữ pháp!</div><div style="color:var(--muted);margin-bottom:18px">Các thẻ đã được lưu lịch ôn theo Quên / Khó / Nhớ / Dễ.</div><button class="btn btn-teal" onclick="hskStartGrammarFlashcards()">Ôn lô tiếp theo</button> <button class="btn btn-outline" onclick="hskReviewSetMode(\'grammar\')">Về tổng quan</button></div>'; return;}
+    var card=cards[idx], pct=Math.round(idx/cards.length*100), ex=card.examples[0]||{};
+    ctn.innerHTML = reviewSwitch('grammar')+'<div class="grammar-study-shell"><div class="fc-progress"><span style="font-size:12px;color:var(--muted)">'+idx+'/'+cards.length+'</span><div class="fc-progress-bar"><div class="fc-progress-fill" style="width:'+pct+'%"></div></div><span style="font-size:12px;color:var(--muted)">'+pct+'%</span></div><div class="grammar-study-top"><span>'+esc(lessonLabel(card.lesson))+'</span><span>'+esc(cardStatus(card.key).rating||'new')+'</span></div><div class="grammar-study-card" onclick="hskFlipGrammarCard()"><div class="grammar-front-pattern zh">'+esc(card.pattern)+'</div><div class="grammar-front-prompt">Nhấp để xem: dùng để làm gì, ví dụ và lỗi cần tránh</div><div id="grammar-answer" class="grammar-answer-box"><div><b>Ý chính:</b> '+esc(card.summary)+'</div><div style="margin-top:8px"><b>Cách dùng:</b> '+esc(card.use)+'</div>'+(ex.zh?'<div class="grammar-ex"><div class="zh">'+esc(ex.zh)+'</div>'+(ex.vi?'<div class="vi">'+esc(ex.vi)+'</div>':'')+'</div>':'')+(card.tip?'<div class="grammar-tip">'+esc(card.tip)+'</div>':'')+'</div></div><div id="grammar-rate-row" class="grammar-rating-row" style="display:none"><button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="hskRateGrammar(\'again\')">Quên</button><button class="btn btn-outline" style="border-color:var(--gold);color:var(--gold)" onclick="hskRateGrammar(\'hard\')">Khó</button><button class="btn btn-teal" onclick="hskRateGrammar(\'good\')">Nhớ</button><button class="btn btn-primary" onclick="hskRateGrammar(\'easy\')">Dễ</button></div></div>';
+  }
+  window.hskFlipGrammarCard=function(){var a=document.getElementById('grammar-answer'), r=document.getElementById('grammar-rate-row'); if(a) a.classList.add('show'); if(r) r.style.display='flex';};
+  window.hskRateGrammar=function(r){var card=grSession.cards[grSession.idx]; if(card) rateGrammarCard(card,r); grSession.idx++; renderGrammarFlashcard();};
+
+  function makeMCQ(card, type){
+    var deck=buildGrammarDeck().filter(function(x){return x.key!==card.key;});
+    var distract=shuffle(deck).slice(0,3);
+    if(type==='pattern') return {card:card,type:type,stem:'Mục đích/cách dùng dưới đây hợp với ngữ pháp nào?<br><b>'+esc(card.summary)+'</b>', correct:card.pattern, options:shuffle([card.pattern].concat(distract.map(function(x){return x.pattern;}))), explain:card.summary};
+    if(type==='example' && card.examples.length){var ex=card.examples[0]; return {card:card,type:type,stem:'Câu ví dụ này đang minh họa ngữ pháp nào?<div class="grammar-ex"><div class="zh">'+esc(ex.zh)+'</div>'+(ex.vi?'<div class="vi">'+esc(ex.vi)+'</div>':'')+'</div>', correct:card.pattern, options:shuffle([card.pattern].concat(distract.map(function(x){return x.pattern;}))), explain:card.summary};}
+    return {card:card,type:'use',stem:'<span class="zh">'+esc(card.pattern)+'</span> thường dùng để làm gì?', correct:card.summary, options:shuffle([card.summary].concat(distract.map(function(x){return x.summary;}))), explain:card.summary};
+  }
+  window.hskStartGrammarQuiz=function(confuse){
+    var cards=pickCards(12, confuse?'confuse':'');
+    grSession={mode:'quiz', questions:cards.map(function(c,i){return makeMCQ(c, i%3===0?'use':(i%3===1?'pattern':'example'));}), idx:0, score:0, answered:false};
+    renderGrammarQuiz();
+  };
+  window.hskStartGrammarConfuse=function(){hskStartGrammarQuiz(true);};
+  function renderGrammarQuiz(){
+    setTopbar('grammar'); var ctn=document.getElementById('review-content'); if(!ctn) return; var qs=grSession.questions||[], idx=grSession.idx||0;
+    if(!qs.length){ctn.innerHTML=reviewSwitch('grammar')+'<div class="empty-state">Chưa đủ dữ liệu quiz.</div>';return;}
+    if(idx>=qs.length){ctn.innerHTML=reviewSwitch('grammar')+'<div class="empty-state"><div class="icon">'+(grSession.score>=9?'🎉':'🧩')+'</div><div style="font-size:26px;font-weight:900;margin-bottom:6px">'+grSession.score+'/'+qs.length+'</div><div style="color:var(--muted);margin-bottom:18px">'+(grSession.score>=9?'Rất tốt!':'Hãy ôn lại các mẫu còn sai trong mục Hay sai.')+'</div><button class="btn btn-teal" onclick="hskStartGrammarQuiz()">Làm lô khác</button> <button class="btn btn-outline" onclick="hskReviewSetMode(\'grammar\')">Về tổng quan</button></div>'; return;}
+    var q=qs[idx], pct=Math.round(idx/qs.length*100);
+    ctn.innerHTML=reviewSwitch('grammar')+'<div class="grammar-study-shell"><div class="fc-progress"><span style="font-size:12px;color:var(--muted)">'+(idx+1)+'/'+qs.length+'</span><div class="fc-progress-bar"><div class="fc-progress-fill" style="width:'+pct+'%"></div></div><span style="font-size:12px;color:var(--muted)">'+grSession.score+' đúng</span></div><div class="grammar-quiz-card"><div class="grammar-quiz-head"><b>Ôn nhanh ngữ pháp</b><span>'+esc(lessonLabel(q.card.lesson))+'</span></div><div class="grammar-quiz-body"><div class="grammar-quiz-stem">'+q.stem+'</div><div class="grammar-quiz-options">'+q.options.map(function(o,i){return '<button id="gr-opt-'+i+'" class="grammar-quiz-option" onclick="hskAnswerGrammarQuiz('+i+')">'+esc(o)+'</button>';}).join('')+'</div><div id="gr-quiz-explain" class="grammar-explain-after"><b>Giải thích:</b> '+esc(q.explain)+(q.card.tip?'<br>'+esc(q.card.tip):'')+'</div><div style="display:flex;justify-content:flex-end;margin-top:12px"><button id="gr-next-btn" class="btn btn-primary" style="display:none" onclick="hskNextGrammarQuiz()">Câu tiếp →</button></div></div></div></div>';
+  }
+  window.hskAnswerGrammarQuiz=function(optIdx){var q=grSession.questions[grSession.idx]; if(!q||grSession.answered) return; grSession.answered=true; var choice=q.options[optIdx]; document.querySelectorAll('.grammar-quiz-option').forEach(function(b,i){b.disabled=true; if(q.options[i]===q.correct)b.classList.add('correct'); else if(i===optIdx)b.classList.add('wrong');}); if(choice===q.correct){grSession.score++; rateGrammarCard(q.card,'good');}else{rateGrammarCard(q.card,'again');} var ex=document.getElementById('gr-quiz-explain'), nb=document.getElementById('gr-next-btn'); if(ex) ex.classList.add('show'); if(nb) nb.style.display='inline-block';};
+  window.hskNextGrammarQuiz=function(){grSession.idx++; grSession.answered=false; renderGrammarQuiz();};
+
+  window.hskStartGrammarMatch=function(){
+    var cards=pickCards(6); var uses=shuffle(cards.map(function(c,i){return {idx:i+1, text:c.summary};})); grSession={mode:'match', match:{cards:cards, uses:uses}}; renderGrammarMatch();
+  };
+  function renderGrammarMatch(){
+    setTopbar('grammar'); var m=grSession.match, cards=m.cards, uses=m.uses;
+    document.getElementById('review-content').innerHTML=reviewSwitch('grammar')+'<div class="grammar-study-shell"><div class="grammar-quiz-card"><div class="grammar-quiz-head"><b>🔗 Nối cột ngữ pháp với cách dùng</b><span>'+cards.length+' mẫu</span></div><div class="grammar-quiz-body"><div class="grammar-match-grid"><div class="grammar-match-left">'+cards.map(function(c,i){return '<div class="grammar-match-item"><div class="zh" style="font-weight:900">'+esc(c.pattern)+'</div><select id="gr-match-'+i+'"><option value="">Chọn mục đích...</option>'+uses.map(function(u){return '<option value="'+u.idx+'">'+u.idx+'</option>';}).join('')+'</select></div>';}).join('')+'</div><div class="grammar-match-right">'+uses.map(function(u){return '<div class="grammar-use-tile"><b>'+u.idx+'</b>. '+esc(u.text)+'</div>';}).join('')+'</div></div><div id="gr-match-result" class="grammar-explain-after"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn btn-outline" onclick="hskStartGrammarMatch()">Đổi bộ</button><button class="btn btn-teal" onclick="hskCheckGrammarMatch()">Kiểm tra</button></div></div></div></div>';
+  }
+  window.hskCheckGrammarMatch=function(){var m=grSession.match, good=0; m.cards.forEach(function(c,i){var val=document.getElementById('gr-match-'+i)?.value; if(String(val)===String(i+1)){good++; rateGrammarCard(c,'good');}else rateGrammarCard(c,'hard');}); var r=document.getElementById('gr-match-result'); if(r){r.classList.add('show'); r.innerHTML='<b>Kết quả:</b> '+good+'/'+m.cards.length+' đúng. Cặp đúng là:<br>'+m.cards.map(function(c,i){return '<b class="zh">'+esc(c.pattern)+'</b> → '+esc(c.summary);}).join('<br>');}};
+
+  function structureTokens(card){
+    var p=card.pattern;
+    if(/[+＋]/.test(p)) return p.split(/[+＋]/).map(clean).filter(Boolean);
+    if(p.indexOf('……')>=0) return p.split('……').map(clean).filter(Boolean).reduce(function(a,x,i){a.push(x); if(i===0)a.push('……'); return a;},[]);
+    if(/与其/.test(p)&&/不如/.test(p)) return ['与其','A','不如','B'];
+    if(/除非/.test(p)) return ['除非','条件','否则','结果'];
+    if(/得\/不/.test(p)||/得不/.test(p)) return ['动词','得/不','结果补语'];
+    return null;
+  }
+  window.hskStartGrammarArrange=function(){
+    var cards=buildGrammarDeck().filter(function(c){return structureTokens(c);}); if(!cards.length) return hskStartGrammarMatch();
+    grSession={mode:'arrange', cards:shuffle(cards).slice(0,8), idx:0, arrange:null}; renderGrammarArrange();
+  };
+  function renderGrammarArrange(){
+    setTopbar('grammar'); var cards=grSession.cards, idx=grSession.idx||0; if(idx>=cards.length){document.getElementById('review-content').innerHTML=reviewSwitch('grammar')+'<div class="empty-state"><div class="icon">✅</div><div>Đã xong phần sắp xếp cấu trúc.</div><button class="btn btn-teal" onclick="hskStartGrammarArrange()">Làm tiếp</button></div>';return;}
+    var c=cards[idx], target=structureTokens(c)||[], chips=shuffle(target.slice()); grSession.arrange={target:target, picked:[], chips:chips};
+    document.getElementById('review-content').innerHTML=reviewSwitch('grammar')+'<div class="grammar-study-shell"><div class="grammar-quiz-card"><div class="grammar-quiz-head"><b>🧱 Sắp xếp cấu trúc</b><span>'+esc(lessonLabel(c.lesson))+'</span></div><div class="grammar-quiz-body"><div class="grammar-quiz-stem">Hãy sắp xếp đúng cấu trúc của: <span class="zh">'+esc(c.pattern)+'</span></div><div id="gr-arrange-area" class="grammar-arrange-area"><span style="color:var(--muted)">Bấm các mảnh bên dưới để ghép...</span></div><div id="gr-arrange-chips" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">'+chips.map(function(t,i){return '<button id="gr-chip-'+i+'" class="grammar-arrange-chip" onclick="hskPickGrammarToken('+i+')">'+esc(t)+'</button>';}).join('')+'</div><div id="gr-arrange-result" class="grammar-explain-after"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="hskResetGrammarArrange()">Làm lại</button><button class="btn btn-teal" onclick="hskCheckGrammarArrange()">Kiểm tra</button></div></div></div></div>';
+  }
+  window.hskPickGrammarToken=function(i){var a=grSession.arrange; if(!a||a.chips[i]==null) return; a.picked.push(a.chips[i]); var b=document.getElementById('gr-chip-'+i); if(b)b.classList.add('used'); var area=document.getElementById('gr-arrange-area'); if(area)area.innerHTML=a.picked.map(function(t,idx){return '<span class="grammar-arrange-token" onclick="hskRemoveGrammarToken('+idx+')">'+esc(t)+'</span>';}).join('');};
+  window.hskRemoveGrammarToken=function(idx){var a=grSession.arrange; if(!a)return; a.picked.splice(idx,1); renderGrammarArrange();};
+  window.hskResetGrammarArrange=function(){renderGrammarArrange();};
+  window.hskNextGrammarArrange=function(){grSession.idx++; renderGrammarArrange();};
+  window.hskCheckGrammarArrange=function(){var a=grSession.arrange, c=grSession.cards[grSession.idx]; var ok=JSON.stringify(a.picked)===JSON.stringify(a.target); if(ok) rateGrammarCard(c,'good'); else rateGrammarCard(c,'hard'); var r=document.getElementById('gr-arrange-result'); if(r){r.classList.add('show'); r.innerHTML=(ok?'<b style="color:var(--teal)">Đúng!</b>':'<b style="color:var(--red)">Chưa đúng.</b>')+'<br>Đáp án: <span class="zh">'+esc(a.target.join(' + '))+'</span><br>'+esc(c.summary)+'<div style="margin-top:8px"><button class="btn btn-primary" onclick="hskNextGrammarArrange()">Câu tiếp →</button></div>';}};
+
+  window.hskStartGrammarWrite=function(){
+    var cards=pickCards(5); grSession={mode:'write', cards:cards}; setTopbar('grammar');
+    document.getElementById('review-content').innerHTML=reviewSwitch('grammar')+'<div class="grammar-study-shell"><div class="section-card"><div class="section-card-header">✍️ Tự đặt câu với ngữ pháp · AI chấm</div><div class="section-card-body"><p style="color:var(--muted);margin-bottom:14px">Phần này dùng để luyện chủ động. Mỗi câu sẽ gửi mẫu ngữ pháp, cách dùng và câu bạn viết cho AI chấm.</p>'+cards.map(function(c,i){var id='gr-write-'+i+'-'+Math.random().toString(36).slice(2,7); return '<div class="grammar-write-card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b class="zh" style="font-size:18px;color:var(--red)">'+esc(c.pattern)+'</b><div style="font-size:12px;color:var(--muted)">'+esc(lessonLabel(c.lesson))+'</div></div><span class="chip chip-blue">'+(i+1)+'</span></div><div style="font-size:13px;margin:8px 0;color:var(--ink2)">'+esc(c.summary)+'</div><textarea id="'+id+'" placeholder="Hãy tự đặt 1 câu tiếng Trung dùng '+esc(c.pattern)+'..."></textarea><div class="ai-direct-tools"><button class="btn btn-teal ai-btn-external" onclick="hskGrammarAIGrade(\''+id+'\',\''+esc(c.key)+'\')">AI chấm</button></div><div id="'+id+'-result" class="gpt-inline-result"></div></div>';}).join('')+'</div></div></div>';
+  };
+  window.hskGrammarAIGrade=function(id,key){var el=document.getElementById(id); if(!el||!el.value.trim()){alert('Hãy viết câu trước.'); return;} var card=buildGrammarDeck().find(function(c){return c.key===key;})||{}; var prompt='Chấm câu tiếng Trung tôi tự đặt với ngữ pháp sau.\nNgữ pháp: '+(card.pattern||'')+'\nCách dùng cần đúng: '+(card.summary||'')+'\nVí dụ mẫu: '+((card.examples&&card.examples[0]&&card.examples[0].zh)||'')+'\nCâu của tôi: '+el.value.trim()+'\n\nHãy chấm theo 4 điểm: đúng cấu trúc chưa, dùng đúng nghĩa chưa, tự nhiên không, sửa câu nếu cần. Trả lời ngắn gọn bằng tiếng Việt.'; if(typeof runAIInlineChoice==='function') return runAIInlineChoice(prompt,{title:'AI chấm ngữ pháp', inlineTarget:id+'-result'},'external'); alert('Chức năng AI chưa sẵn sàng trong file này.');};
+
+  document.addEventListener('DOMContentLoaded', function(){ if(getMode()==='grammar' && document.getElementById('page-review') && document.getElementById('page-review').style.display!=='none') renderGrammarHome(); });
+})();
+</script>
+<!-- HSK Albert patch end: Anki grammar review -->
