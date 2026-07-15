@@ -13617,8 +13617,14 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
 
   function extractHint(prompt) {
     var text = String(prompt || '');
-    var m = text.match(/（([^）]+)）/);
-    return m ? m[1].trim() : '';
+    var parts = [];
+    var m = text.match(/（([^）]+)）/) || text.match(/\(([^)]+)\)/);
+    if(m && m[1]) parts.push(m[1].trim());
+    var mh = text.match(/Gợi ý(?:\s+trong sách)?\s*[:：]\s*([^\n]+)/i);
+    if(mh && mh[1]) parts.push(mh[1].trim());
+    var mg = text.match(/(?:Ngữ pháp|Cách dùng cần đúng|语法)\s*[:：]\s*([^\n]+)/i);
+    if(mg && mg[1]) parts.push(mg[1].trim());
+    return parts.filter(Boolean).join(' | ');
   }
 
   function extractTargetInfo(text) {
@@ -13630,29 +13636,46 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
       requiredUsage = m[2].replace(/[）)]/g, '').trim();
     }
     if(!targetWord) {
-      var known = ['顶','至今','反而','似的','从而','起来','于','孝敬','如何','靠','居然'];
-      for(var i=0;i<known.length;i++) { if(s.includes(known[i])) { targetWord = known[i]; break; } }
+      var known = (typeof HSK_KNOWN_GRAMMAR !== 'undefined' ? HSK_KNOWN_GRAMMAR : ['顶','至今','反而','似的','从而','起来','于','孝敬','如何','靠','居然'])
+        .slice().sort(function(a,b){ return b.length - a.length; });
+      for(var i=0;i<known.length;i++) {
+        var kw = known[i].replace(/……/g, '');
+        if(kw && s.indexOf(kw) !== -1) { targetWord = known[i]; break; }
+      }
     }
-    var grammarPoint = targetWord ? 'Cần dùng đúng từ/cấu trúc ' + targetWord : '';
-    if(targetWord && requiredUsage) grammarPoint = targetWord + ' dùng với vai trò ' + requiredUsage;
+    if(!targetWord) {
+      var mh = s.match(/[\u4e00-\u9fff]{1,6}/);
+      if(mh) targetWord = mh[0];
+    }
+    var grammarPoint = targetWord ? 'Bắt buộc dùng đúng từ/cấu trúc 「' + targetWord + '」' : '';
+    if(targetWord && requiredUsage) grammarPoint = '「' + targetWord + '」 phải dùng đúng với vai trò/từ loại: ' + requiredUsage;
     return { targetWord: targetWord, requiredUsage: requiredUsage, grammarPoint: grammarPoint };
   }
 
   function buildRubric(info) {
     var word = info.targetWord || '', usage = info.requiredUsage || '';
-    if(word === '顶' && /名词/.test(usage)) return 'Câu trả lời phải dùng 顶 với nghĩa danh từ, ví dụ 山顶, 头顶. Không được dùng 顶 làm động từ hoặc lượng từ.';
-    if(word === '顶' && /动词/.test(usage)) return 'Câu trả lời phải dùng 顶 như động từ, ví dụ 顶着大风, 顶住压力. Không được dùng 顶 làm danh từ hoặc lượng từ.';
-    if(word === '顶' && /量词/.test(usage)) return 'Câu trả lời phải dùng 顶 làm lượng từ, thường đi với 帽子, 帐篷, 轿子, ví dụ 一顶帽子. Câu phải hợp ngữ cảnh hội thoại.';
-    if(word === '至今') return 'Câu phải dùng 至今 để diễn tả sự việc hoặc trạng thái kéo dài từ quá khứ đến hiện tại.';
-    if(word === '反而') return 'Câu phải có logic trái với dự đoán: vế trước tạo kỳ vọng, vế sau dùng 反而 để đảo ngược kỳ vọng đó.';
-    if(word === '似的') return 'Câu nên dùng mẫu 像/好像/跟……似的 hoặc 得……似的. Không nên dùng 似的 một mình thiếu điểm so sánh.';
-    return 'Hãy chấm theo yêu cầu trong ngoặc, đúng từ bắt buộc, đúng từ loại/cách dùng, đúng ngữ cảnh bài tập. Câu phải tự nhiên với người bản ngữ.';
+    var lines = [];
+    if(word) {
+      lines.push('YÊU CẦU BẮT BUỘC: Câu của học viên PHẢI dùng đúng từ/cấu trúc 「' + word + '」 theo đúng đề bài.');
+      lines.push('Nếu câu KHÔNG chứa 「' + word + '」 thì phải chấm là SAI (verdict = "sai", percent thấp), dù ý nghĩa đúng, vì đề yêu cầu vận dụng cấu trúc này.');
+      lines.push('Trường corrected_zh (câu sửa mẫu) BẮT BUỘC vẫn phải dùng 「' + word + '」 — TUYỆT ĐỐI KHÔNG được bỏ 「' + word + '」 khi sửa, không thay bằng cách nói khác né tránh cấu trúc.');
+      if(usage) lines.push('Cách dùng đúng: 「' + word + '」 làm ' + usage + '. Nếu sai từ loại/kết cấu, hãy sửa lại NHƯNG vẫn giữ 「' + word + '」.');
+    }
+    if(word === '作为') lines.push('「作为」 = "với tư cách là / là ...". Kết cấu tự nhiên: 作为 + danh từ chỉ vai trò (作为老板 / 作为一名学生 / 作为饭店的老板 …), thường đứng đầu câu hoặc đầu vế. Câu sửa mẫu nên ở dạng như "作为饭店老板，我……" hoặc "……不想作为一家饭店的老板".');
+    if(word === '顶' && /名词/.test(usage)) lines.push('Câu trả lời phải dùng 顶 với nghĩa danh từ, ví dụ 山顶, 头顶. Không được dùng 顶 làm động từ hoặc lượng từ.');
+    if(word === '顶' && /动词/.test(usage)) lines.push('Câu trả lời phải dùng 顶 như động từ, ví dụ 顶着大风, 顶住压力. Không được dùng 顶 làm danh từ hoặc lượng từ.');
+    if(word === '顶' && /量词/.test(usage)) lines.push('Câu trả lời phải dùng 顶 làm lượng từ, thường đi với 帽子, 帐篷, 轿子, ví dụ 一顶帽子.');
+    if(word === '至今') lines.push('Câu phải dùng 至今 để diễn tả sự việc hoặc trạng thái kéo dài từ quá khứ đến hiện tại.');
+    if(word === '反而') lines.push('Câu phải có logic trái với dự đoán: vế trước tạo kỳ vọng, vế sau dùng 反而 để đảo ngược.');
+    if(word === '似的') lines.push('Câu nên dùng mẫu 像/好像/跟……似的 hoặc 得……似的. Không nên dùng 似的 một mình thiếu điểm so sánh.');
+    lines.push('Ngoài ra: chấm đúng ngữ cảnh đề bài, câu phải tự nhiên với người bản ngữ.');
+    return lines.join('\n');
   }
 
   // Chuẩn hóa kết quả Edge Function -> schema thống nhất.
   // Edge Function v2 đã trả đúng {percent, verdict, wrong_parts, corrected_zh, comment_vi}.
   // Hàm này thêm fallback đề phòng schema cũ.
-  function normalizeExternalResult(result) {
+  function normalizeExternalResult(result, targetInfo) {
     if(!result) return null;
     var percent = Number(result.percent);
     if(!isFinite(percent)) {
@@ -13671,13 +13694,49 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     }
     wrong = wrong.map(function(w){ return { wrong:String(w.wrong||''), should_be:String(w.should_be||''), why_vi:String(w.why_vi||'') }; });
 
-    return {
+    var out = {
       percent: percent,
       verdict: result.verdict || (percent>=90?'đúng':(percent>=50?'gần đúng':'sai')),
       wrong_parts: wrong,
       corrected_zh: String(result.corrected_zh || result.corrected || result.full_corrected_sentence_zh || ''),
       comment_vi: String(result.comment_vi || result.summary || result.short_feedback_vi || 'Đã chấm xong.')
     };
+
+    // ── LƯỚI AN TOÀN: bắt buộc giữ cấu trúc ngữ pháp yêu cầu ──
+    // Nếu đề yêu cầu 「word」 mà câu sửa của server lại bỏ mất, app tự sửa lại kết quả
+    // để không bao giờ "hướng dẫn học viên bỏ cấu trúc cần luyện".
+    var word = targetInfo && targetInfo.targetWord ? String(targetInfo.targetWord).replace(/……/g,'') : '';
+    if(word){
+      var studentAnswer = targetInfo && targetInfo.studentAnswer ? String(targetInfo.studentAnswer) : '';
+      var studentUsed = studentAnswer && studentAnswer.indexOf(word) !== -1;
+      var correctedMissing = out.corrected_zh && out.corrected_zh.indexOf(word) === -1;
+      if(correctedMissing){
+        // Server đã gợi ý câu sửa bỏ mất cấu trúc → không dùng câu đó nữa.
+        out.wrong_parts = out.wrong_parts.concat([{
+          wrong: out.corrected_zh,
+          should_be: '（Câu sửa PHẢI dùng 「' + word + '」）',
+          why_vi: 'Đề yêu cầu dùng cấu trúc 「' + word + '」 nhưng câu sửa gợi ý đã bỏ mất cấu trúc này.'
+        }]);
+        out.corrected_zh = '';
+        out.comment_vi = 'Bài này bắt buộc dùng cấu trúc 「' + word + '」. Hãy đặt lại câu sao cho VẪN dùng 「' + word + '」 cho đúng và tự nhiên. ' + (out.comment_vi || '');
+        if(out.percent > 50) out.percent = 50;
+        out.verdict = 'gần đúng';
+      }
+      if(!studentUsed){
+        // Câu học viên không dùng cấu trúc → luôn coi là chưa đạt.
+        if(out.percent > 40) out.percent = 40;
+        if(String(out.verdict).indexOf('đúng') >= 0 && String(out.verdict).indexOf('gần') < 0) out.verdict = 'sai';
+        var already = out.wrong_parts.some(function(w){ return (w.why_vi||'').indexOf(word) !== -1; });
+        if(!already){
+          out.wrong_parts = [{
+            wrong: studentAnswer || '(đáp án của bạn)',
+            should_be: 'Dùng cấu trúc 「' + word + '」',
+            why_vi: 'Đề yêu cầu vận dụng cấu trúc 「' + word + '」 nhưng câu chưa dùng cấu trúc này.'
+          }].concat(out.wrong_parts);
+        }
+      }
+    }
+    return out;
   }
 
   window.callAIBackend = callAIBackend = async function(prompt, meta) {
@@ -13690,16 +13749,26 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var rawPrompt = String(prompt || '');
     var questionText = extractQuestionText(rawPrompt);
     var hintText = extractHint(rawPrompt);
-    var targetInfo = extractTargetInfo(hintText || rawPrompt);
+    var targetInfo = extractTargetInfo(hintText);
+    if(!targetInfo.targetWord) targetInfo = extractTargetInfo(rawPrompt);
+    var studentAnswerVal = extractStudentAnswer(rawPrompt) || rawPrompt;
+    targetInfo.studentAnswer = studentAnswerVal;
+    var reqWord = targetInfo.targetWord ? String(targetInfo.targetWord).replace(/……/g,'') : '';
+    var instruction = reqWord
+      ? '完成句子或对话，必须正确使用「' + reqWord + '」这个语法结构（改错时也不能去掉它，corrected_zh 必须仍包含它）。'
+      : '完成句子或对话';
+    var requiredNote = reqWord
+      ? '\n【必须使用的语法结构 / Cấu trúc bắt buộc】：「' + reqWord + '」（câu không dùng cấu trúc này = SAI; khi sửa vẫn phải giữ 「' + reqWord + '」）'
+      : '';
     var payload = {
       lessonId: (typeof STATE !== 'undefined') ? STATE.currentLesson : null,
       lessonTitle: lesson.zh || '',
       exerciseType: 'grammar_sentence',
       exerciseId: (typeof CURRENT_GPT_INLINE_TARGET !== 'undefined' && CURRENT_GPT_INLINE_TARGET) ? CURRENT_GPT_INLINE_TARGET : 'ai-' + Date.now(),
-      instruction: '完成句子或对话',
-      questionText: questionText || rawPrompt,
+      instruction: instruction,
+      questionText: (questionText || rawPrompt) + requiredNote,
       fullSentenceBefore: questionText || rawPrompt,
-      studentAnswer: extractStudentAnswer(rawPrompt) || rawPrompt,
+      studentAnswer: studentAnswerVal,
       targetWord: targetInfo.targetWord,
       requiredUsage: targetInfo.requiredUsage,
       grammarPoint: targetInfo.grammarPoint,
@@ -13725,7 +13794,7 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
       var detail = data && data.detail ? ('\nChi tiết: ' + JSON.stringify(data.detail).slice(0, 1200)) : '';
       throw new Error((data && data.error ? data.error : ('HTTP ' + response.status)) + detail);
     }
-    var unified = normalizeExternalResult(data.result);
+    var unified = normalizeExternalResult(data.result, targetInfo);
     // answer: bản text gọn để các nơi cũ (HSK1) vẫn đọc res.answer được.
     var txt = 'Điểm: ' + unified.percent + '% (' + verdictText(unified.verdict, unified.percent) + ')';
     if(unified.wrong_parts && unified.wrong_parts.length){
