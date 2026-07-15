@@ -13223,48 +13223,99 @@ function hskAlbertExtractQuestionText(prompt) {
 
 function hskAlbertExtractHint(prompt) {
   var text = String(prompt || '');
-  var m = text.match(/（([^）]+)）/);
-  return m ? m[1].trim() : '';
+  var parts = [];
+  // 1) Gợi ý trong ngoặc （...） hoặc (...)
+  var m = text.match(/（([^）]+)）/) || text.match(/\(([^)]+)\)/);
+  if(m && m[1]) parts.push(m[1].trim());
+  // 2) Dòng "Gợi ý trong sách: ..." / "Gợi ý: ..."
+  var mh = text.match(/Gợi ý(?:\s+trong sách)?\s*[:：]\s*([^\n]+)/i);
+  if(mh && mh[1]) parts.push(mh[1].trim());
+  // 3) Dòng "Ngữ pháp: ..." / "Cách dùng cần đúng: ..." / "语法："
+  var mg = text.match(/(?:Ngữ pháp|Cách dùng cần đúng|语法)\s*[:：]\s*([^\n]+)/i);
+  if(mg && mg[1]) parts.push(mg[1].trim());
+  return parts.filter(Boolean).join(' | ');
 }
+
+// Danh sách các cấu trúc/từ ngữ pháp HSK 5 hay bị chấm sót (không có dấu gạch nối).
+var HSK_KNOWN_GRAMMAR = [
+  '作为','以来','如何','靠','居然','临','立刻','各自','勿','包括','至今','孝敬','反而',
+  '起来','于','从而','替','说不定','似的','纷纷','瞎','分别','根','便','倒','亲自','喂养',
+  '算','曾经','胃口','来','过来','所','数','想念','怀念','均匀','特色','记录','纪录','单调',
+  '涨','偶然','偶尔','抓紧','追求','公平','平等','主张','过分','独自','单独','沟通','能干',
+  '发言','发表','操心','承担','严肃','严格','风险','简直','总算','终于','一律','至于','失去',
+  '损失','把握','眼睁睁','反映','反应','显然','参考','相当','以及','程度','何况','何必','多亏',
+  '所谓','则','为……所……','起','过','迟早','再三','即','个别','非','以','平常','宁可','极其',
+  '其余','可见','般','闻','趁','凭','顶','支'
+];
 
 function hskAlbertExtractTargetInfo(text) {
   var s = String(text || '').trim();
   var targetWord = '';
   var requiredUsage = '';
+  // 1) Mẫu "X — Y" (từ — từ loại/cách dùng), ví dụ "顶 — 量词"
   var m = s.match(/([^—\-－\s]+)\s*[—\-－]\s*([^）)\s]+)/);
   if(m) {
     targetWord = m[1].replace(/[（(]/g, '').trim();
     requiredUsage = m[2].replace(/[）)]/g, '').trim();
   }
+  // 2) Quét danh sách cấu trúc HSK 5 đã biết (kể cả khi không có dấu gạch nối).
+  //    Ưu tiên cụm dài nhất khớp để tránh bắt nhầm ký tự lẻ (vd 作为 thay vì 为).
   if(!targetWord) {
-    var known = ['顶','至今','反而','似的','从而','起来','于','孝敬','如何','靠','居然'];
-    for(var i=0;i<known.length;i++) { if(s.includes(known[i])) { targetWord = known[i]; break; } }
+    var known = (typeof HSK_KNOWN_GRAMMAR !== 'undefined' ? HSK_KNOWN_GRAMMAR : [])
+      .slice().sort(function(a,b){ return b.length - a.length; });
+    for(var i=0;i<known.length;i++) {
+      var kw = known[i].replace(/……/g, '');
+      if(kw && s.indexOf(kw) !== -1) { targetWord = known[i]; break; }
+    }
   }
-  var grammarPoint = targetWord ? 'Cần dùng đúng từ/cấu trúc ' + targetWord : '';
-  if(targetWord && requiredUsage) grammarPoint = targetWord + ' dùng với vai trò ' + requiredUsage;
+  // 3) Nếu vẫn chưa có, lấy cụm chữ Hán đầu tiên trong gợi ý làm từ mục tiêu.
+  if(!targetWord) {
+    var mh = s.match(/[\u4e00-\u9fff]{1,6}/);
+    if(mh) targetWord = mh[0];
+  }
+  var grammarPoint = targetWord ? 'Bắt buộc dùng đúng từ/cấu trúc 「' + targetWord + '」' : '';
+  if(targetWord && requiredUsage) grammarPoint = '「' + targetWord + '」 phải dùng đúng với vai trò/từ loại: ' + requiredUsage;
   return { targetWord: targetWord, requiredUsage: requiredUsage, grammarPoint: grammarPoint };
 }
 
 function hskAlbertBuildRubric(info, questionText) {
   var word = info.targetWord || '';
   var usage = info.requiredUsage || '';
-  if(word === '顶' && /名词/.test(usage)) return 'Câu trả lời phải dùng 顶 với nghĩa danh từ, ví dụ 山顶, 头顶. Không được dùng 顶 làm động từ hoặc lượng từ.';
-  if(word === '顶' && /动词/.test(usage)) return 'Câu trả lời phải dùng 顶 như động từ, ví dụ 顶着大风, 顶住压力. Không được dùng 顶 làm danh từ hoặc lượng từ.';
-  if(word === '顶' && /量词/.test(usage)) return 'Câu trả lời phải dùng 顶 làm lượng từ, thường đi với 帽子, 帐篷, 轿子, ví dụ 一顶帽子. Câu phải hợp ngữ cảnh hội thoại.';
-  if(word === '至今') return 'Câu phải dùng 至今 để diễn tả sự việc hoặc trạng thái kéo dài từ quá khứ đến hiện tại.';
-  if(word === '反而') return 'Câu phải có logic trái với dự đoán: vế trước tạo kỳ vọng, vế sau dùng 反而 để đảo ngược kỳ vọng đó.';
-  if(word === '似的') return 'Câu nên dùng mẫu 像/好像/跟……似的 hoặc 得……似的. Không nên dùng 似的 một mình thiếu điểm so sánh.';
-  return 'Hãy chấm theo yêu cầu trong ngoặc, đúng từ bắt buộc, đúng từ loại/cách dùng, đúng ngữ cảnh bài tập. Câu phải tự nhiên với người bản ngữ.';
+  var lines = [];
+  // Quy tắc cốt lõi: BẮT BUỘC giữ và dùng đúng cấu trúc mục tiêu.
+  if(word) {
+    lines.push('YÊU CẦU BẮT BUỘC: Câu của học viên PHẢI dùng đúng từ/cấu trúc 「' + word + '」 theo đúng đề bài.');
+    lines.push('Nếu câu KHÔNG chứa 「' + word + '」 thì phải chấm là CHƯA ĐẠT (verdict = incorrect), dù ý nghĩa có đúng, vì đề yêu cầu vận dụng đúng cấu trúc này.');
+    lines.push('Câu sửa mẫu (full_corrected_sentence_zh) BẮT BUỘC vẫn phải dùng 「' + word + '」 — TUYỆT ĐỐI KHÔNG được bỏ 「' + word + '」 ra khỏi câu khi sửa, cũng không được thay bằng cách nói khác né tránh cấu trúc.');
+    if(usage) lines.push('Cách dùng đúng cần đạt: 「' + word + '」 làm ' + usage + '. Nếu học viên dùng sai từ loại/kết cấu của 「' + word + '」 thì chỉ ra lỗi và sửa lại NHƯNG vẫn giữ 「' + word + '」.');
+  }
+  // Ghi chú riêng theo từng cấu trúc phổ biến.
+  if(word === '作为') lines.push('「作为」 = "với tư cách là / là ...". Kết cấu tự nhiên: 作为 + danh từ chỉ vai trò, thường đứng đầu câu hoặc đầu vế (作为老板/作为一名学生……). Hãy sửa cho tự nhiên nhưng vẫn dùng 作为, ví dụ "作为饭店的老板" hoặc "作为一家饭店的老板".');
+  if(word === '顶' && /名词/.test(usage)) lines.push('Câu trả lời phải dùng 顶 với nghĩa danh từ, ví dụ 山顶, 头顶. Không được dùng 顶 làm động từ hoặc lượng từ.');
+  if(word === '顶' && /动词/.test(usage)) lines.push('Câu trả lời phải dùng 顶 như động từ, ví dụ 顶着大风, 顶住压力. Không được dùng 顶 làm danh từ hoặc lượng từ.');
+  if(word === '顶' && /量词/.test(usage)) lines.push('Câu trả lời phải dùng 顶 làm lượng từ, thường đi với 帽子, 帐篷, 轿子, ví dụ 一顶帽子.');
+  if(word === '至今') lines.push('Câu phải dùng 至今 để diễn tả sự việc hoặc trạng thái kéo dài từ quá khứ đến hiện tại.');
+  if(word === '反而') lines.push('Câu phải có logic trái với dự đoán: vế trước tạo kỳ vọng, vế sau dùng 反而 để đảo ngược kỳ vọng đó.');
+  if(word === '似的') lines.push('Câu nên dùng mẫu 像/好像/跟……似的 hoặc 得……似的. Không nên dùng 似的 một mình thiếu điểm so sánh.');
+  lines.push('Ngoài ra: chấm đúng ngữ cảnh đề bài, câu phải tự nhiên với người bản ngữ.');
+  return lines.join('\n');
 }
 
-function hskAlbertFormatAIResult(result) {
+function hskAlbertFormatAIResult(result, targetInfo) {
   if(!result) return 'AI không trả về kết quả chấm.';
   var verdictText = result.verdict === 'correct' ? 'Đúng' : (result.verdict === 'partially_correct' ? 'Đúng một phần' : 'Chưa đúng');
   var errors = Array.isArray(result.errors) && result.errors.length ? result.errors.map(function(e,i){ return (i+1)+'. '+(e.problem_vi||'')+'\n   Gợi ý: '+(e.suggestion_vi||''); }).join('\n') : 'Không phát hiện lỗi lớn.';
   var practice = Array.isArray(result.practice_more) && result.practice_more.length ? result.practice_more.map(function(p,i){ return (i+1)+'. '+(p.prompt_zh||'')+'\n   参考答案：'+(p.sample_answer_zh||'')+'\n   '+(p.explanation_vi||''); }).join('\n') : 'Chưa có câu luyện thêm.';
   var corrected = result.full_corrected_sentence_zh || result.corrected_answer_zh || '';
   var targetCheck = result.target_check_vi || (result.target_check && result.target_check.explanation_vi) || '';
-  return '🤖 AI chấm câu\n\nNguồn AI: Supabase Edge Function hsk-ai-grade\nKết luận: '+verdictText+'\nĐiểm: '+result.score+'/100\n\nNhận xét nhanh:\n'+(result.short_feedback_vi||'')+'\n\nGiải thích:\n'+(result.detailed_feedback_vi||'')+'\n\nKiểm tra từ/ngữ pháp:\n'+targetCheck+'\n\nCâu sửa tự nhiên hơn:\n'+corrected+'\n\nLỗi cần sửa:\n'+errors+'\n\nLuyện thêm:\n'+practice;
+  // Lưới an toàn phía client: nếu đề yêu cầu cấu trúc mà câu sửa của AI lại bỏ mất → cảnh báo.
+  var warn = '';
+  var word = targetInfo && targetInfo.targetWord ? String(targetInfo.targetWord).replace(/……/g,'') : '';
+  if(word && corrected && corrected.indexOf(word) === -1) {
+    warn = '\n\n⚠️ Lưu ý: Đề bài yêu cầu dùng cấu trúc 「' + word + '」 nhưng câu sửa gợi ý ở trên đã bỏ mất cấu trúc này. ' +
+           'Bạn cần đặt lại câu sao cho VẪN dùng 「' + word + '」 cho đúng yêu cầu bài tập.';
+  }
+  return '🤖 AI chấm câu\n\nNguồn AI: Supabase Edge Function hsk-ai-grade\nKết luận: '+verdictText+'\nĐiểm: '+result.score+'/100\n\nNhận xét nhanh:\n'+(result.short_feedback_vi||'')+'\n\nGiải thích:\n'+(result.detailed_feedback_vi||'')+'\n\nKiểm tra từ/ngữ pháp:\n'+targetCheck+'\n\nCâu sửa tự nhiên hơn:\n'+corrected+'\n\nLỗi cần sửa:\n'+errors+'\n\nLuyện thêm:\n'+practice+warn;
 }
 
 window.getAIEndpoint = getAIEndpoint = function(){ return 'supabase:hsk-ai-grade'; };
@@ -13277,14 +13328,23 @@ window.callAIBackend = callAIBackend = async function(prompt, meta) {
   var studentAnswer = hskAlbertExtractStudentAnswer(rawPrompt);
   var questionText = hskAlbertExtractQuestionText(rawPrompt);
   var hintText = hskAlbertExtractHint(rawPrompt);
-  var targetInfo = hskAlbertExtractTargetInfo(hintText || rawPrompt);
+  var targetInfo = hskAlbertExtractTargetInfo(hintText);
+  // Nếu chỉ từ gợi ý chưa xác định được cấu trúc bắt buộc, quét toàn bộ prompt.
+  if(!targetInfo.targetWord) targetInfo = hskAlbertExtractTargetInfo(rawPrompt);
+  var instruction = targetInfo.targetWord
+    ? '完成句子或对话，必须正确使用「' + targetInfo.targetWord + '」这个语法结构（改错时也不能去掉它）。'
+    : '完成句子或对话';
+  var requiredNote = targetInfo.targetWord
+    ? '\n【必须使用的语法结构 / Cấu trúc bắt buộc】：「' + targetInfo.targetWord + '」（' +
+      'chấm CHƯA ĐẠT nếu câu không dùng cấu trúc này; khi sửa câu vẫn phải giữ 「' + targetInfo.targetWord + '」）'
+    : '';
   var payload = {
     lessonId: typeof STATE !== 'undefined' ? STATE.currentLesson : null,
     lessonTitle: lesson.zh || '',
     exerciseType: 'grammar_sentence',
     exerciseId: (typeof CURRENT_GPT_INLINE_TARGET !== 'undefined' && CURRENT_GPT_INLINE_TARGET) ? CURRENT_GPT_INLINE_TARGET : 'ai-' + Date.now(),
-    instruction: '完成句子或对话',
-    questionText: questionText || rawPrompt,
+    instruction: instruction,
+    questionText: (questionText || rawPrompt) + requiredNote,
     fullSentenceBefore: questionText || rawPrompt,
     studentAnswer: studentAnswer || rawPrompt,
     targetWord: targetInfo.targetWord,
@@ -13302,7 +13362,7 @@ window.callAIBackend = callAIBackend = async function(prompt, meta) {
   console.log('HSK Albert kết quả AI:', res);
   if(res.error) throw new Error(res.error.message || 'Không gọi được Supabase Edge Function.');
   if(!res.data || !res.data.ok) throw new Error(res.data && res.data.error ? res.data.error : 'AI chấm bài lỗi không rõ nguyên nhân.');
-  return { answer: hskAlbertFormatAIResult(res.data.result), source: 'supabase-ai' };
+  return { answer: hskAlbertFormatAIResult(res.data.result, targetInfo), source: 'supabase-ai' };
 };
 
 document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
@@ -24023,3 +24083,663 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
 })();
 </script>
 <!-- HSK Albert patch end: AI Chinese tutor Q&A -->
+
+<!-- HSK Albert patch: Today page simplified + grammar/vocab focus -->
+<style id="today-focus-ui-patch">
+  /* Sidebar cleanup requested: remove Lo trinh and Kiem tra from the left bar. */
+  #nav-roadmap,
+  #nav-quiz { display: none !important; }
+  #page-today .topbar-actions .btn-outline[onclick*="roadmap"] { display: none !important; }
+
+  /* Replace the old Today dashboard with a vertical study feed. */
+  #page-today .today-grid,
+  #page-today #today-tasks,
+  #page-today #week-overview { display: none !important; }
+  #page-today .content > .section-card,
+  #page-today .content > .grid2 { display: none !important; }
+
+  .today-focus-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 980px;
+    margin: 0 auto 24px;
+  }
+  .today-focus-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 1px 0 rgba(0,0,0,.02);
+  }
+  .today-focus-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--paper2);
+  }
+  .today-focus-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--ink);
+  }
+  .today-focus-sub {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .today-focus-body { padding: 18px; }
+  .today-grammar-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .today-grammar-item {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: #fff;
+  }
+  .today-grammar-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .today-grammar-pattern {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--red);
+    line-height: 1.25;
+  }
+  .today-grammar-lesson {
+    flex-shrink: 0;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--gold-light);
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .today-grammar-use {
+    font-size: 13px;
+    color: var(--ink2);
+    line-height: 1.75;
+  }
+  .today-grammar-example {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--teal-light);
+    border-left: 3px solid var(--teal);
+  }
+  .today-grammar-example .zh {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .today-grammar-example .vi {
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .today-focus-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    margin-top: 14px;
+  }
+
+  .today-vocab-stage {
+    display: grid;
+    grid-template-columns: minmax(240px, 360px) 1fr;
+    gap: 18px;
+    align-items: stretch;
+  }
+  .today-vocab-flashcard {
+    min-height: 250px;
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    background: linear-gradient(180deg, #fff, var(--paper));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    cursor: pointer;
+    position: relative;
+    transition: transform .18s, box-shadow .18s, border-color .18s;
+  }
+  .today-vocab-flashcard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 26px rgba(0,0,0,.10);
+    border-color: var(--teal);
+  }
+  .today-vocab-zh {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 54px;
+    font-weight: 900;
+    line-height: 1.15;
+    color: var(--ink);
+  }
+  .today-vocab-py {
+    margin-top: 8px;
+    font-size: 17px;
+    color: var(--muted);
+  }
+  .today-vocab-meaning {
+    display: none;
+    margin-top: 14px;
+  }
+  .today-vocab-flashcard.flipped .today-vocab-meaning { display: block; }
+  .today-vocab-vi {
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--teal);
+  }
+  .today-vocab-type {
+    margin-top: 5px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .today-card-hint {
+    position: absolute;
+    bottom: 12px;
+    left: 16px;
+    right: 16px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .today-vocab-side {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    background: var(--paper2);
+  }
+  .today-timer-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .today-timer-ring {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: conic-gradient(var(--teal) var(--today-timer-deg, 360deg), var(--border) 0);
+    color: var(--ink);
+    font-weight: 900;
+    position: relative;
+  }
+  .today-timer-ring::after {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border-radius: 50%;
+    background: #fff;
+  }
+  .today-timer-ring span { position: relative; z-index: 1; }
+  .today-vocab-controls,
+  .today-vocab-rate {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .today-vocab-meta {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  @media (max-width: 820px) {
+    .today-vocab-stage { grid-template-columns: 1fr; }
+    .today-vocab-zh { font-size: 44px; }
+  }
+</style>
+<script id="today-focus-behavior-patch">
+(function(){
+  if(window.__HSK_TODAY_FOCUS_PATCHED__) return;
+  window.__HSK_TODAY_FOCUS_PATCHED__ = true;
+
+  var vocabTimer = null;
+  var vocabCountdown = 30;
+  var vocabPaused = false;
+  var vocabIndex = 0;
+  var vocabFlipped = false;
+  var grammarSeedBump = 0;
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function clean(s){ return String(s || '').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(); }
+  function shortText(s,n){ s = clean(s); return s.length > n ? s.slice(0,n-1) + '…' : s; }
+  function todayKey(){ return new Date().toISOString().slice(0,10); }
+  function course(){ return window.CURRENT_COURSE || 'hsk5'; }
+  function getLessons(){ try { return Array.isArray(LESSONS) ? LESSONS : []; } catch(e) { return []; } }
+  function lessonNo(l){ return l ? (l.disp || l.lessonNo || l.no || l.id || '') : ''; }
+  function lessonOrder(l){
+    if(!l) return 0;
+    var raw = lessonNo(l);
+    var m = String(raw == null ? '' : raw).match(/\d+/);
+    return m ? parseInt(m[0], 10) : 0;
+  }
+  function findLessonByStateId(id){
+    var sid = String(id == null ? '' : id);
+    var lessons = getLessons();
+    return lessons.find(function(l){ return String(l.id) === sid || String(lessonNo(l)) === sid; }) || null;
+  }
+  function learnedLessonLimit(){
+    var lessons = getLessons();
+    if(!lessons.length) return 0;
+    var st = (typeof STATE !== 'undefined' && STATE) ? STATE : (window.STATE || {});
+    var completedMax = 0;
+    (Array.isArray(st.completedLessons) ? st.completedLessons : []).forEach(function(id){
+      var l = findLessonByStateId(id);
+      if(l) completedMax = Math.max(completedMax, lessonOrder(l));
+    });
+    var current = findLessonByStateId(st.currentLesson);
+    var currentOrder = current ? lessonOrder(current) : 0;
+    if(completedMax){
+      if(currentOrder && currentOrder <= completedMax + 1) return Math.max(completedMax, currentOrder);
+      return completedMax;
+    }
+    return currentOrder || lessonOrder(lessons[0]) || 1;
+  }
+  function getLearnedLessons(){
+    var limit = learnedLessonLimit();
+    return getLessons().filter(function(l){ return lessonOrder(l) > 0 && lessonOrder(l) <= limit; });
+  }
+  function learnedRangeLabel(){
+    var arr = getLearnedLessons();
+    if(!arr.length) return 'Chưa có bài đã học';
+    var nums = arr.map(lessonOrder).filter(Boolean);
+    return 'Bài ' + Math.min.apply(null, nums) + '–' + Math.max.apply(null, nums);
+  }
+  function seedNum(str){
+    var h = 2166136261;
+    str = String(str || '');
+    for(var i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h += (h<<1) + (h<<4) + (h<<7) + (h<<8) + (h<<24); }
+    return Math.abs(h >>> 0);
+  }
+  function seededShuffle(arr, seed){
+    arr = arr.slice();
+    var x = seed || 1;
+    function rnd(){ x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }
+    for(var i=arr.length-1;i>0;i--){ var j = Math.floor(rnd()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
+    return arr;
+  }
+  function lessonLabel(l){
+    return (course()==='hsk1' ? 'HSK1 · ' : '') + 'Bài ' + lessonNo(l) + (l && l.zh ? ' · ' + l.zh : '');
+  }
+  function grammarExamples(g){
+    var arr = [];
+    (g.senses || []).forEach(function(s){ (s.examples || []).forEach(function(e){ arr.push({zh:clean(e.zh || e), vi:clean(e.vi || '')}); }); });
+    (g.examples || []).forEach(function(e){ arr.push({zh:clean(e.zh || e), vi:clean(e.vi || '')}); });
+    return arr.filter(function(e){ return e.zh; });
+  }
+  function grammarSummary(g){
+    var s = clean(g.explanation || '');
+    if(!s && g.full) s = clean(g.full).replace(/^.*?[—-]/,'');
+    if(!s && g.senses && g.senses.length) s = clean(g.senses.map(function(x){ return x.label || ''; }).join('；'));
+    return s || 'Ôn cách dùng, vị trí trong câu và ví dụ của mẫu ngữ pháp này.';
+  }
+  function buildGrammarTodayDeck(){
+    var deck = [];
+    getLearnedLessons().forEach(function(l){
+      var details = Array.isArray(l.grammarDetail) ? l.grammarDetail : [];
+      if(!details.length && Array.isArray(l.grammar)) {
+        details = l.grammar.map(function(p){ return {pattern:p, explanation:'Mẫu ngữ pháp trong ' + lessonLabel(l) + '. Hãy ôn cách dùng và ví dụ.'}; });
+      }
+      details.forEach(function(g, idx){
+        var pat = clean(g.pattern || g.full || '');
+        if(!pat) return;
+        var exs = grammarExamples(g);
+        deck.push({
+          key: course() + '::' + (l.id || idx) + '::' + idx + '::' + pat,
+          lesson: l,
+          pattern: pat,
+          summary: grammarSummary(g),
+          tip: clean(g.tip || ''),
+          example: exs[0] || null
+        });
+      });
+    });
+    return deck;
+  }
+  function buildVocabTodayDeck(){
+    var seen = Object.create(null), words = [];
+    var known = (typeof STATE !== 'undefined' && STATE && STATE.knownWords) ? STATE.knownWords : {};
+    getLearnedLessons().forEach(function(l){
+      (l.vocab || []).forEach(function(w){
+        var zh = clean(w.zh || '');
+        if(!zh || seen[zh]) return;
+        seen[zh] = true;
+        words.push({zh:zh, py:clean(w.py || ''), vi:clean(w.vi || ''), type:clean(w.type || ''), lesson:l, status:known[zh] || 'new'});
+      });
+    });
+    var fresh = words.filter(function(w){ return w.status === 'new' || w.status === 'again' || w.status === 'hard'; });
+    return fresh.length ? fresh : words;
+  }
+  function patchNavAndTopbar(){
+    ['nav-roadmap','nav-quiz'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; });
+    var actions = document.querySelector('#page-today .topbar-actions');
+    if(actions){
+      Array.prototype.slice.call(actions.querySelectorAll('button')).forEach(function(btn){
+        if(/roadmap|lộ trình/i.test(btn.getAttribute('onclick') || btn.textContent || '')) btn.style.display='none';
+      });
+    }
+  }
+  function ensureTodayFocusRoot(){
+    var content = document.querySelector('#page-today .content');
+    if(!content) return null;
+    var root = document.getElementById('today-focus-root');
+    if(!root){
+      root = document.createElement('div');
+      root.id = 'today-focus-root';
+      root.className = 'today-focus-shell';
+      content.insertBefore(root, content.firstChild);
+    }
+    return root;
+  }
+  function renderGrammarTodaySection(){
+    var deck = buildGrammarTodayDeck();
+    if(!deck.length){
+      return '<section class="today-focus-card"><div class="today-focus-head"><div><div class="today-focus-title">🧩 Ngữ pháp hôm nay</div><div class="today-focus-sub">Chưa có dữ liệu ngữ pháp trong phạm vi đã học.</div></div></div><div class="today-focus-body">Hãy học hoặc đánh dấu hoàn thành ít nhất một bài để mở ôn ngữ pháp hôm nay.</div></section>';
+    }
+    var seed = seedNum(course() + '::grammar::' + todayKey() + '::' + learnedLessonLimit() + '::' + grammarSeedBump);
+    var cards = seededShuffle(deck, seed).slice(0, Math.min(3, deck.length));
+    return '<section class="today-focus-card"><div class="today-focus-head"><div><div class="today-focus-title">🧩 Ngữ pháp hôm nay</div><div class="today-focus-sub">Random trong nội dung đã học: ' + esc(learnedRangeLabel()) + '</div></div><button class="btn btn-outline" onclick="hskTodayRandomGrammar()">Đổi ngữ pháp</button></div><div class="today-focus-body"><div class="today-grammar-list">' + cards.map(function(c){
+      var ex = c.example;
+      return '<article class="today-grammar-item"><div class="today-grammar-top"><div class="today-grammar-pattern">' + esc(c.pattern) + '</div><div class="today-grammar-lesson">' + esc(lessonLabel(c.lesson)) + '</div></div><div class="today-grammar-use">' + esc(shortText(c.summary, 230)) + '</div>' + (ex ? '<div class="today-grammar-example"><div class="zh">' + esc(ex.zh) + '</div>' + (ex.vi ? '<div class="vi">' + esc(ex.vi) + '</div>' : '') + '</div>' : '') + (c.tip ? '<div class="today-grammar-use" style="margin-top:8px;color:var(--muted)"><b>Lưu ý:</b> ' + esc(shortText(c.tip, 180)) + '</div>' : '') + '<div class="today-focus-actions"><button class="btn btn-outline" onclick="showPage(\'lessons\');setTimeout(function(){loadLesson(' + JSON.stringify(c.lesson.id) + ');},80)">Mở bài này</button><button class="btn btn-teal" onclick="window.hskReviewSetMode&&window.hskReviewSetMode(\'grammar\');showPage(\'review\')">Ôn Anki ngữ pháp</button></div></article>';
+    }).join('') + '</div></div></section>';
+  }
+  function renderVocabTodaySection(){
+    var deck = buildVocabTodayDeck();
+    if(!deck.length){
+      return '<section class="today-focus-card"><div class="today-focus-head"><div><div class="today-focus-title">📚 Từ mới Anki</div><div class="today-focus-sub">Chưa có từ vựng trong phạm vi đã học.</div></div></div><div class="today-focus-body">Hãy học hoặc đánh dấu hoàn thành bài đầu tiên để bắt đầu flashcard từ mới.</div></section>';
+    }
+    if(vocabIndex < 0 || vocabIndex >= deck.length) vocabIndex = seedNum(course() + '::vocab::' + todayKey() + '::' + learnedLessonLimit()) % deck.length;
+    var w = deck[vocabIndex];
+    var cls = vocabFlipped ? 'today-vocab-flashcard flipped' : 'today-vocab-flashcard';
+    var statusMap = {new:'Từ mới', again:'Học lại', hard:'Khó', known:'Đã thuộc'};
+    var statusClass = w.status === 'known' ? 'chip-teal' : (w.status === 'hard' ? 'chip-gold' : (w.status === 'again' ? 'chip-red' : 'chip-blue'));
+    return '<section class="today-focus-card"><div class="today-focus-head"><div><div class="today-focus-title">📚 Từ mới · Flashcard 30s/từ</div><div class="today-focus-sub">Dựa theo Anki từ vựng, giới hạn trong nội dung đã học: ' + esc(learnedRangeLabel()) + '</div></div><button class="btn btn-outline" onclick="hskTodayOpenVocabReview()">Mở Anki từ vựng</button></div><div class="today-focus-body"><div class="today-vocab-stage"><div class="' + cls + '" onclick="hskTodayFlipVocab()"><div class="today-vocab-zh">' + esc(w.zh) + '</div>' + (w.py ? '<div class="today-vocab-py">' + esc(w.py) + '</div>' : '') + '<div class="today-vocab-meaning"><div class="today-vocab-vi">' + esc(w.vi || '—') + '</div>' + (w.type ? '<div class="today-vocab-type">' + esc(w.type) + '</div>' : '') + '</div><div class="today-card-hint">Bấm thẻ để lật nghĩa · tự chuyển sau 30 giây</div></div><div class="today-vocab-side"><div class="today-timer-row"><div class="today-timer-ring" id="today-vocab-ring"><span id="today-vocab-seconds">30</span></div><div><div style="font-weight:800">Thẻ ' + (vocabIndex + 1) + '/' + deck.length + '</div><div style="font-size:12px;color:var(--muted)">' + esc(lessonLabel(w.lesson)) + ' · <span class="chip ' + statusClass + '">' + esc(statusMap[w.status] || w.status) + '</span></div></div></div><div class="today-vocab-controls"><button class="btn btn-outline" onclick="hskTodayPrevVocab(event)">← Trước</button><button class="btn btn-primary" onclick="hskTodayNextVocab(event)">Từ tiếp →</button><button class="btn btn-outline" id="today-vocab-pause" onclick="hskTodayToggleVocabTimer(event)">' + (vocabPaused ? 'Tiếp tục' : 'Tạm dừng') + '</button></div><div class="today-vocab-rate"><button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="hskTodayRateVocab(\'again\',event)">Học lại</button><button class="btn btn-outline" style="border-color:var(--gold);color:var(--gold)" onclick="hskTodayRateVocab(\'hard\',event)">Khó</button><button class="btn btn-teal" onclick="hskTodayRateVocab(\'known\',event)">Đã thuộc</button></div><div class="today-vocab-meta">Mỗi thẻ tự đổi sau 30 giây. Bạn vẫn có thể kéo sang từ tiếp theo hoặc đánh dấu trạng thái để đồng bộ với Anki từ vựng.</div></div></div></div></section>';
+  }
+  function renderTodayFocus(){
+    patchNavAndTopbar();
+    var d = new Date();
+    var todayDate = document.getElementById('today-date');
+    if(todayDate) todayDate.textContent = d.toLocaleDateString('vi-VN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    var label = document.getElementById('today-lesson-label');
+    if(label) label.textContent = 'Ôn nhanh hôm nay · chỉ lấy nội dung trong những bài đã học';
+    var root = ensureTodayFocusRoot();
+    if(!root) return;
+    root.innerHTML = renderGrammarTodaySection() + renderVocabTodaySection();
+    restartVocabTimer();
+  }
+  function updateTimerUI(){
+    var sec = document.getElementById('today-vocab-seconds');
+    var ring = document.getElementById('today-vocab-ring');
+    if(sec) sec.textContent = vocabCountdown;
+    if(ring) ring.style.setProperty('--today-timer-deg', (vocabCountdown/30*360) + 'deg');
+  }
+  function restartVocabTimer(){
+    if(vocabTimer) clearInterval(vocabTimer);
+    vocabCountdown = 30;
+    updateTimerUI();
+    vocabTimer = setInterval(function(){
+      var page = document.getElementById('page-today');
+      if(!page || page.style.display === 'none') return;
+      if(vocabPaused) return;
+      vocabCountdown -= 1;
+      if(vocabCountdown <= 0){
+        nextVocabInternal(1);
+      } else updateTimerUI();
+    }, 1000);
+  }
+  function nextVocabInternal(delta){
+    var deck = buildVocabTodayDeck();
+    if(!deck.length) return;
+    vocabIndex = (vocabIndex + delta + deck.length) % deck.length;
+    vocabFlipped = false;
+    var root = ensureTodayFocusRoot();
+    if(root) root.innerHTML = renderGrammarTodaySection() + renderVocabTodaySection();
+    vocabCountdown = 30;
+    updateTimerUI();
+  }
+
+  window.hskTodayRandomGrammar = function(){
+    grammarSeedBump += 1;
+    var root = ensureTodayFocusRoot();
+    if(root) root.innerHTML = renderGrammarTodaySection() + renderVocabTodaySection();
+    updateTimerUI();
+  };
+  window.hskTodayFlipVocab = function(){
+    vocabFlipped = !vocabFlipped;
+    var root = ensureTodayFocusRoot();
+    if(root) root.innerHTML = renderGrammarTodaySection() + renderVocabTodaySection();
+    updateTimerUI();
+  };
+  window.hskTodayNextVocab = function(ev){ if(ev) ev.stopPropagation(); nextVocabInternal(1); };
+  window.hskTodayPrevVocab = function(ev){ if(ev) ev.stopPropagation(); nextVocabInternal(-1); };
+  window.hskTodayToggleVocabTimer = function(ev){
+    if(ev) ev.stopPropagation();
+    vocabPaused = !vocabPaused;
+    var btn = document.getElementById('today-vocab-pause');
+    if(btn) btn.textContent = vocabPaused ? 'Tiếp tục' : 'Tạm dừng';
+  };
+  window.hskTodayRateVocab = function(rating, ev){
+    if(ev) ev.stopPropagation();
+    var deck = buildVocabTodayDeck();
+    var w = deck[vocabIndex];
+    if(!w) return;
+    if(typeof STATE !== 'undefined'){
+      STATE.knownWords = STATE.knownWords || {};
+      STATE.knownWords[w.zh] = rating;
+      if(typeof saveState === 'function') saveState();
+      if(typeof updateStreak === 'function') updateStreak();
+    }
+    nextVocabInternal(1);
+  };
+  window.hskTodayOpenVocabReview = function(){
+    try { localStorage.setItem('hsk_albert_review_mode','vocab'); } catch(e) {}
+    if(typeof hskReviewSetMode === 'function') hskReviewSetMode('vocab');
+    showPage('review');
+  };
+
+  var prevRenderToday = window.renderToday;
+  window.renderToday = renderToday = function(){
+    try { if(typeof prevRenderToday === 'function') prevRenderToday(); } catch(e) {}
+    renderTodayFocus();
+  };
+
+  var prevShowPage = window.showPage;
+  if(typeof prevShowPage === 'function'){
+    window.showPage = function(id){
+      if(id === 'roadmap' || id === 'quiz') id = 'today';
+      var result = prevShowPage.apply(this, arguments.length ? [id] : arguments);
+      if(id === 'today') setTimeout(renderTodayFocus, 0);
+      patchNavAndTopbar();
+      return result;
+    };
+  }
+
+  function boot(){
+    patchNavAndTopbar();
+    var todayPage = document.getElementById('page-today');
+    if(todayPage && todayPage.style.display !== 'none') renderTodayFocus();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  setTimeout(boot, 500);
+  setTimeout(boot, 1500);
+})();
+</script>
+<!-- HSK Albert patch end: Today page simplified + grammar/vocab focus -->
+
+<!-- HSK Albert patch: Today two-column layout with AI tutor on the right -->
+<style id="today-two-column-ai-patch">
+  /* Desktop: split Hôm nay into two vertical columns: study feed left, AI tutor right. */
+  #page-today {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(380px, 38vw) !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+    grid-template-areas:
+      "topbar topbar"
+      "study  ai" !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  #page-today > .topbar {
+    grid-area: topbar !important;
+    min-width: 0 !important;
+  }
+  #page-today > .content {
+    grid-area: study !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow-y: auto !important;
+    padding: 24px !important;
+  }
+  #page-today #today-focus-root,
+  #page-today .today-focus-shell {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  #page-today .today-focus-card:last-child {
+    margin-bottom: 24px !important;
+  }
+  #page-today > .ai-panel {
+    grid-area: ai !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    border-top: 0 !important;
+    border-left: 1px solid var(--border) !important;
+    background: #fff !important;
+  }
+  #page-today > .ai-panel .ai-panel-header {
+    flex-shrink: 0 !important;
+    padding: 14px 18px !important;
+    background: var(--paper2) !important;
+  }
+  #page-today > .ai-panel #quick-btns {
+    flex-shrink: 0 !important;
+    padding: 10px 16px 8px !important;
+    border-bottom: 1px solid var(--border) !important;
+    background: #fff !important;
+  }
+  #page-today > .ai-panel .ai-chat-body,
+  #page-today > .ai-panel #chat-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    padding: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  #page-today > .ai-panel .ai-chat-body.collapsed,
+  #page-today > .ai-panel #chat-body.collapsed {
+    display: flex !important;
+  }
+  #page-today > .ai-panel .ai-input-row {
+    flex-shrink: 0 !important;
+    padding: 12px 16px !important;
+    background: #fff !important;
+  }
+  #page-today > .ai-panel .msg-bubble {
+    max-width: 92% !important;
+  }
+  #page-today > .ai-panel .msg.user .msg-bubble {
+    max-width: 88% !important;
+  }
+  #page-today > .ai-panel #chat-toggle-label {
+    display: none !important;
+  }
+  #page-today .today-vocab-stage {
+    grid-template-columns: minmax(230px, 340px) minmax(0, 1fr) !important;
+  }
+
+  @media (max-width: 1100px) {
+    #page-today {
+      grid-template-columns: minmax(0, 1fr) minmax(340px, 42vw) !important;
+    }
+    #page-today .today-vocab-stage {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  /* Tablet/mobile: stack naturally, but keep AI directly below the study feed. */
+  @media (max-width: 820px) {
+    #page-today {
+      display: flex !important;
+      flex-direction: column !important;
+      overflow-y: auto !important;
+    }
+    #page-today > .content {
+      overflow: visible !important;
+      padding: 14px !important;
+    }
+    #page-today > .ai-panel {
+      height: auto !important;
+      min-height: 420px !important;
+      border-left: 0 !important;
+      border-top: 1px solid var(--border) !important;
+      overflow: visible !important;
+    }
+    #page-today > .ai-panel .ai-chat-body,
+    #page-today > .ai-panel #chat-body {
+      max-height: 360px !important;
+    }
+  }
+</style>
+<script id="today-two-column-ai-behavior-patch">
+(function(){
+  function ensureTodayAIExpanded(){
+    var body = document.getElementById('chat-body');
+    if(body) body.classList.remove('collapsed');
+    var label = document.getElementById('chat-toggle-label');
+    if(label) label.textContent = '';
+  }
+  var oldToggle = window.toggleChat;
+  window.toggleChat = function(){
+    var today = document.getElementById('page-today');
+    if(today && today.style.display !== 'none'){
+      ensureTodayAIExpanded();
+      return;
+    }
+    if(typeof oldToggle === 'function') return oldToggle.apply(this, arguments);
+  };
+  var oldShowPage = window.showPage;
+  if(typeof oldShowPage === 'function'){
+    window.showPage = function(id){
+      var result = oldShowPage.apply(this, arguments);
+      if(id === 'today') setTimeout(ensureTodayAIExpanded, 0);
+      return result;
+    };
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ensureTodayAIExpanded);
+  else ensureTodayAIExpanded();
+})();
+</script>
+<!-- HSK Albert patch end: Today two-column layout with AI tutor on the right -->
