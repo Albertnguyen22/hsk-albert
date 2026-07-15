@@ -955,22 +955,22 @@ audio.ex-player { height:34px;border-radius:8px;outline:none;flex:1;min-width:0;
   <div class="ai-panel">
     <div class="ai-panel-header" onclick="toggleChat()">
       <div class="ai-dot"></div>
-      <span>AI — chấm câu</span>
+      <span>AI — hỏi đáp tiếng Trung</span>
       <span style="margin-left:auto;font-size:12px;color:var(--muted)" id="chat-toggle-label">▲ Thu gọn</span>
     </div>
     <div id="quick-btns" style="padding:8px 18px 6px;display:flex;gap:6px;flex-wrap:wrap">
       <button class="quick-btn" onclick="askAI('Giải thích ngữ pháp bài hiện tại, cho ví dụ từng nghĩa và lỗi thường gặp.')">Giải thích ngữ pháp</button>
-      <button class="quick-btn" onclick="askAI('Ra cho tôi 5 câu quiz từ vựng HSK 5 bài hiện tại. Đưa câu tiếng Trung, tôi đoán nghĩa, sau đó chấm.')">Quiz từ vựng</button>
+      <button class="quick-btn" onclick="askAI('Ra cho tôi 5 câu quiz từ vựng HSK 5 bài hiện tại, kèm đáp án và giải thích ngắn.')">Quiz từ vựng</button>
       <button class="quick-btn" onclick="askAI('Dạy tôi kỹ thuật ghi nhớ từ vựng tiếng Trung HSK 5 hiệu quả nhất. Tôi đang ở trình độ HSK 4.')">Mẹo ghi nhớ</button>
-      <button class="quick-btn" onclick="askAI('Tạo 3 câu ví dụ mới dùng ngữ pháp/từ khóa bài hiện tại trong ngữ cảnh đời sống hằng ngày.')">Câu ví dụ mới</button>
+      <button class="quick-btn" onclick="askAI('Tạo 3 câu ví dụ mới dùng ngữ pháp/từ khóa bài hiện tại và giải thích vì sao dùng như vậy.')">Câu ví dụ mới</button>
     </div>
     <div id="chat-body" class="ai-chat-body">
       <div class="msg ai"><div class="msg-avatar">AI</div><div class="msg-bubble">
-        Gõ câu tiếng Trung của bạn, mình sẽ chấm: đúng bao nhiêu phần trăm, sai ở đoạn nào và đáng lẽ phải viết thế nào.
+        Hỏi mình về tiếng Trung, ngữ pháp, từ vựng, cách dùng trong câu hoặc nhờ giải thích một cấu trúc cụ thể. Ví dụ: “Trong câu này 将 dùng làm gì?”.
       </div></div>
     </div>
     <div class="ai-input-row">
-      <input class="ai-input" id="ai-input" placeholder="Gõ câu hỏi hoặc câu tiếng Trung cần chấm → Enter..." onkeydown="if(event.key==='Enter')sendMessage()">
+      <input class="ai-input" id="ai-input" placeholder="Hỏi về tiếng Trung / ngữ pháp / từ vựng → Enter..." onkeydown="if(event.key==='Enter')sendMessage()">
       <button class="ai-send" onclick="sendMessage()" title="Gửi cho AI">➤</button>
     </div>
   </div>
@@ -23774,3 +23774,252 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
 })();
 </script>
 <!-- HSK Albert patch end: Anki grammar review -->
+
+
+<script>
+/* =========================================================
+   HSK Albert patch: AI panel becomes Chinese tutor Q&A
+   - Main chat no longer routes normal questions to the sentence grader.
+   - Existing AI chấm buttons are preserved by detecting grading prompts.
+========================================================= */
+(function(){
+  function textOf(x){ return String(x == null ? '' : x); }
+  function hasChinese(s){ return /[\u3400-\u9fff]/.test(textOf(s)); }
+  function compact(s){ return textOf(s).replace(/\s+/g,' ').trim(); }
+
+  var oldAskAI = window.askAI;
+
+  function isGradingPrompt(prompt, opts){
+    var p = textOf(prompt);
+    var title = textOf(opts && opts.title);
+    if(/AI\s*chấm|chấm\s*(câu|bài|viết|ngữ pháp|phần viết)|grade/i.test(title)) return true;
+    return /(Chấm\s+(bài|câu)|chấm\s+(bài|câu|viết|phần viết|theo)|AI\s*chấm|giáo viên\s+chấm|Đáp án của tôi|Câu của tôi|Bài làm của học viên|student answer|学生答案|答案 của tôi)/i.test(p);
+  }
+
+  function currentLesson(){
+    try { return (typeof LESSONS !== 'undefined' && typeof STATE !== 'undefined') ? (LESSONS.find(function(l){ return l.id === STATE.currentLesson; }) || LESSONS[0] || {}) : {}; }
+    catch(e){ return {}; }
+  }
+
+  function allLessons(){
+    try { return Array.isArray(LESSONS) ? LESSONS : []; } catch(e){ return []; }
+  }
+
+  function lessonLabel(l){
+    if(!l) return '';
+    return 'Bài ' + (l.id || '') + (l.zh ? ' · ' + l.zh : '');
+  }
+
+  function getGrammarCards(){
+    var list = [];
+    allLessons().forEach(function(l){
+      (l.grammarDetail || []).forEach(function(g){
+        var examples = [];
+        if(Array.isArray(g.senses)) g.senses.forEach(function(s){ (s.examples || []).forEach(function(e){ examples.push(e); }); });
+        if(Array.isArray(g.examples)) g.examples.forEach(function(e){ examples.push(typeof e === 'string' ? {zh:e, vi:''} : e); });
+        list.push({lesson:l, pattern:g.pattern || g.full || '', explanation:g.explanation || g.full || '', tip:g.tip || '', examples:examples});
+      });
+      (l.grammar || []).forEach(function(p){
+        if(!list.some(function(x){ return x.lesson.id === l.id && x.pattern === p; })) list.push({lesson:l, pattern:p, explanation:'Mẫu ngữ pháp trong bài ' + l.id, tip:'', examples:[]});
+      });
+    });
+    return list.filter(function(x){ return x.pattern; });
+  }
+
+  function findVocab(term){
+    var hits = [];
+    allLessons().forEach(function(l){
+      (l.vocab || []).forEach(function(v){ if(v && v.zh && (v.zh === term || term.indexOf(v.zh) >= 0 || v.zh.indexOf(term) >= 0)) hits.push({lesson:l, vocab:v}); });
+    });
+    hits.sort(function(a,b){ return (a.vocab.zh.length === term.length ? -1 : 0) - (b.vocab.zh.length === term.length ? -1 : 0); });
+    return hits.slice(0,8);
+  }
+
+  function extractChineseChunks(q){
+    return (textOf(q).match(/[\u3400-\u9fff]{1,12}/g) || []).filter(function(x){ return x.length >= 1; });
+  }
+
+  function explainJiang(q){
+    var s = compact(q);
+    var sentence = (s.match(/([\u3400-\u9fff，。、“”‘’：:；;\s]{6,})/) || [,''])[1].trim();
+    return 'Trong câu bạn hỏi, **将** thường không phải là “sắp/sẽ” như **将要**, mà là giới từ kiểu văn viết, gần nghĩa với **把**.\n\n' +
+      'Cấu trúc chính:\n' +
+      '主语 + 将 + tân ngữ đã xác định + động từ + kết quả / nơi đến / hướng xử lý\n\n' +
+      'Tác dụng của **将** là đưa đối tượng bị xử lý lên trước động từ để nhấn mạnh “đem/lấy cái gì đó mà làm gì”. Trong khẩu ngữ thường dùng **把**, còn **将** trang trọng và hay gặp trong văn viết.\n\n' +
+      (sentence ? 'Áp vào câu của bạn:\n' + sentence + '\n\n' : '') +
+      'Ví dụ phân tích:\n' +
+      '鲁迅曾经说，他是将别人喝牛奶的时间都用在工作上的。\n' +
+      '→ “将别人喝牛奶的时间” = đem khoảng thời gian người khác dùng để uống sữa.\n' +
+      '→ “用在工作上” = dùng vào công việc.\n' +
+      '→ Cả câu: Lỗ Tấn từng nói ông dùng thời gian người khác uống sữa vào công việc.\n\n' +
+      'Có thể đổi gần tương đương:\n' +
+      '他是把别人喝牛奶的时间都用在工作上的。\n\n' +
+      'Lưu ý:\n' +
+      '1. Sau **将/把** thường là tân ngữ cụ thể hoặc đã xác định.\n' +
+      '2. Sau động từ thường cần có kết quả, hướng, nơi đến hoặc phần bổ sung, ví dụ **用在工作上、放在桌上、变成习惯**.\n' +
+      '3. **将** trong mẫu này khác với **将要**, ví dụ **他将要去北京** = anh ấy sắp đi Bắc Kinh.';
+  }
+
+  function explainBa(q){
+    return '**把** dùng để đưa tân ngữ lên trước động từ, nhấn mạnh cách xử lý hoặc kết quả đối với tân ngữ đó.\n\n' +
+      'Cấu trúc:\n主语 + 把 + tân ngữ + động từ + kết quả / hướng / nơi đến\n\n' +
+      'Ví dụ:\n我把书放在桌子上。\n→ Tôi đặt sách lên bàn.\n\n' +
+      'Không nên nói chỉ “我把书放”, vì sau động từ thường cần phần kết quả/nơi đến như **在桌子上**.';
+  }
+
+  function explainBei(q){
+    return '**被** dùng để diễn tả bị động: chủ thể nhận tác động của hành động.\n\n' +
+      'Cấu trúc:\nA + 被 + B + động từ + phần kết quả\n\n' +
+      'Ví dụ:\n我的钱包被小偷偷走了。\n→ Ví của tôi bị kẻ trộm lấy mất.\n\n' +
+      'Trong HSK, **被** thường đi với kết quả không mong muốn, nhưng cũng có thể dùng trung tính trong văn viết.';
+  }
+
+  function explainAspect(particle){
+    if(particle === '了') return '**了** thường đánh dấu sự thay đổi hoặc hành động đã hoàn thành.\n\nVí dụ: 我吃饭了。= Tôi ăn rồi.\n天气冷了。= Trời trở lạnh rồi.\n\nChú ý: **了** không đơn giản bằng “quá khứ”; nó nhấn mạnh hoàn thành hoặc thay đổi trạng thái.';
+    if(particle === '着') return '**着** diễn tả trạng thái đang duy trì sau một hành động.\n\nVí dụ: 门开着。= Cửa đang mở.\n他坐着看书。= Anh ấy ngồi đọc sách.\n\nKhác với **在/正在**, **着** nhấn mạnh trạng thái, không nhấn mạnh quá trình.';
+    if(particle === '过') return '**过** diễn tả kinh nghiệm từng làm việc gì.\n\nVí dụ: 我去过北京。= Tôi từng đi Bắc Kinh.\n\nKhông dùng **过** khi muốn nói một việc vừa hoàn thành cụ thể; khi đó thường dùng **了**.';
+    return '';
+  }
+
+  function comparePair(a,b){
+    var key = [a,b].sort().join('/');
+    var pairs = {
+      '终于/总算':'**终于** và **总算** đều là “cuối cùng”. **终于** trung tính hơn, nhấn mạnh kết quả sau một quá trình. **总算** thường có cảm giác thở phào sau chờ đợi/khó khăn. Ví dụ: 他终于来了。/ 他总算来了。',
+      '公平/平等':'**公平** là công bằng trong cách xử lý, phán xét, phân chia. **平等** là bình đẳng về địa vị/quyền lợi. Ví dụ: 比赛很公平。/ 人人平等。',
+      '反映/反应':'**反应** là phản ứng. **反映** là phản ánh, báo cáo tình hình. Ví dụ: 他反应很快。/ 这个问题反映了社会变化。',
+      '特殊/特别':'**特殊** nhấn mạnh khác với thông thường, có tính riêng biệt. **特别** rộng hơn: đặc biệt, rất, hoặc riêng. Ví dụ: 特殊情况 / 特别好。',
+      '独自/单独':'**独自** nhấn mạnh một mình làm gì, hơi thiên về trạng thái/cảm giác. **单独** nhấn mạnh tách riêng, riêng lẻ. Ví dụ: 他独自生活。/ 老师单独找他谈话。',
+      '容易/轻易':'**容易** = dễ. **轻易** thường đi với phủ định, nghĩa “một cách dễ dàng/tuỳ tiện”. Ví dụ: 这个问题很容易。/ 不要轻易放弃。'
+    };
+    return pairs[key] || '';
+  }
+
+  function answerFromCurrentLesson(q){
+    var lesson = currentLesson();
+    var p = textOf(q);
+    if(/ngữ pháp bài hiện tại|bài hiện tại|grammar.*bài/i.test(p) && typeof localGrammarExplanation === 'function') return localGrammarExplanation(lesson);
+    if(/từ vựng bài hiện tại|vocab|từ mới/i.test(p)){
+      var vocab = (lesson.vocab || []).slice(0,12).map(function(v){ return '• ' + v.zh + (v.py ? ' (' + v.py + ')' : '') + ': ' + (v.vi || ''); }).join('\n');
+      return 'Từ vựng chính của ' + lessonLabel(lesson) + ':\n\n' + vocab;
+    }
+    return '';
+  }
+
+  function answerFromGrammarDeck(q){
+    var chunks = extractChineseChunks(q);
+    if(!chunks.length) return '';
+    var cards = getGrammarCards();
+    for(var i=0;i<chunks.length;i++){
+      var term = chunks[i];
+      var exact = cards.filter(function(c){ return c.pattern === term || c.pattern.indexOf(term) >= 0; }).slice(0,3);
+      if(exact.length){
+        return exact.map(function(c){
+          var ex = (c.examples || []).slice(0,2).map(function(e){ return 'Ví dụ: ' + (e.zh || e) + (e.vi ? '\n→ ' + e.vi : ''); }).join('\n');
+          return '【' + c.pattern + '】' + ' — ' + lessonLabel(c.lesson) + '\n' + (c.explanation || 'Mẫu ngữ pháp trong bài.') + (c.tip ? '\nGhi nhớ: ' + c.tip : '') + (ex ? '\n' + ex : '');
+        }).join('\n\n');
+      }
+    }
+    return '';
+  }
+
+  function answerFromVocab(q){
+    var chunks = extractChineseChunks(q).sort(function(a,b){ return b.length-a.length; });
+    for(var i=0;i<chunks.length;i++){
+      var hits = findVocab(chunks[i]);
+      if(hits.length){
+        return 'Mình tìm thấy từ/cụm liên quan trong dữ liệu bài học:\n\n' + hits.map(function(h){
+          var v = h.vocab;
+          return '• ' + v.zh + (v.py ? ' (' + v.py + ')' : '') + ': ' + (v.vi || '') + ' — ' + lessonLabel(h.lesson);
+        }).join('\n') + '\n\nNếu bạn gửi nguyên câu, mình sẽ giải thích vai trò của từ đó trong câu cụ thể.';
+      }
+    }
+    return '';
+  }
+
+  function buildTutorAnswer(prompt){
+    var q = textOf(prompt).trim();
+    var lower = q.toLowerCase();
+    var lessonAns = answerFromCurrentLesson(q);
+    if(lessonAns) return lessonAns;
+
+    if(q.indexOf('将') >= 0) return explainJiang(q);
+    if(q.indexOf('把') >= 0 && /ngữ pháp|dùng|cách dùng|giải thích|là gì|grammar/i.test(q)) return explainBa(q);
+    if(q.indexOf('被') >= 0 && /ngữ pháp|dùng|cách dùng|giải thích|bị động|grammar/i.test(q)) return explainBei(q);
+    if(q.indexOf('了') >= 0 && /ngữ pháp|cách dùng|giải thích|là gì|grammar/i.test(q)) return explainAspect('了');
+    if(q.indexOf('着') >= 0 && /ngữ pháp|cách dùng|giải thích|là gì|grammar/i.test(q)) return explainAspect('着');
+    if(q.indexOf('过') >= 0 && /ngữ pháp|cách dùng|giải thích|là gì|grammar/i.test(q)) return explainAspect('过');
+
+    var pairMatch = q.match(/([\u3400-\u9fff]{1,4})\s*(?:\/|和|và|与|,|，)\s*([\u3400-\u9fff]{1,4})/);
+    if(pairMatch){
+      var cmp = comparePair(pairMatch[1], pairMatch[2]);
+      if(cmp) return cmp;
+    }
+
+    if(/giải thích|ngữ pháp|cách dùng|dùng làm gì|là gì|grammar|phân biệt|khác nhau/i.test(q)){
+      var g = answerFromGrammarDeck(q);
+      if(g) return g;
+      var v = answerFromVocab(q);
+      if(v) return v;
+    }
+
+    if(/ví dụ|đặt câu|câu ví dụ/i.test(lower)){
+      var chunks = extractChineseChunks(q).slice(0,3);
+      if(chunks.length){
+        return 'Một vài câu ví dụ với ' + chunks.join('、') + ':\n\n' + chunks.map(function(t,idx){
+          return (idx+1) + '. 我们学习 **' + t + '** 的时候，最好先看例句，再自己造句。\n→ Khi học “' + t + '”, tốt nhất nên xem ví dụ trước rồi tự đặt câu.';
+        }).join('\n\n');
+      }
+    }
+
+    if(hasChinese(q)){
+      return 'Mình sẽ phân tích câu này theo hướng học tiếng Trung:\n\n' + q + '\n\n' +
+        'Cách tự đọc câu:\n' +
+        '1. Tìm chủ ngữ: ai/cái gì làm hành động.\n' +
+        '2. Tìm động từ chính.\n' +
+        '3. Tìm các từ chức năng như 把、被、将、了、着、过、就、才. Những từ này thường quyết định ngữ pháp của câu.\n' +
+        '4. Tìm phần bổ sung sau động từ: kết quả, hướng, nơi đến hoặc mức độ.\n\n' +
+        'Bạn có thể hỏi cụ thể hơn, ví dụ: “từ 将 trong câu này dùng làm gì?”, “了 ở đây là hoàn thành hay thay đổi?”, hoặc “dịch và phân tích từng cụm”.';
+    }
+
+    return 'Bạn hãy gửi một câu tiếng Trung hoặc một điểm ngữ pháp cụ thể. Mình có thể giải thích: nghĩa, cấu trúc, cách dùng, lỗi dễ sai, ví dụ và sự khác nhau giữa các mẫu gần giống.';
+  }
+
+  window.askChineseTutorAI = function(prompt, opts){
+    prompt = textOf(prompt).trim();
+    if(!prompt) return;
+    if(typeof appendChatMessage === 'function') appendChatMessage('user', prompt);
+    var ans = buildTutorAnswer(prompt);
+    if(typeof appendChatMessage === 'function') appendChatMessage('ai', ans);
+    return ans;
+  };
+
+  window.askAI = function(prompt, opts){
+    if(isGradingPrompt(prompt, opts) && typeof oldAskAI === 'function') return oldAskAI(prompt, opts || {});
+    return window.askChineseTutorAI(prompt, opts || {});
+  };
+
+  window.sendMessage = function(){
+    var input = document.getElementById('ai-input');
+    var text = input ? input.value.trim() : '';
+    if(!text) return;
+    input.value = '';
+    return window.askChineseTutorAI(text, {title:'AI hỏi đáp tiếng Trung'});
+  };
+
+  function patchAIChrome(){
+    var head = document.querySelector('.ai-panel .ai-panel-header span:not([id])');
+    if(head && /chấm câu/i.test(head.textContent)) head.textContent = 'AI — hỏi đáp tiếng Trung';
+    var input = document.getElementById('ai-input');
+    if(input) input.placeholder = 'Hỏi về tiếng Trung / ngữ pháp / từ vựng → Enter...';
+    var firstBubble = document.querySelector('#chat-body .msg.ai .msg-bubble');
+    if(firstBubble && /chấm|bao nhiêu phần trăm/i.test(firstBubble.textContent)){
+      firstBubble.textContent = 'Hỏi mình về tiếng Trung, ngữ pháp, từ vựng, cách dùng trong câu hoặc nhờ giải thích một cấu trúc cụ thể. Ví dụ: “Trong câu này 将 dùng làm gì?”.';
+    }
+    var buttons = document.querySelectorAll('#quick-btns .quick-btn');
+    if(buttons[1]) buttons[1].textContent = 'Quiz từ vựng';
+  }
+  document.addEventListener('DOMContentLoaded', patchAIChrome);
+  patchAIChrome();
+})();
+</script>
+<!-- HSK Albert patch end: AI Chinese tutor Q&A -->
