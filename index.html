@@ -24179,10 +24179,37 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
     return 'Bạn hãy gửi một câu tiếng Trung hoặc một điểm ngữ pháp cụ thể. Mình có thể giải thích: nghĩa, cấu trúc, cách dùng, lỗi dễ sai, ví dụ và sự khác nhau giữa các mẫu gần giống.';
   }
 
-  window.askChineseTutorAI = function(prompt, opts){
+  window.askChineseTutorAI = async function(prompt, opts){
     prompt = textOf(prompt).trim();
     if(!prompt) return;
     if(typeof appendChatMessage === 'function') appendChatMessage('user', prompt);
+
+    // Ưu tiên hỏi gia sư AI thật (Supabase hsk-ai-grade, chế độ tutor).
+    // Chỉ khi lỗi mạng / chưa deploy backend mới rơi về trả lời cục bộ.
+    if(typeof callAIBackend === 'function'){
+      var thinkingId = null;
+      try{
+        if(typeof appendChatMessage === 'function'){ appendChatMessage('ai', '⏳ Gia sư AI đang trả lời...'); }
+        var ctx = (typeof buildAIContext === 'function') ? buildAIContext(prompt) : prompt;
+        // Đặt ngữ cảnh để backend nhận đúng câu hỏi gốc.
+        try { CURRENT_GPT_CONTEXT = ctx; CURRENT_GPT_RAW_PROMPT = prompt; } catch(e){}
+        var res = await callAIBackend(ctx, { rawPrompt: prompt, mode: 'tutor-chat' });
+        var body = document.getElementById('chat-body');
+        // Xóa dòng "đang trả lời" vừa thêm.
+        if(body && body.lastElementChild) body.removeChild(body.lastElementChild);
+        var answer = res && (res.answer || res.reply || res.text || res.message);
+        if(answer){
+          if(typeof appendChatMessage === 'function') appendChatMessage('ai', String(answer));
+          return answer;
+        }
+      }catch(err){
+        var body2 = document.getElementById('chat-body');
+        if(body2 && body2.lastElementChild) body2.removeChild(body2.lastElementChild);
+        // rơi xuống trả lời cục bộ bên dưới
+      }
+    }
+
+    // Dự phòng khi không gọi được backend.
     var ans = buildTutorAnswer(prompt);
     if(typeof appendChatMessage === 'function') appendChatMessage('ai', ans);
     return ans;
