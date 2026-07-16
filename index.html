@@ -959,18 +959,19 @@ audio.ex-player { height:34px;border-radius:8px;outline:none;flex:1;min-width:0;
       <span style="margin-left:auto;font-size:12px;color:var(--muted)" id="chat-toggle-label">▲ Thu gọn</span>
     </div>
     <div id="quick-btns" style="padding:8px 18px 6px;display:flex;gap:6px;flex-wrap:wrap">
-      <button class="quick-btn" onclick="askAI('Giải thích ngữ pháp bài hiện tại, cho ví dụ từng nghĩa và lỗi thường gặp.')">Giải thích ngữ pháp</button>
+      <button class="quick-btn" onclick="askAI('Giải thích ngữ pháp bài hiện tại, cho ví dụ từng nghĩa và lỗi thường gặp. Cho biết mỗi điểm ngữ pháp thuộc bài nào, HSK mấy.')">Giải thích ngữ pháp</button>
       <button class="quick-btn" onclick="askAI('Ra cho tôi 5 câu quiz từ vựng HSK 5 bài hiện tại, kèm đáp án và giải thích ngắn.')">Quiz từ vựng</button>
       <button class="quick-btn" onclick="askAI('Dạy tôi kỹ thuật ghi nhớ từ vựng tiếng Trung HSK 5 hiệu quả nhất. Tôi đang ở trình độ HSK 4.')">Mẹo ghi nhớ</button>
       <button class="quick-btn" onclick="askAI('Tạo 3 câu ví dụ mới dùng ngữ pháp/từ khóa bài hiện tại và giải thích vì sao dùng như vậy.')">Câu ví dụ mới</button>
+      <button class="quick-btn" onclick="askAI('Chuẩn bị cho tôi 5 câu luyện dịch đúng trình độ HSK 5: 3 câu Việt→Trung và 2 câu Trung→Việt. Đưa đề trước, để phần đáp án + pinyin ở cuối tách riêng để tôi tự làm trước.')">Luyện dịch HSK5</button>
     </div>
     <div id="chat-body" class="ai-chat-body">
       <div class="msg ai"><div class="msg-avatar">AI</div><div class="msg-bubble">
-        Hỏi mình về tiếng Trung, ngữ pháp, từ vựng, cách dùng trong câu hoặc nhờ giải thích một cấu trúc cụ thể. Ví dụ: “Trong câu này 将 dùng làm gì?”.
+        Hỏi mình về tiếng Trung: ngữ pháp/từ vựng bạn quên hoặc chưa rõ (mình giải thích lại, nói rõ nghĩa trong câu, thuộc bài nào – HSK mấy), nhờ dịch Trung↔Việt, hoặc xin câu luyện dịch HSK 5. Ví dụ: “Trong câu 鲁迅常与朋友们一起去…, 与 nghĩa là gì, cấu trúc thế nào?”.
       </div></div>
     </div>
     <div class="ai-input-row">
-      <input class="ai-input" id="ai-input" placeholder="Hỏi về tiếng Trung / ngữ pháp / từ vựng → Enter..." onkeydown="if(event.key==='Enter')sendMessage()">
+      <input class="ai-input" id="ai-input" placeholder="Hỏi ngữ pháp/từ vựng · nhờ dịch · xin câu luyện dịch → Enter..." onkeydown="if(event.key==='Enter')sendMessage()">
       <button class="ai-send" onclick="sendMessage()" title="Gửi cho AI">➤</button>
     </div>
   </div>
@@ -11444,7 +11445,23 @@ function appendChatMessage(role, text) {
 
 function buildAIContext(prompt) {
   const currentLesson = LESSONS.find(l=>l.id===STATE.currentLesson);
-  return `[Tôi đang học HSK 5, bài ${currentLesson?.id || ''} "${currentLesson?.zh || ''}" (${currentLesson?.vi || ''}), trình độ HSK 4. Hãy trả lời bằng tiếng Việt dễ hiểu, ví dụ tiếng Trung giữ chữ Hán. Khi chấm câu, hãy trả lời theo dạng: 1) Đúng/sai; 2) Lỗi cụ thể; 3) Câu sửa đúng; 4) Một cách nói tự nhiên hơn; 5) Dịch nghĩa tiếng Việt.]\n\n${prompt}`;
+  return `[Tôi đang học HSK 5, bài ${currentLesson?.id || ''} "${currentLesson?.zh || ''}" (${currentLesson?.vi || ''}), trình độ HSK 4. Hãy trả lời bằng tiếng Việt dễ hiểu, ví dụ tiếng Trung giữ chữ Hán.
+
+Bạn là gia sư tiếng Trung. Tùy câu hỏi của tôi, làm ĐÚNG việc tôi cần:
+1) HỎI NGỮ PHÁP / TỪ VỰNG: giải thích lại ngữ pháp hoặc từ tôi hỏi (kể cả khi tôi quên); nêu rõ NGHĨA TRONG ĐÚNG NGỮ CẢNH của câu tôi đưa, cấu trúc và cách dùng; nếu biết thì cho biết từ/ngữ pháp đó ở bài nào, HSK mấy. Tập trung đúng chữ/ngữ pháp tôi hỏi, TUYỆT ĐỐI KHÔNG đổi sang một cấu trúc khác gần giống (ví dụ tôi hỏi 与 thì đừng trả lời 与其).
+2) DỊCH: nếu tôi yêu cầu dịch, dịch Trung→Việt hoặc Việt→Trung theo đúng chiều tôi cần, kèm pinyin và giải thích ngắn từ khó.
+3) LUYỆN DỊCH: nếu tôi yêu cầu chuẩn bị câu luyện dịch, tạo vài câu đúng trình độ HSK 5 (Việt–Trung / Trung–Việt); để đáp án ở cuối, tách riêng để tôi tự làm trước rồi mới xem.
+Khi tôi gửi câu để CHẤM: 1) Đúng/sai; 2) Lỗi cụ thể; 3) Câu sửa đúng; 4) Cách nói tự nhiên hơn; 5) Dịch nghĩa tiếng Việt.]
+
+${prompt}`;
+}
+
+// Câu hỏi tự do / dịch / luyện dịch / 4 nút nhanh → chế độ "tutor".
+// KHÔNG gồm yêu cầu chấm câu (những cái đó vẫn dùng chế độ grading).
+function isTutorPrompt(text) {
+  const p = String(text || '');
+  if(/Chấm câu|Chấm bài|Đáp án của tôi|练一练|câu ví dụ của tôi|Chấm/i.test(p)) return false;
+  return true;
 }
 
 function getDefaultAIEndpoint() {
@@ -13747,6 +13764,48 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     if(sess.error || !sess.data || !sess.data.session) throw new Error('Bạn cần đăng nhập trước khi dùng AI ngoài.');
     var lesson = getCurrentLessonSafe();
     var rawPrompt = String(prompt || '');
+
+    // ─── Chế độ GIA SƯ (hỏi đáp tự do / dịch / luyện dịch / 4 nút nhanh) ───
+    // Gửi mode:"tutor" sang cùng Edge Function hsk-ai-grade.
+    // Backend cần xử lý nhánh này và trả về { ok:true, answer:"..." } (hoặc reply/text).
+    var tutorRaw = (meta && meta.rawPrompt) ? meta.rawPrompt : rawPrompt;
+    if(isTutorPrompt(tutorRaw)) {
+      var tutorPayload = {
+        mode: 'tutor',
+        exerciseType: 'tutor_chat',
+        lessonId: (typeof STATE !== 'undefined') ? STATE.currentLesson : null,
+        lessonTitle: lesson.zh || '',
+        lessonTitleVi: lesson.vi || '',
+        hskLevel: 5,
+        studentLevel: 'HSK4',
+        // rawPrompt = câu hỏi gốc của người dùng; prompt = đã kèm ngữ cảnh gia sư
+        question: tutorRaw,
+        prompt: rawPrompt,
+        vocabularyList: Array.isArray(lesson.vocab) ? lesson.vocab.map(function(v){return v.zh;}) : []
+      };
+      console.log('HSK Albert gửi tutor sang Supabase hsk-ai-grade:', tutorPayload);
+      var tRes = await fetch(HSK_SUPABASE_URL.replace(/\/$/,'') + '/functions/v1/hsk-ai-grade', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + sess.data.session.access_token,
+          'apikey': HSK_SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(tutorPayload)
+      });
+      var tText = await tRes.text();
+      var tData = null;
+      try { tData = JSON.parse(tText); } catch(e) { tData = { ok:false, error:'Function trả về không phải JSON.', raw:tText }; }
+      if(!tRes.ok || (tData && tData.ok === false)) {
+        var tDetail = tData && tData.detail ? ('\nChi tiết: ' + JSON.stringify(tData.detail).slice(0,1200)) : '';
+        throw new Error((tData && tData.error ? tData.error : ('HTTP ' + tRes.status)) + tDetail);
+      }
+      var answerText = (tData && (tData.answer || tData.reply || tData.text || tData.message)) ||
+                       (tData && tData.result && (tData.result.answer || tData.result.text)) || '';
+      if(!answerText) throw new Error('Backend chưa trả về nội dung cho chế độ gia sư (cần field "answer").');
+      return { answer: String(answerText), source: 'supabase-tutor', tutor: true };
+    }
+
     var questionText = extractQuestionText(rawPrompt);
     var hintText = extractHint(rawPrompt);
     var targetInfo = extractTargetInfo(hintText);
@@ -13809,13 +13868,20 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var requestId = ++CURRENT_AI_REQUEST_ID;
     var raw = getCurrentRawPrompt();
     var currentLesson = getCurrentLessonSafe();
-    if(!raw) { setGPTModalAnswer('Chưa có nội dung để chấm.', 'error'); return; }
+    if(!raw) { setGPTModalAnswer('Chưa có nội dung.', 'error'); return; }
+    var tutorMode = (typeof isTutorPrompt === 'function') && isTutorPrompt(raw);
     updateModalChrome('external');
-    setGPTModalAnswer('⏳ AI ngoài đang chấm qua Supabase hsk-ai-grade...\n\nBài: ' + (currentLesson.id ? currentLesson.id + ' · ' + currentLesson.zh : '') + '\n\nNếu lỗi, hệ thống sẽ hiện nguyên nhân để bạn sửa API key/model/quota.', 'loading');
-    setInlineGPTAnswer(CURRENT_GPT_INLINE_TARGET, 'Đang chấm bằng AI ngoài...', '', 'chatgpt');
+    setGPTModalAnswer((tutorMode ? '⏳ Gia sư AI đang soạn câu trả lời...' : '⏳ AI ngoài đang chấm qua Supabase hsk-ai-grade...') + '\n\nBài: ' + (currentLesson.id ? currentLesson.id + ' · ' + currentLesson.zh : '') + '\n\nNếu lỗi, hệ thống sẽ hiện nguyên nhân để bạn sửa API key/model/quota.', 'loading');
+    if(!tutorMode) setInlineGPTAnswer(CURRENT_GPT_INLINE_TARGET, 'Đang chấm bằng AI ngoài...', '', 'chatgpt');
     try {
       var res = await callAIBackend(CURRENT_GPT_CONTEXT || raw, { rawPrompt: raw, mode: 'external-openai' });
       if(requestId !== CURRENT_AI_REQUEST_ID) return;
+      if(res && res.tutor) {
+        setGPTModalStatus('Trả lời bởi gia sư AI (Supabase).');
+        setGPTModalAnswer(res.answer, '');
+        if(typeof appendChatMessage === 'function') appendChatMessage('ai', res.answer);
+        return;
+      }
       setGPTModalStatus('Đã chấm bằng AI ngoài qua Supabase/OpenRouter.');
       showGradeResult(res.result, 'external');
     } catch(err) {
