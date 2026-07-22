@@ -24503,12 +24503,17 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
     font-size: 17px;
     color: var(--muted);
   }
-  #page-today .today-vocab-py { display: none !important; }
+  /* Mặt trước flashcard hôm nay chỉ hiện Hán tự. Pinyin chỉ hiện sau khi lật thẻ. */
   .today-vocab-meaning {
     display: none;
     margin-top: 14px;
   }
   .today-vocab-flashcard.flipped .today-vocab-meaning { display: block; }
+  .today-vocab-py-back {
+    font-size: 17px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
   .today-vocab-vi {
     font-size: 19px;
     font-weight: 800;
@@ -24745,7 +24750,7 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
     var cls = vocabFlipped ? 'today-vocab-flashcard flipped' : 'today-vocab-flashcard';
     var statusMap = {new:'Từ mới', again:'Học lại', hard:'Khó', known:'Đã thuộc'};
     var statusClass = w.status === 'known' ? 'chip-teal' : (w.status === 'hard' ? 'chip-gold' : (w.status === 'again' ? 'chip-red' : 'chip-blue'));
-    return '<section class="today-focus-card"><div class="today-focus-head"><div><div class="today-focus-title">📚 Từ mới · Flashcard 30s/từ</div><div class="today-focus-sub">Dựa theo Anki từ vựng, giới hạn trong nội dung đã học: ' + esc(learnedRangeLabel()) + '</div></div><button class="btn btn-outline" onclick="hskTodayOpenVocabReview()">Mở Anki từ vựng</button></div><div class="today-focus-body"><div class="today-vocab-stage"><div class="' + cls + '" onclick="hskTodayFlipVocab()"><div class="today-vocab-zh">' + esc(w.zh) + '</div><div class="today-vocab-meaning"><div class="today-vocab-vi">' + esc(w.vi || '—') + '</div>' + (w.type ? '<div class="today-vocab-type">' + esc(w.type) + '</div>' : '') + '</div><div class="today-card-hint">Bấm thẻ để lật nghĩa · tự chuyển sau 30 giây</div></div><div class="today-vocab-side"><div class="today-timer-row"><div class="today-timer-ring" id="today-vocab-ring"><span id="today-vocab-seconds">30</span></div><div><div style="font-weight:800">Thẻ ' + (vocabIndex + 1) + '/' + deck.length + '</div><div style="font-size:12px;color:var(--muted)">' + esc(lessonLabel(w.lesson)) + ' · <span class="chip ' + statusClass + '">' + esc(statusMap[w.status] || w.status) + '</span></div></div></div><div class="today-vocab-controls"><button class="btn btn-outline" onclick="hskTodayPrevVocab(event)">← Trước</button><button class="btn btn-primary" onclick="hskTodayNextVocab(event)">Từ tiếp →</button><button class="btn btn-outline" id="today-vocab-pause" onclick="hskTodayToggleVocabTimer(event)">' + (vocabPaused ? 'Tiếp tục' : 'Tạm dừng') + '</button></div><div class="today-vocab-rate"><button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="hskTodayRateVocab(\'again\',event)">Học lại</button><button class="btn btn-outline" style="border-color:var(--gold);color:var(--gold)" onclick="hskTodayRateVocab(\'hard\',event)">Khó</button><button class="btn btn-teal" onclick="hskTodayRateVocab(\'known\',event)">Đã thuộc</button></div><div class="today-vocab-meta">Mỗi thẻ tự đổi sau 30 giây. Bạn vẫn có thể kéo sang từ tiếp theo hoặc đánh dấu trạng thái để đồng bộ với Anki từ vựng.</div></div></div></div></section>';
+    return '<section class="today-focus-card"><div class="today-focus-head"><div><div class="today-focus-title">📚 Từ mới · Flashcard 30s/từ</div><div class="today-focus-sub">Dựa theo Anki từ vựng, giới hạn trong nội dung đã học: ' + esc(learnedRangeLabel()) + '</div></div><button class="btn btn-outline" onclick="hskTodayOpenVocabReview()">Mở Anki từ vựng</button></div><div class="today-focus-body"><div class="today-vocab-stage"><div class="' + cls + '" onclick="hskTodayFlipVocab()"><div class="today-vocab-zh">' + esc(w.zh) + '</div><div class="today-vocab-meaning">' + (w.py ? '<div class="today-vocab-py-back">' + esc(w.py) + '</div>' : '') + '<div class="today-vocab-vi">' + esc(w.vi || '—') + '</div>' + (w.type ? '<div class="today-vocab-type">' + esc(w.type) + '</div>' : '') + '</div><div class="today-card-hint">Bấm thẻ để lật nghĩa · tự chuyển sau 30 giây</div></div><div class="today-vocab-side"><div class="today-timer-row"><div class="today-timer-ring" id="today-vocab-ring"><span id="today-vocab-seconds">30</span></div><div><div style="font-weight:800">Thẻ ' + (vocabIndex + 1) + '/' + deck.length + '</div><div style="font-size:12px;color:var(--muted)">' + esc(lessonLabel(w.lesson)) + ' · <span class="chip ' + statusClass + '">' + esc(statusMap[w.status] || w.status) + '</span></div></div></div><div class="today-vocab-controls"><button class="btn btn-outline" onclick="hskTodayPrevVocab(event)">← Trước</button><button class="btn btn-primary" onclick="hskTodayNextVocab(event)">Từ tiếp →</button><button class="btn btn-outline" id="today-vocab-pause" onclick="hskTodayToggleVocabTimer(event)">' + (vocabPaused ? 'Tiếp tục' : 'Tạm dừng') + '</button></div><div class="today-vocab-rate"><button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="hskTodayRateVocab(\'again\',event)">Học lại</button><button class="btn btn-outline" style="border-color:var(--gold);color:var(--gold)" onclick="hskTodayRateVocab(\'hard\',event)">Khó</button><button class="btn btn-teal" onclick="hskTodayRateVocab(\'known\',event)">Đã thuộc</button></div><div class="today-vocab-meta">Mỗi thẻ tự đổi sau 30 giây. Bạn vẫn có thể kéo sang từ tiếp theo hoặc đánh dấu trạng thái để đồng bộ với Anki từ vựng.</div></div></div></div></section>';
   }
   function renderTodayFocus(){
     patchNavAndTopbar();
