@@ -959,10 +959,10 @@ audio.ex-player { height:34px;border-radius:8px;outline:none;flex:1;min-width:0;
       <span style="margin-left:auto;font-size:12px;color:var(--muted)" id="chat-toggle-label">▲ Thu gọn</span>
     </div>
     <div id="quick-btns" style="padding:8px 18px 6px;display:flex;gap:6px;flex-wrap:wrap">
-      <button class="quick-btn" onclick="askAI('Giải thích ngữ pháp bài hiện tại, cho ví dụ từng nghĩa và lỗi thường gặp. Cho biết mỗi điểm ngữ pháp thuộc bài nào, HSK mấy.')">Giải thích ngữ pháp</button>
-      <button class="quick-btn" onclick="askAI('Ra cho tôi 5 câu quiz từ vựng HSK 5 bài hiện tại, kèm đáp án và giải thích ngắn.')">Quiz từ vựng</button>
-      <button class="quick-btn" onclick="askAI('Dạy tôi kỹ thuật ghi nhớ từ vựng tiếng Trung HSK 5 hiệu quả nhất. Tôi đang ở trình độ HSK 4.')">Mẹo ghi nhớ</button>
-      <button class="quick-btn" onclick="askAI('Tạo 3 câu ví dụ mới dùng ngữ pháp/từ khóa bài hiện tại và giải thích vì sao dùng như vậy.')">Câu ví dụ mới</button>
+      <button class="quick-btn" onclick="askAI('Giải thích ngữ pháp bài hiện tại. Trình bày GỌN cho từng điểm ngữ pháp theo cấu trúc: tên cấu trúc → công thức → nghĩa → 1-2 ví dụ ngắn (chữ Hán + pinyin + dịch) → 1 lỗi thường gặp. Ghi rõ thuộc bài nào, HSK mấy. KHÔNG viết lan man, không lặp ý.')">Giải thích ngữ pháp</button>
+      <button class="quick-btn" onclick="askAI('Ra cho tôi 5 câu quiz từ vựng HSK 5 bài hiện tại, kèm đáp án và giải thích ngắn gọn.')">Quiz từ vựng</button>
+      <button class="quick-btn" onclick="askAI('Dạy tôi kỹ thuật ghi nhớ từ vựng tiếng Trung HSK 5 hiệu quả nhất. Tôi đang ở trình độ HSK 4. Trình bày gọn, có ví dụ cụ thể.')">Mẹo ghi nhớ</button>
+      <button class="quick-btn" onclick="askAI('Tạo 3 câu ví dụ mới dùng ngữ pháp/từ khóa bài hiện tại (chữ Hán + pinyin + dịch), mỗi câu kèm 1 dòng giải thích vì sao dùng như vậy.')">Câu ví dụ mới</button>
       <button class="quick-btn" onclick="askAI('Chuẩn bị cho tôi 5 câu luyện dịch đúng trình độ HSK 5: 3 câu Việt→Trung và 2 câu Trung→Việt. Đưa đề trước, để phần đáp án + pinyin ở cuối tách riêng để tôi tự làm trước.')">Luyện dịch HSK5</button>
     </div>
     <div id="chat-body" class="ai-chat-body">
@@ -11445,13 +11445,30 @@ function appendChatMessage(role, text) {
 
 function buildAIContext(prompt) {
   const currentLesson = LESSONS.find(l=>l.id===STATE.currentLesson);
-  return `[Tôi đang học HSK 5, bài ${currentLesson?.id || ''} "${currentLesson?.zh || ''}" (${currentLesson?.vi || ''}), trình độ HSK 4. Hãy trả lời bằng tiếng Việt dễ hiểu, ví dụ tiếng Trung giữ chữ Hán.
+  return `[BỐI CẢNH: Tôi đang học HSK 5, bài ${currentLesson?.id || ''} "${currentLesson?.zh || ''}" (${currentLesson?.vi || ''}), trình độ hiện tại HSK 4. Luôn trả lời bằng tiếng Việt tự nhiên, dễ hiểu; mọi ví dụ tiếng Trung giữ nguyên chữ Hán và kèm pinyin.
 
-Bạn là gia sư tiếng Trung. Tùy câu hỏi của tôi, làm ĐÚNG việc tôi cần:
-1) HỎI NGỮ PHÁP / TỪ VỰNG: giải thích lại ngữ pháp hoặc từ tôi hỏi (kể cả khi tôi quên); nêu rõ NGHĨA TRONG ĐÚNG NGỮ CẢNH của câu tôi đưa, cấu trúc và cách dùng; nếu biết thì cho biết từ/ngữ pháp đó ở bài nào, HSK mấy. Tập trung đúng chữ/ngữ pháp tôi hỏi, TUYỆT ĐỐI KHÔNG đổi sang một cấu trúc khác gần giống (ví dụ tôi hỏi 与 thì đừng trả lời 与其).
-2) DỊCH: nếu tôi yêu cầu dịch, dịch Trung→Việt hoặc Việt→Trung theo đúng chiều tôi cần, kèm pinyin và giải thích ngắn từ khó.
-3) LUYỆN DỊCH: nếu tôi yêu cầu chuẩn bị câu luyện dịch, tạo vài câu đúng trình độ HSK 5 (Việt–Trung / Trung–Việt); để đáp án ở cuối, tách riêng để tôi tự làm trước rồi mới xem.
-Khi tôi gửi câu để CHẤM: 1) Đúng/sai; 2) Lỗi cụ thể; 3) Câu sửa đúng; 4) Cách nói tự nhiên hơn; 5) Dịch nghĩa tiếng Việt.]
+Bạn là gia sư tiếng Trung giỏi, cẩn thận và chính xác. Hãy nhận diện đúng việc tôi cần rồi làm THẬT KỸ:
+
+★ NGUYÊN TẮC CHUNG (áp dụng cho MỌI câu trả lời):
+- CHÍNH XÁC quan trọng hơn dài dòng. Không nói lan man, không lặp ý, không thêm lời chào hay lời khuyên chung chung.
+- Khi dịch: phải SÁT NGHĨA và ĐẦY ĐỦ — dịch HẾT từ đầu đến cuối, KHÔNG bỏ sót câu, vế, hay chi tiết nào. Văn bản dài vẫn phải dịch trọn vẹn.
+- Câu tiếng Việt phải TỰ NHIÊN, đúng văn phong người Việt, KHÔNG dịch word-by-word cứng nhắc; nhưng cũng không được thêm/bớt ý so với bản gốc.
+- Chỉ trả lời ĐÚNG việc được hỏi, không tự thêm phần không ai yêu cầu.
+
+1) DỊCH (khi tôi dán một đoạn/câu và nhờ dịch, ví dụ "dịch cho tôi"):
+   - Mặc định dịch Trung→Việt (hoặc theo đúng chiều tôi yêu cầu). Dịch TRỌN VẸN cả đoạn, tuyệt đối không lược bớt.
+   - Trình bày trước tiên là BẢN DỊCH TIẾNG VIỆT hoàn chỉnh, mượt mà, liền mạch thành đoạn văn — giữ đúng giọng văn bản gốc (kể chuyện thì mượt như truyện; trang trọng thì trang trọng; hội thoại thì tự nhiên).
+   - KHÔNG chèn pinyin hay chữ Hán vào giữa từng câu của bản dịch (làm rối, khó đọc). Bản dịch phải sạch.
+   - Sau bản dịch, thêm mục ngắn "📌 Từ/điển tích đáng chú ý": chỉ liệt kê vài từ khó, thành ngữ, tên riêng hoặc điển cố THẬT SỰ quan trọng (chữ Hán + pinyin + nghĩa). Không giải thích tràn lan mọi từ.
+
+2) HỎI NGỮ PHÁP / TỪ VỰNG:
+   - Trả lời ĐÚNG TRỌNG TÂM chữ/ngữ pháp tôi hỏi. TUYỆT ĐỐI không đổi sang cấu trúc gần giống (hỏi 与 thì không trả lời 与其).
+   - Trình bày gọn theo thứ tự: nghĩa TRONG ĐÚNG NGỮ CẢNH câu tôi đưa → cấu trúc/công thức → 1-2 ví dụ ngắn (chữ Hán + pinyin + dịch). Nếu biết thì ghi thuộc bài nào, HSK mấy.
+   - Ngắn gọn, có cấu trúc rõ ràng; KHÔNG viết thành đoạn văn dài dòng lan man.
+
+3) LUYỆN DỊCH: tạo vài câu đúng trình độ HSK 5 theo chiều tôi yêu cầu; để phần đáp án + pinyin RIÊNG ở cuối để tôi tự làm trước.
+
+4) CHẤM CÂU (khi tôi gửi câu nhờ chấm): trả lời gọn theo thứ tự: ① Đúng/sai; ② Lỗi cụ thể (nếu có); ③ Câu sửa đúng; ④ Cách nói tự nhiên hơn; ⑤ Dịch nghĩa tiếng Việt.]
 
 ${prompt}`;
 }
@@ -13770,6 +13787,15 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     // Backend cần xử lý nhánh này và trả về { ok:true, answer:"..." } (hoặc reply/text).
     var tutorRaw = (meta && meta.rawPrompt) ? meta.rawPrompt : rawPrompt;
     if(isTutorPrompt(tutorRaw)) {
+      // Câu hỏi gốc người dùng gõ:
+      var tutorUserQuestion = tutorRaw;
+      // Bản đã kèm ngữ cảnh + hướng dẫn gia sư (system prompt). rawPrompt ở đây =
+      // CURRENT_GPT_CONTEXT do runExternalAIGrading truyền vào; nếu vì lý do nào đó
+      // nó chưa được bọc, ta chủ động bọc lại để chắc chắn model luôn nhận được
+      // các quy tắc "dịch sát & đầy đủ, giải thích ngắn gọn".
+      var tutorInstructed = /BỐI CẢNH:|NGUYÊN TẮC CHUNG/.test(rawPrompt)
+        ? rawPrompt
+        : (typeof buildAIContext === 'function' ? buildAIContext(tutorUserQuestion) : rawPrompt);
       var tutorPayload = {
         mode: 'tutor',
         exerciseType: 'tutor_chat',
@@ -13778,9 +13804,12 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
         lessonTitleVi: lesson.vi || '',
         hskLevel: 5,
         studentLevel: 'HSK4',
-        // rawPrompt = câu hỏi gốc của người dùng; prompt = đã kèm ngữ cảnh gia sư
-        question: tutorRaw,
-        prompt: rawPrompt,
+        // Gửi CẢ hướng dẫn gia sư vào question lẫn prompt/systemPrompt để backend
+        // ánh xạ trường nào cũng nhận được đúng chỉ dẫn.
+        question: tutorInstructed,
+        userQuestion: tutorUserQuestion,
+        prompt: tutorInstructed,
+        systemPrompt: tutorInstructed,
         vocabularyList: Array.isArray(lesson.vocab) ? lesson.vocab.map(function(v){return v.zh;}) : []
       };
       console.log('HSK Albert gửi tutor sang Supabase hsk-ai-grade:', tutorPayload);
