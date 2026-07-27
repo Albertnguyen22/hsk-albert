@@ -848,10 +848,12 @@ audio.ex-player { height:34px;border-radius:8px;outline:none;flex:1;min-width:0;
 <div id="auth-bar" style="position:fixed;top:10px;right:10px;z-index:999999;background:#fff;border:1px solid #ddd8cc;border-radius:12px;padding:10px;box-shadow:0 4px 22px rgba(0,0,0,.14);font-family:'Be Vietnam Pro',Arial,sans-serif;font-size:13px;max-width:calc(100vw - 20px)">
   <div id="auth-config-warning" style="display:none;color:#c0392b;font-weight:700;margin-bottom:6px">Chưa cấu hình Supabase URL/Key</div>
   <div id="auth-logged-out" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-    <input id="auth-email" type="email" placeholder="Email" style="width:190px;padding:8px;border:1px solid #ccc;border-radius:7px;font:inherit">
-    <input id="auth-password" type="password" placeholder="Mật khẩu" style="width:140px;padding:8px;border:1px solid #ccc;border-radius:7px;font:inherit">
+    <input id="auth-email" type="email" name="albert-email" placeholder="Email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" style="width:190px;padding:8px;border:1px solid #ccc;border-radius:7px;font:inherit">
+    <input id="auth-password" type="password" name="albert-password" placeholder="Mật khẩu" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();hskSignIn();}" style="width:140px;padding:8px;border:1px solid #ccc;border-radius:7px;font:inherit">
+    <button id="auth-toggle-password" type="button" onclick="hskTogglePassword()" style="padding:8px 10px;border:1px solid #ccc;border-radius:7px;background:#f4f1e8;color:#1a1a2e;font-weight:700;cursor:pointer;font:inherit">Hiện</button>
     <button onclick="hskSignUp()" style="padding:8px 12px;border:0;border-radius:7px;background:#b8860b;color:white;font-weight:700;cursor:pointer;font:inherit">Đăng ký</button>
     <button onclick="hskSignIn()" style="padding:8px 12px;border:0;border-radius:7px;background:#0f7b6c;color:white;font-weight:700;cursor:pointer;font:inherit">Đăng nhập</button>
+    <button type="button" onclick="hskForgotPassword()" style="padding:8px 10px;border:1px solid #ccc;border-radius:7px;background:#fff;color:#1a4a8a;font-weight:700;cursor:pointer;font:inherit">Quên mật khẩu</button>
   </div>
   <div id="auth-logged-in" style="display:none;align-items:center;gap:8px;flex-wrap:wrap">
     <span id="auth-user-email" style="font-weight:700;color:#1a1a2e"></span>
@@ -13168,8 +13170,11 @@ showPage('today');
 ========================================================= */
 var HSK_SUPABASE_URL = "https://pdsxreonrlrfcotszblj.supabase.co";
 var HSK_SUPABASE_KEY = "sb_publishable_HifldsDyYLTfaAVPhOVrAA_oCdXFAxw";
+var ALBERT_SHARED_AUTH_STORAGE_KEY = "sb-pdsxreonrlrfcotszblj-auth-token";
 var hskSupabase = null;
 var hskCurrentUser = null;
+var hskAuthSubscription = null;
+var hskRecoveryInProgress = false;
 
 (function hskInitSupabaseClient(){
   try {
@@ -13181,7 +13186,14 @@ var hskCurrentUser = null;
       console.warn('HSK Albert: Chưa cấu hình Supabase URL hoặc Key trong index.html');
       return;
     }
-    hskSupabase = window.supabase.createClient(HSK_SUPABASE_URL.replace(/\/$/, ''), HSK_SUPABASE_KEY);
+    hskSupabase = window.supabase.createClient(HSK_SUPABASE_URL.replace(/\/$/, ''), HSK_SUPABASE_KEY, {
+      auth: {
+        storageKey: ALBERT_SHARED_AUTH_STORAGE_KEY,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
     window.hskSupabase = hskSupabase;
   } catch(e) {
     console.error('Không khởi tạo được Supabase:', e);
@@ -13190,10 +13202,94 @@ var hskCurrentUser = null;
 
 async function hskInitAuth() {
   if(!hskSupabase) { hskUpdateAuthUI(); return; }
-  var res = await hskSupabase.auth.getUser();
-  hskCurrentUser = res && res.data ? res.data.user : null;
+  var res = await hskSupabase.auth.getSession();
+  hskCurrentUser = res && res.data && res.data.session ? res.data.session.user : null;
   window.hskCurrentUser = hskCurrentUser;
   hskUpdateAuthUI();
+}
+
+function hskNormalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function hskFriendlyAuthError(error, password) {
+  var raw = String(error && error.message ? error.message : error || '');
+  var low = raw.toLowerCase();
+  if(low.includes('invalid login credentials')) {
+    var dotHint = String(password || '').endsWith('.')
+      ? '\n\nMật khẩu hiện đang kết thúc bằng dấu chấm (.). Nếu đây là ký tự nhập nhầm trên điện thoại, hãy xóa dấu chấm rồi thử lại.'
+      : '';
+    return 'Email hoặc mật khẩu không đúng. Lưu ý: bấm “Đăng ký” lần nữa không thay đổi mật khẩu của tài khoản đã tồn tại. Hãy kiểm tra mật khẩu cũ hoặc chọn “Quên mật khẩu”.' + dotHint;
+  }
+  if(low.includes('email not confirmed')) return 'Email chưa được xác nhận. Hãy mở thư xác nhận do hệ thống gửi rồi đăng nhập lại.';
+  if(low.includes('too many requests') || low.includes('rate limit')) return 'Bạn đã thử quá nhiều lần. Vui lòng chờ vài phút rồi thử lại.';
+  if(low.includes('password should be at least')) return 'Mật khẩu phải có ít nhất 6 ký tự.';
+  return raw || 'Không thể kết nối hệ thống đăng nhập. Vui lòng thử lại.';
+}
+
+function hskTogglePassword() {
+  var input = document.getElementById('auth-password');
+  var button = document.getElementById('auth-toggle-password');
+  if(!input) return;
+  var showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  if(button) button.textContent = showing ? 'Hiện' : 'Ẩn';
+  input.focus();
+}
+
+async function hskForgotPassword() {
+  if(!hskSupabase) { alert('Chưa kết nối được hệ thống đăng nhập.'); return; }
+  var input = document.getElementById('auth-email');
+  var email = hskNormalizeEmail(input && input.value);
+  if(!email) {
+    email = hskNormalizeEmail(window.prompt('Nhập email đã đăng ký để nhận liên kết đặt lại mật khẩu:') || '');
+  }
+  if(!email) return;
+  try {
+    var redirectTo = window.location.origin + window.location.pathname;
+    var res = await hskSupabase.auth.resetPasswordForEmail(email, { redirectTo: redirectTo });
+    if(res.error) throw res.error;
+    alert('Đã gửi email đặt lại mật khẩu tới ' + email + '. Hãy mở liên kết trong email và tạo mật khẩu mới. Nếu không thấy thư, kiểm tra Spam/Junk.');
+  } catch(e) {
+    alert('Không gửi được email đặt lại mật khẩu: ' + hskFriendlyAuthError(e));
+  }
+}
+
+async function hskCompletePasswordRecovery() {
+  if(hskRecoveryInProgress || !hskSupabase) return;
+  hskRecoveryInProgress = true;
+  try {
+    var first = window.prompt('Tạo mật khẩu mới (ít nhất 6 ký tự):');
+    if(first === null) return;
+    if(first.length < 6) { alert('Mật khẩu mới phải có ít nhất 6 ký tự.'); return; }
+    var second = window.prompt('Nhập lại mật khẩu mới:');
+    if(second !== first) { alert('Hai lần nhập mật khẩu không khớp. Vui lòng mở lại liên kết trong email và thử lại.'); return; }
+    var res = await hskSupabase.auth.updateUser({ password: first });
+    if(res.error) throw res.error;
+    alert('Đã đổi mật khẩu thành công. Mật khẩu mới dùng chung cho cả app HSK và app PMI.');
+  } catch(e) {
+    alert('Không đổi được mật khẩu: ' + hskFriendlyAuthError(e));
+  } finally {
+    hskRecoveryInProgress = false;
+  }
+}
+
+function hskInstallAuthListener() {
+  if(!hskSupabase || hskAuthSubscription) return;
+  try {
+    var sub = hskSupabase.auth.onAuthStateChange(function(event, session) {
+      setTimeout(function() {
+        hskCurrentUser = session && session.user ? session.user : null;
+        window.hskCurrentUser = hskCurrentUser;
+        hskUpdateAuthUI();
+        if(event === 'PASSWORD_RECOVERY') hskCompletePasswordRecovery();
+        if(typeof window.hskCheckApproval === 'function') window.hskCheckApproval();
+      }, 0);
+    });
+    hskAuthSubscription = sub && sub.data ? sub.data.subscription : sub;
+  } catch(e) {
+    console.warn('Không đồng bộ được phiên đăng nhập:', e);
+  }
 }
 
 function hskUpdateAuthUI() {
@@ -13216,25 +13312,42 @@ async function hskSignUp() {
   if(!hskSupabase) { alert('Chưa cấu hình Supabase URL/Key trong index.html.'); return; }
   var email = (document.getElementById('auth-email') || {}).value || '';
   var password = (document.getElementById('auth-password') || {}).value || '';
-  email = email.trim();
+  email = hskNormalizeEmail(email);
   if(!email || !password) { alert('Bạn cần nhập email và mật khẩu.'); return; }
-  var res = await hskSupabase.auth.signUp({ email: email, password: password });
-  if(res.error) { alert('Đăng ký lỗi: ' + res.error.message); return; }
-  alert('Đăng ký thành công. Nếu Supabase yêu cầu xác nhận email, hãy mở email xác nhận rồi đăng nhập.');
+  try {
+    var res = await hskSupabase.auth.signUp({ email: email, password: password });
+    if(res.error) throw res.error;
+    if(res.data && res.data.session && res.data.user) {
+      hskCurrentUser = res.data.user;
+      window.hskCurrentUser = hskCurrentUser;
+      hskUpdateAuthUI();
+      alert('Đăng ký thành công. Tài khoản đang chờ quản trị viên duyệt.');
+    } else {
+      alert('Đã gửi yêu cầu đăng ký/xác nhận email. Nếu email này đã có tài khoản, nút “Đăng ký” sẽ không đổi mật khẩu cũ. Khi đó hãy đăng nhập bằng mật khẩu cũ hoặc chọn “Quên mật khẩu”.');
+    }
+  } catch(e) {
+    alert('Đăng ký lỗi: ' + hskFriendlyAuthError(e, password));
+  }
 }
 
 async function hskSignIn() {
   if(!hskSupabase) { alert('Chưa cấu hình Supabase URL/Key trong index.html.'); return; }
   var email = (document.getElementById('auth-email') || {}).value || '';
   var password = (document.getElementById('auth-password') || {}).value || '';
-  email = email.trim();
+  email = hskNormalizeEmail(email);
   if(!email || !password) { alert('Bạn cần nhập email và mật khẩu.'); return; }
-  var res = await hskSupabase.auth.signInWithPassword({ email: email, password: password });
-  if(res.error) { alert('Đăng nhập lỗi: ' + res.error.message); return; }
-  hskCurrentUser = res.data.user;
-  window.hskCurrentUser = hskCurrentUser;
-  hskUpdateAuthUI();
-  alert('Đăng nhập thành công.');
+  try {
+    var res = await hskSupabase.auth.signInWithPassword({ email: email, password: password });
+    if(res.error) throw res.error;
+    hskCurrentUser = res.data.user;
+    window.hskCurrentUser = hskCurrentUser;
+    hskUpdateAuthUI();
+    var passInput = document.getElementById('auth-password');
+    if(passInput) passInput.value = '';
+    alert('Đăng nhập thành công. Phiên đăng nhập này dùng chung cho cả app HSK và app PMI.');
+  } catch(e) {
+    alert('Đăng nhập lỗi: ' + hskFriendlyAuthError(e, password));
+  }
 }
 
 async function hskSignOut() {
@@ -13427,7 +13540,10 @@ window.callAIBackend = callAIBackend = async function(prompt, meta) {
   return { answer: hskAlbertFormatAIResult(res.data.result, targetInfo), source: 'supabase-ai' };
 };
 
-document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
+document.addEventListener('DOMContentLoaded', function(){
+  hskInstallAuthListener();
+  hskInitAuth();
+});
 </script>
 
 
@@ -18160,8 +18276,21 @@ document.addEventListener('DOMContentLoaded', function(){ hskInitAuth(); });
     var status = 'pending', isAdmin = false;
     try {
       var r = await sb.rpc('my_status');
-      if(r && r.data && r.data.length){ status = r.data[0].status; isAdmin = !!r.data[0].is_admin; }
-      else if(r && r.error){ console.warn('my_status error', r.error); }
+      var row = null;
+      if(r && !r.error) {
+        if(Array.isArray(r.data)) row = r.data[0] || null;
+        else if(r.data && typeof r.data === 'object') row = r.data;
+      }
+      if((!row || !row.status) && r && r.error) {
+        var q = await sb.from('profiles').select('status,is_admin').eq('id', user.id).maybeSingle();
+        if(q && !q.error && q.data) row = q.data;
+        else console.warn('Không đọc được trạng thái tài khoản', (q && q.error) || r.error);
+      }
+      if(row) {
+        status = String(row.status || 'pending').toLowerCase();
+        isAdmin = !!row.is_admin;
+      }
+      if(['pending','approved','rejected'].indexOf(status) < 0) status = 'pending';
     } catch(e){ console.warn('my_status exception', e); }
 
     window.hskIsAdmin = isAdmin;
