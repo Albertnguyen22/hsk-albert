@@ -25207,3 +25207,177 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
 })();
 </script>
 <!-- HSK Albert patch end: Today two-column layout with AI tutor on the right -->
+
+<!-- HSK Albert patch: Anki tu vung 40/60 with Today grammar; hide Today AI outside Today -->
+<style id="review-vocab-40-60-latest-patch">
+  /* The Today page uses display:grid!important. Force it to hide when another page is active. */
+  #page-today.hsk-page-force-hidden,
+  #page-today[style*="display: none"] {
+    display: none !important;
+  }
+
+  /* Anki vocabulary: 40% Today grammar on the left, 60% vocabulary flashcard on the right. */
+  #page-review .review-vocab-split {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 18px;
+    align-items: start;
+    width: 100%;
+  }
+  #page-review .review-vocab-grammar-host,
+  #page-review .review-vocab-flash-host {
+    min-width: 0;
+  }
+  #page-review .review-vocab-grammar-host .today-focus-card {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+  #page-review .review-vocab-grammar-host .today-focus-head {
+    padding: 14px 15px;
+  }
+  #page-review .review-vocab-grammar-host .today-focus-body {
+    padding: 14px;
+  }
+  #page-review .review-vocab-grammar-host .today-grammar-item {
+    padding: 12px 13px;
+  }
+  #page-review .review-vocab-grammar-host .today-grammar-pattern {
+    font-size: 20px;
+  }
+  #page-review .review-vocab-grammar-host .today-focus-actions {
+    justify-content: flex-start;
+  }
+  #page-review .review-vocab-flash-host .fc-progress:first-child {
+    margin-top: 0;
+  }
+
+  @media (max-width: 920px) {
+    #page-review .review-vocab-split {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+<script id="review-vocab-40-60-latest-behavior-patch">
+(function(){
+  if(window.__HSK_REVIEW_VOCAB_40_60_LATEST__) return;
+  window.__HSK_REVIEW_VOCAB_40_60_LATEST__ = true;
+
+  var baseRenderFlashcard = (typeof window.renderFlashcard === 'function') ? window.renderFlashcard : null;
+  if(!baseRenderFlashcard) return;
+
+  function syncTodayPageVisibility(){
+    var todayPage = document.getElementById('page-today');
+    if(!todayPage) return;
+    var todayNav = document.getElementById('nav-today');
+    var todayIsActive = !!(todayNav && todayNav.classList.contains('active'));
+    todayPage.classList.toggle('hsk-page-force-hidden', !todayIsActive);
+  }
+
+  var previousShowPage = window.showPage;
+  if(typeof previousShowPage === 'function'){
+    window.showPage = function(){
+      var result = previousShowPage.apply(this, arguments);
+      syncTodayPageVisibility();
+      return result;
+    };
+  }
+
+  function makeModeSwitch(){
+    var wrap = document.createElement('div');
+    wrap.className = 'review-mode-switch';
+    wrap.innerHTML = '<button class="mode-pill active" onclick="hskReviewSetMode(\'vocab\')">📚 Anki từ vựng</button>' +
+      '<button class="mode-pill" onclick="hskReviewSetMode(\'grammar\')">🧩 Anki ngữ pháp</button>' +
+      '<span style="margin-left:auto;color:var(--muted);font-size:12px">Nhớ cách dùng, không chỉ nhớ nghĩa</span>';
+    return wrap;
+  }
+
+  function getTodayGrammarSource(){
+    var source = document.querySelector('#today-focus-root > .today-focus-card:first-child');
+    if(!source && typeof window.renderToday === 'function'){
+      try { window.renderToday(); } catch(e) {}
+      source = document.querySelector('#today-focus-root > .today-focus-card:first-child');
+    }
+    return source;
+  }
+
+  function makeFallbackGrammarCard(){
+    var card = document.createElement('section');
+    card.className = 'today-focus-card review-today-grammar-card';
+    card.innerHTML = '<div class="today-focus-head"><div><div class="today-focus-title">🧩 Ngữ pháp hôm nay</div>' +
+      '<div class="today-focus-sub">Nội dung ngữ pháp trong các bài đã học</div></div></div>' +
+      '<div class="today-focus-body" style="color:var(--muted)">Chưa có dữ liệu ngữ pháp để hiển thị.</div>';
+    return card;
+  }
+
+  function cloneTodayGrammarCard(){
+    var source = getTodayGrammarSource();
+    if(!source) return makeFallbackGrammarCard();
+
+    var clone = source.cloneNode(true);
+    clone.classList.add('review-today-grammar-card');
+    clone.querySelectorAll('[id]').forEach(function(el){ el.removeAttribute('id'); });
+    clone.querySelectorAll('button').forEach(function(btn){
+      if(/Đổi ngữ pháp/i.test(btn.textContent || '')){
+        btn.setAttribute('onclick', 'hskReviewRefreshTodayGrammar(event)');
+      }
+    });
+    return clone;
+  }
+
+  function buildVocabSplit(){
+    var content = document.getElementById('review-content');
+    if(!content) return;
+
+    content.querySelectorAll('.review-mode-switch').forEach(function(el){ el.remove(); });
+
+    var flashHost = document.createElement('section');
+    flashHost.className = 'review-vocab-flash-host';
+    while(content.firstChild) flashHost.appendChild(content.firstChild);
+
+    var grammarHost = document.createElement('aside');
+    grammarHost.className = 'review-vocab-grammar-host';
+    grammarHost.appendChild(cloneTodayGrammarCard());
+
+    var split = document.createElement('div');
+    split.className = 'review-vocab-split';
+    split.appendChild(grammarHost);
+    split.appendChild(flashHost);
+
+    content.appendChild(makeModeSwitch());
+    content.appendChild(split);
+  }
+
+  function patchedRenderFlashcard(){
+    baseRenderFlashcard.apply(this, arguments);
+    buildVocabSplit();
+  }
+
+  window.renderFlashcard = patchedRenderFlashcard;
+  try { renderFlashcard = patchedRenderFlashcard; } catch(e) {}
+
+  window.hskReviewRefreshTodayGrammar = function(ev){
+    if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+    if(typeof window.hskTodayRandomGrammar === 'function'){
+      try { window.hskTodayRandomGrammar(); } catch(e) {}
+    }
+    var host = document.querySelector('#review-content .review-vocab-grammar-host');
+    if(!host) return;
+    while(host.firstChild) host.removeChild(host.firstChild);
+    host.appendChild(cloneTodayGrammarCard());
+  };
+
+  function boot(){
+    syncTodayPageVisibility();
+    var reviewNav = document.getElementById('nav-review');
+    var reviewActive = !!(reviewNav && reviewNav.classList.contains('active'));
+    var mode = 'vocab';
+    try { mode = localStorage.getItem('hsk_albert_review_mode') || 'vocab'; } catch(e) {}
+    if(reviewActive && mode !== 'grammar') patchedRenderFlashcard();
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+<!-- HSK Albert patch end: Anki tu vung 40/60 -->
