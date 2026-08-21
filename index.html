@@ -25502,3 +25502,180 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
 })();
 </script>
 <!-- HSK Albert patch end: Anki tu vung 40/60 -->
+
+
+<!-- HSK Albert patch: restore AI grading for workbook writing (题32) -->
+<style id="workbook-writing-ai-restore-style">
+  .hsk-restored-writing-ai {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    margin-left: auto !important;
+  }
+  .hsk-source-writing-tools .hsk-restored-writing-ai .btn,
+  .hsk-restored-writing-ai .btn {
+    margin-left: 0 !important;
+    font-size: 12px !important;
+  }
+  .hsk-writing-ai-result {
+    margin-top: 12px !important;
+    line-height: 1.75 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+  @media (max-width: 760px) {
+    .hsk-restored-writing-ai {
+      width: 100% !important;
+      margin-left: 0 !important;
+    }
+  }
+</style>
+<script id="workbook-writing-ai-restore-patch">
+(function(){
+  'use strict';
+  if(window.__HSK_WORKBOOK_WRITING_AI_RESTORED__) return;
+  window.__HSK_WORKBOOK_WRITING_AI_RESTORED__ = true;
+
+  var previousRenderer = window.renderExercisesTab ||
+    (typeof renderExercisesTab === 'function' ? renderExercisesTab : null);
+  var previousGradeWritingAI = window.gradeWritingAI;
+
+  function restoreWritingButtons(html){
+    var source = String(html == null ? '' : html);
+    return source.replace(
+      /<button\b[^>]*onclick="submitWriting\((\d+)\)"[^>]*>\s*Chấm(?:\s+bài|\s+cơ bản)?\s*✓\s*<\/button>/g,
+      function(match, lid, offset, whole){
+        var nearby = whole.slice(offset, Math.min(whole.length, offset + 1100));
+        if(nearby.indexOf('gradeWritingAI(' + lid) !== -1 ||
+           nearby.indexOf('hskGradeWorkbookWriting(' + lid) !== -1){
+          return match;
+        }
+        return '<div class="writing-ai-tools hsk-restored-writing-ai">' +
+          '<button class="btn btn-outline hsk-writing-basic-btn" type="button" onclick="submitWriting(' + lid + ')">Chấm cơ bản ✓</button>' +
+          '<button class="btn btn-teal ai-btn-external hsk-writing-ai-btn" type="button" onclick="gradeWritingAI(' + lid + ',\'external\')">AI chấm</button>' +
+          '</div>';
+      }
+    );
+  }
+
+  if(previousRenderer){
+    window.renderExercisesTab = function(lesson){
+      return restoreWritingButtons(previousRenderer.apply(this, arguments));
+    };
+    try { renderExercisesTab = window.renderExercisesTab; } catch(e) {}
+  }
+
+  function getLessons(){
+    try {
+      if(typeof LESSONS !== 'undefined' && Array.isArray(LESSONS)) return LESSONS;
+    } catch(e) {}
+    return Array.isArray(window.LESSONS) ? window.LESSONS : [];
+  }
+
+  function getWritingMeta(lid, lesson){
+    var verified = window.HSK5_WORKBOOK_11_18_SOURCE_VERIFIED &&
+      window.HSK5_WORKBOOK_11_18_SOURCE_VERIFIED[String(lid)];
+    var p2 = verified && verified.writing && verified.writing.p2;
+    var sample = null;
+    try {
+      sample = (typeof WRITING_SAMPLES !== 'undefined' && WRITING_SAMPLES[lid]) ? WRITING_SAMPLES[lid] : null;
+    } catch(e) {}
+    var words = (p2 && Array.isArray(p2.words) && p2.words.length) ? p2.words.slice() :
+      (sample && Array.isArray(sample.words) && sample.words.length) ? sample.words.slice() :
+      (lesson && Array.isArray(lesson.keyVocab)) ? lesson.keyVocab.slice(0, 8) : [];
+    var prompt = (p2 && p2.prompt) || '请结合下列词语（要全部使用，顺序不分先后），写一篇80字左右的短文。';
+    var lessonNo = (verified && verified.meta && verified.meta.lessonNo) ||
+      (lesson && (lesson.disp || lesson.lessonNo || lesson.id)) || lid;
+    return { words: words, prompt: prompt, lessonNo: lessonNo };
+  }
+
+  function ensureResultBox(lid){
+    var id = 'write-result-' + lid;
+    var box = document.getElementById(id);
+    if(box) return box;
+    var ta = document.getElementById('write-' + lid);
+    if(!ta) return null;
+    box = document.createElement('div');
+    box.id = id;
+    box.className = 'gpt-inline-result hsk-writing-ai-result';
+    var body = ta.closest ? ta.closest('.ex-part-body') : ta.parentElement;
+    (body || ta.parentElement).appendChild(box);
+    return box;
+  }
+
+  window.gradeWritingAI = function(lid, mode){
+    lid = Number(lid);
+    var ta = document.getElementById('write-' + lid);
+    if(!ta || !ta.value.trim()){
+      alert('Hãy viết bài trước!');
+      return;
+    }
+
+    var lesson = getLessons().find(function(item){ return Number(item.id) === lid; }) || {};
+    var meta = getWritingMeta(lid, lesson);
+    var courseLabel = window.CURRENT_COURSE === 'hsk1' ? 'HSK 1' : 'HSK 5';
+    var requiredWords = meta.words.length ? meta.words.join('、') : '(không có danh sách từ bắt buộc)';
+    var answer = ta.value.trim();
+    ensureResultBox(lid);
+
+    /* Keep the learner's answer at the very end. The existing AI parser reads
+       everything after “Đáp án của tôi:”, so no instruction may follow it. */
+    var prompt =
+      'Chấm bài viết tiếng Trung theo tiêu chí ' + courseLabel + '.\n' +
+      'Bài: ' + meta.lessonNo + ' · ' + (lesson.zh || '') + '\n' +
+      'Đề bài: ' + meta.prompt + '\n' +
+      'Từ bắt buộc/ưu tiên dùng: ' + requiredWords + '\n\n' +
+      'Yêu cầu chấm:\n' +
+      '1) Cho điểm 0-100 theo mức độ hoàn thành đề, ngữ pháp, từ vựng, trật tự từ và độ tự nhiên.\n' +
+      '2) Kiểm tra rõ từng từ bắt buộc đã được dùng đúng hay chưa.\n' +
+      '3) Chỉ ra từng lỗi bằng tiếng Việt và sửa lại bằng tiếng Trung.\n' +
+      '4) Đưa một bản hoàn chỉnh tự nhiên hơn, vẫn giữ đúng ý của người học.\n' +
+      '5) Nhận xét độ dài so với mục tiêu khoảng 80 chữ.\n\n' +
+      'Đáp án của tôi:\n' + answer;
+
+    try {
+      var modal = document.getElementById('gpt-modal');
+      if(modal) modal.style.display = 'flex';
+      if(typeof runAIInlineChoice === 'function'){
+        var task = runAIInlineChoice(prompt, {
+          title: 'AI chấm bài viết · Bài ' + meta.lessonNo,
+          inlineTarget: 'write-result-' + lid
+        }, mode || 'external');
+        setTimeout(function(){
+          var title = document.getElementById('gpt-modal-title');
+          if(title) title.textContent = 'AI chấm bài viết · Bài ' + meta.lessonNo;
+        }, 0);
+        return task;
+      }
+      if(typeof previousGradeWritingAI === 'function'){
+        return previousGradeWritingAI.call(this, lid, mode || 'external');
+      }
+      alert('Chức năng AI chấm chưa sẵn sàng trong file này.');
+    } catch(err) {
+      var box = ensureResultBox(lid);
+      if(box){
+        box.className = 'gpt-inline-result show hsk-writing-ai-result';
+        box.textContent = 'AI chưa chấm được: ' + (err && err.message ? err.message : err);
+      }
+    }
+  };
+
+  function refreshCurrentExerciseTab(){
+    try {
+      var id = Number(window.STATE && window.STATE.currentLesson);
+      if(!id || !previousRenderer) return;
+      var lesson = getLessons().find(function(item){ return Number(item.id) === id; });
+      var tab = document.getElementById('exercises-tab');
+      if(lesson && tab) tab.innerHTML = window.renderExercisesTab(lesson);
+    } catch(e) {}
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(refreshCurrentExerciseTab, 250); });
+  } else {
+    setTimeout(refreshCurrentExerciseTab, 250);
+  }
+})();
+</script>
+<!-- HSK Albert patch end: restore AI grading for workbook writing -->
