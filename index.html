@@ -25679,3 +25679,564 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
 })();
 </script>
 <!-- HSK Albert patch end: restore AI grading for workbook writing -->
+
+
+<!-- HSK Albert patch: accurate AI grading for workbook writing question 32 -->
+<style id="workbook-writing-ai-accuracy-style">
+  .hsk-writing-requirement-summary {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid #bee6d8;
+    border-radius: 10px;
+    background: var(--teal-light);
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--ink2);
+  }
+  .hsk-writing-requirement-summary strong { color: var(--teal); }
+</style>
+<script id="workbook-writing-ai-accuracy-patch">
+(function(){
+  'use strict';
+  if(window.__HSK_WORKBOOK_WRITING_AI_ACCURACY_PATCHED__) return;
+  window.__HSK_WORKBOOK_WRITING_AI_ACCURACY_PATCHED__ = true;
+
+  var previousGradeWritingAI = window.gradeWritingAI;
+  var previousCallAIBackend = window.callAIBackend;
+  var contexts = window.__HSK_WORKBOOK_WRITING_GRADE_CONTEXTS__ =
+    window.__HSK_WORKBOOK_WRITING_GRADE_CONTEXTS__ || {};
+  var contextOrder = window.__HSK_WORKBOOK_WRITING_GRADE_ORDER__ =
+    window.__HSK_WORKBOOK_WRITING_GRADE_ORDER__ || [];
+
+  function getLessons(){
+    try {
+      if(typeof LESSONS !== 'undefined' && Array.isArray(LESSONS)) return LESSONS;
+    } catch(e) {}
+    return Array.isArray(window.LESSONS) ? window.LESSONS : [];
+  }
+
+  function getWritingMeta(lid, lesson){
+    var verified = window.HSK5_WORKBOOK_11_18_SOURCE_VERIFIED &&
+      window.HSK5_WORKBOOK_11_18_SOURCE_VERIFIED[String(lid)];
+    var p2 = verified && verified.writing && verified.writing.p2;
+
+    if(!p2){
+      try {
+        var wb = (typeof WORKBOOK !== 'undefined' && WORKBOOK[lid]) ? WORKBOOK[lid] : null;
+        p2 = wb && wb.writing && wb.writing.p2;
+      } catch(e) {}
+    }
+
+    if(!p2 || !Array.isArray(p2.words) || !p2.words.length) return null;
+
+    return {
+      words: p2.words.map(function(w){ return String(w || '').trim(); }).filter(Boolean),
+      prompt: String(p2.prompt || '请结合下列词语（要全部使用，顺序不分先后），写一篇80字左右的短文。'),
+      lessonNo: Number(
+        (verified && verified.meta && verified.meta.lessonNo) ||
+        (lesson && (lesson.disp || lesson.lessonNo || lesson.id)) ||
+        lid
+      ),
+      lessonTitle: String(
+        (verified && verified.meta && verified.meta.title) ||
+        (lesson && lesson.zh) ||
+        ''
+      ),
+      targetLength: 80
+    };
+  }
+
+  function countHan(text){
+    var m = String(text || '').match(/[\u3400-\u9fff]/g);
+    return m ? m.length : 0;
+  }
+
+  function countNoSpace(text){
+    return Array.from(String(text || '').replace(/\s/g, '')).length;
+  }
+
+  function ensureResultBox(lid){
+    var id = 'write-result-' + lid;
+    var box = document.getElementById(id);
+    if(box) return box;
+    var ta = document.getElementById('write-' + lid);
+    if(!ta) return null;
+    box = document.createElement('div');
+    box.id = id;
+    box.className = 'gpt-inline-result hsk-writing-ai-result';
+    var body = ta.closest ? ta.closest('.ex-part-body') : ta.parentElement;
+    (body || ta.parentElement).appendChild(box);
+    return box;
+  }
+
+  function newToken(lid){
+    return 'wb32-' + lid + '-' + Date.now().toString(36) + '-' +
+      Math.random().toString(36).slice(2, 9);
+  }
+
+  function rememberContext(ctx){
+    contexts[ctx.token] = ctx;
+    contextOrder.push(ctx.token);
+    while(contextOrder.length > 12){
+      var old = contextOrder.shift();
+      if(old && old !== ctx.token) delete contexts[old];
+    }
+  }
+
+  function buildVisiblePrompt(ctx){
+    return '[HSK_WORKBOOK_WRITING_32:' + ctx.token + ']\n' +
+      'Chấm bài viết HSK 5 - Sách bài tập, câu 32.\n' +
+      'Bài: ' + ctx.lessonNo + ' · ' + ctx.lessonTitle + '\n' +
+      'Đề gốc: ' + ctx.prompt + '\n' +
+      'Năm từ bắt buộc: ' + ctx.words.join('、') + '\n' +
+      'Lưu ý: “要全部使用” chỉ là lời hướng dẫn phải dùng đủ năm từ; ' +
+      'không phải cụm từ học viên phải chép vào bài.\n\n' +
+      'Đáp án của tôi:\n' + ctx.answer;
+  }
+
+  window.gradeWritingAI = function(lid, mode){
+    lid = Number(lid);
+    var ta = document.getElementById('write-' + lid);
+    if(!ta || !ta.value.trim()){
+      alert('Hãy viết bài trước!');
+      return;
+    }
+
+    var lesson = getLessons().find(function(item){ return Number(item.id) === lid; }) || {};
+    var meta = getWritingMeta(lid, lesson);
+    if(!meta && typeof previousGradeWritingAI === 'function'){
+      return previousGradeWritingAI.call(this, lid, mode || 'external');
+    }
+    if(!meta){
+      alert('Không tìm thấy đề và danh sách từ bắt buộc của bài viết này.');
+      return;
+    }
+
+    var answer = ta.value.trim();
+    var token = newToken(lid);
+    var usedWords = meta.words.filter(function(w){ return answer.indexOf(w) !== -1; });
+    var missingWords = meta.words.filter(function(w){ return answer.indexOf(w) === -1; });
+    var ctx = {
+      token: token,
+      lid: lid,
+      lessonNo: meta.lessonNo,
+      lessonTitle: meta.lessonTitle,
+      prompt: meta.prompt,
+      words: meta.words,
+      targetLength: meta.targetLength,
+      answer: answer,
+      usedWords: usedWords,
+      missingWords: missingWords,
+      hanCount: countHan(answer),
+      noSpaceCount: countNoSpace(answer)
+    };
+    rememberContext(ctx);
+
+    var box = ensureResultBox(lid);
+    if(box){
+      box.className = 'gpt-inline-result show hsk-writing-ai-result';
+      box.innerHTML =
+        '<div class="hsk-writing-requirement-summary">' +
+          '<strong>Đang đối chiếu đúng đề:</strong> ' +
+          usedWords.length + '/' + meta.words.length + ' từ bắt buộc đã xuất hiện · ' +
+          ctx.hanCount + ' chữ Hán · mục tiêu khoảng ' + meta.targetLength + ' chữ.' +
+        '</div>';
+    }
+
+    var prompt = buildVisiblePrompt(ctx);
+    if(typeof runAIInlineChoice === 'function'){
+      var task = runAIInlineChoice(prompt, {
+        title: 'AI chấm bài viết · Bài ' + meta.lessonNo,
+        inlineTarget: 'write-result-' + lid
+      }, mode || 'external');
+      setTimeout(function(){
+        var title = document.getElementById('gpt-modal-title');
+        if(title) title.textContent = 'AI chấm bài viết · Bài ' + meta.lessonNo;
+      }, 0);
+      return task;
+    }
+
+    if(typeof previousGradeWritingAI === 'function'){
+      return previousGradeWritingAI.call(this, lid, mode || 'external');
+    }
+    alert('Chức năng AI chấm chưa sẵn sàng trong file này.');
+  };
+
+  function markerToken(text){
+    var m = String(text || '').match(/\[HSK_WORKBOOK_WRITING_32:([A-Za-z0-9_-]+)\]/);
+    return m ? m[1] : '';
+  }
+
+  function buildJudgePrompt(ctx, retry){
+    var checks = ctx.words.map(function(w){
+      return w + ': ' + (ctx.answer.indexOf(w) !== -1 ? 'ĐÃ XUẤT HIỆN' : 'CHƯA XUẤT HIỆN');
+    }).join(' | ');
+
+    return [
+      'Bạn là giám khảo chấm phần viết HSK 5.',
+      'Đây là câu 32 写短文 của Sách bài tập, KHÔNG phải bài điền một cấu trúc ngữ pháp vào một câu.',
+      '',
+      'ĐỀ GỐC:',
+      ctx.prompt,
+      'TỪ BẮT BUỘC CHÍNH XÁC: ' + ctx.words.join('、'),
+      '',
+      'QUY TẮC BẮT BUỘC KHI CHẤM:',
+      '1. Cụm “要全部使用” trong đề chỉ có nghĩa là phải dùng đủ các từ được liệt kê. Nó KHÔNG phải từ/cấu trúc phải xuất hiện nguyên văn trong bài viết.',
+      '2. Chủ đề do học viên tự chọn. Chỉ cần nội dung mạch lạc và dùng đúng đủ các từ bắt buộc; không được tự đổi sang một chủ đề hoặc nhân vật khác.',
+      '3. Chỉ chấm phần nằm giữa <student_answer> và </student_answer>. Không được lấy câu chữ trong đề làm bài của học viên.',
+      '4. Kiểm tra từng từ bắt buộc theo cả hai tiêu chí: có xuất hiện và được dùng đúng nghĩa/ngữ cảnh.',
+      '5. Bài sửa hoàn chỉnh phải giữ ý chính của học viên và PHẢI chứa đủ các từ bắt buộc. Không được viết một bài mẫu lạc đề, ví dụ tự chuyển sang nói về 鲁迅 hoặc một nhân vật không có trong bài của học viên.',
+      '6. “80字左右” là độ dài xấp xỉ 80 chữ. Dài hoặc ngắn hơn thì trừ điểm phù hợp, nhưng không được chấm sai hoàn toàn chỉ vì độ dài.',
+      '7. Nếu dữ kiện kiểm tra máy cho biết một từ đã xuất hiện, không được nói từ đó bị thiếu; vẫn có thể nhận xét từ đó dùng chưa tự nhiên.',
+      retry ? '8. Đây là lần kiểm tra lại vì kết quả trước có dấu hiệu hiểu sai đề. Hãy tự đối chiếu từng từ trước khi trả lời.' : '',
+      '',
+      'DỮ KIỆN ĐÃ KIỂM TRA BẰNG MÁY:',
+      checks,
+      'Số chữ Hán: ' + ctx.hanCount + '; số ký tự không tính khoảng trắng: ' + ctx.noSpaceCount + '; mục tiêu: khoảng ' + ctx.targetLength + ' chữ.',
+      '',
+      '<student_answer>',
+      ctx.answer,
+      '</student_answer>',
+      '',
+      'Hãy trả về CHỈ MỘT JSON hợp lệ, không dùng markdown, đúng cấu trúc sau:',
+      '{',
+      '  "percent": 0,',
+      '  "verdict": "đúng | gần đúng | sai",',
+      '  "wrong_parts": [',
+      '    {"wrong":"đoạn sai trong bài học viên","should_be":"cách sửa bằng tiếng Trung","why_vi":"giải thích ngắn bằng tiếng Việt"}',
+      '  ],',
+      '  "corrected_zh": "bản sửa hoàn chỉnh, giữ đúng chủ đề của học viên và dùng đủ các từ bắt buộc",',
+      '  "comment_vi": "nhận xét tổng hợp bằng tiếng Việt, nêu rõ từng từ bắt buộc và độ dài"',
+      '}'
+    ].filter(Boolean).join('\n');
+  }
+
+  function parseJsonFromText(value){
+    if(value && typeof value === 'object'){
+      if(value.result && typeof value.result === 'object') return value.result;
+      return value;
+    }
+    var text = String(value || '').trim();
+    if(!text) return null;
+    text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    var first = text.indexOf('{');
+    var last = text.lastIndexOf('}');
+    if(first !== -1 && last > first) text = text.slice(first, last + 1);
+    try {
+      var parsed = JSON.parse(text);
+      return parsed && parsed.result && typeof parsed.result === 'object' ? parsed.result : parsed;
+    } catch(e) {
+      return null;
+    }
+  }
+
+  function extractTutorAnswer(data){
+    if(!data) return '';
+    return data.answer || data.reply || data.text || data.message ||
+      (data.result && (data.result.answer || data.result.text)) || '';
+  }
+
+  async function getSession(){
+    var sb = window.hskSupabase ||
+      (typeof hskSupabase !== 'undefined' ? hskSupabase : null);
+    if(!sb) throw new Error('Chưa cấu hình/kết nối Supabase trong index.html.');
+    var sess = await sb.auth.getSession();
+    if(sess.error || !sess.data || !sess.data.session){
+      throw new Error('Bạn cần đăng nhập trước khi dùng AI chấm bài.');
+    }
+    return { sb: sb, session: sess.data.session };
+  }
+
+  async function invokeWritingTutor(ctx, retry){
+    var auth = await getSession();
+    var judgePrompt = buildJudgePrompt(ctx, retry);
+    var payload = {
+      mode: 'tutor',
+      exerciseType: 'workbook_writing_32',
+      lessonId: ctx.lid,
+      lessonDisplayNo: ctx.lessonNo,
+      lessonTitle: ctx.lessonTitle,
+      hskLevel: 5,
+      question: judgePrompt,
+      userQuestion: judgePrompt,
+      prompt: judgePrompt,
+      systemPrompt: judgePrompt,
+      requiredWords: ctx.words,
+      targetLength: ctx.targetLength,
+      actualLength: ctx.hanCount,
+      maxTokens: 3000,
+      max_tokens: 3000
+    };
+    var res = await auth.sb.functions.invoke('hsk-ai-grade', {
+      body: payload,
+      headers: { Authorization: 'Bearer ' + auth.session.access_token }
+    });
+    if(res.error) throw new Error(res.error.message || 'Không gọi được AI chấm bài viết.');
+    if(!res.data || res.data.ok === false){
+      throw new Error(res.data && res.data.error ? res.data.error : 'AI chấm bài viết trả về lỗi.');
+    }
+    var answerText = extractTutorAnswer(res.data);
+    var parsed = parseJsonFromText(answerText);
+    if(!parsed) throw new Error('AI trả về kết quả không đúng định dạng JSON cho bài viết.');
+    return parsed;
+  }
+
+  async function invokeWritingGradeFallback(ctx){
+    var auth = await getSession();
+    var question = ctx.prompt + '\n指定词语：' + ctx.words.join('、');
+    var rubric = buildJudgePrompt(ctx, true) +
+      '\nLƯU Ý KỸ THUẬT: targetWord phải để trống vì đây không phải bài luyện một cấu trúc đơn lẻ.';
+    var payload = {
+      lessonId: ctx.lid,
+      lessonTitle: ctx.lessonTitle,
+      exerciseType: 'writing_paragraph',
+      exerciseId: 'workbook-writing-32-' + ctx.lid,
+      instruction: 'HSK 5 练习册第' + ctx.lessonNo + '课第32题写短文',
+      questionText: question,
+      fullSentenceBefore: question,
+      studentAnswer: ctx.answer,
+      targetWord: '',
+      requiredUsage: '必须全部使用指定词语：' + ctx.words.join('、') + '。不要求在作文中写出“要全部使用”。',
+      grammarPoint: 'HSK 5 写短文（第32题），不是单句语法结构题',
+      referenceAnswer: '',
+      teacherRubric: rubric,
+      vocabularyList: ctx.words,
+      requiredWords: ctx.words,
+      targetLength: ctx.targetLength,
+      actualLength: ctx.hanCount
+    };
+    var res = await auth.sb.functions.invoke('hsk-ai-grade', {
+      body: payload,
+      headers: { Authorization: 'Bearer ' + auth.session.access_token }
+    });
+    if(res.error) throw new Error(res.error.message || 'Không gọi được AI chấm bài viết.');
+    if(!res.data || res.data.ok === false){
+      throw new Error(res.data && res.data.error ? res.data.error : 'AI chấm bài viết trả về lỗi.');
+    }
+    return (res.data && res.data.result) || res.data;
+  }
+
+  function percentFrom(raw){
+    var p = Number(raw && raw.percent);
+    if(!isFinite(p)){
+      p = Number(raw && raw.score);
+      if(isFinite(p) && p <= 10) p = p * 10;
+    }
+    if(!isFinite(p)) p = 0;
+    return Math.max(0, Math.min(100, Math.round(p)));
+  }
+
+  function normalizeWrongParts(raw){
+    var wrong = Array.isArray(raw && raw.wrong_parts) ? raw.wrong_parts : [];
+    if(!wrong.length && Array.isArray(raw && raw.problems)){
+      wrong = raw.problems.map(function(p){
+        return {
+          wrong: p.text || p.wrong || '',
+          should_be: p.fix || p.should_be || '',
+          why_vi: p.type || p.why_vi || ''
+        };
+      });
+    }
+    if(!wrong.length && Array.isArray(raw && raw.errors)){
+      wrong = raw.errors.map(function(e){
+        return {
+          wrong: e.wrong || '',
+          should_be: e.suggestion_vi || e.should_be || '',
+          why_vi: e.problem_vi || e.why_vi || ''
+        };
+      });
+    }
+    return wrong.map(function(w){
+      return {
+        wrong: String(w.wrong || ''),
+        should_be: String(w.should_be || ''),
+        why_vi: String(w.why_vi || '')
+      };
+    });
+  }
+
+  function falseMissingClaim(text, ctx){
+    var s = String(text || '');
+    if(!s) return false;
+
+    if(s.indexOf('要全部使用') !== -1 &&
+       !/(chỉ là|không phải|khong phai|not a|required instruction|只是|不是)/i.test(s)){
+      return true;
+    }
+
+    if(!ctx.missingWords.length){
+      var missingPattern = /(thiếu|chưa dùng|không dùng|không có|không chứa|未使用|没有使用|缺少|未包含|没有包含)/i;
+      if(missingPattern.test(s)){
+        for(var i=0;i<ctx.words.length;i++){
+          if(s.indexOf(ctx.words[i]) !== -1) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function sanitizeComment(text, ctx){
+    var source = String(text || '');
+    if(!source) return '';
+    var chunks = source.split(/\n+/);
+    return chunks.filter(function(part){
+      return !falseMissingClaim(part, ctx);
+    }).join('').trim();
+  }
+
+  function localFloor(ctx){
+    var total = Math.max(1, ctx.words.length);
+    var coverage = ctx.usedWords.length / total;
+    var score = Math.round(35 * coverage);
+
+    if(ctx.hanCount >= 60 && ctx.hanCount <= 110) score += 15;
+    else if(ctx.hanCount >= 45 && ctx.hanCount <= 130) score += 10;
+    else if(ctx.hanCount >= 30) score += 6;
+
+    var sentenceCount = (ctx.answer.match(/[。！？!?]/g) || []).length;
+    score += sentenceCount >= 3 ? 8 : (sentenceCount >= 1 ? 4 : 0);
+
+    var ratio = ctx.hanCount / Math.max(1, ctx.noSpaceCount);
+    if(ratio >= 0.65) score += 7;
+
+    return Math.min(55, score);
+  }
+
+  function normalizeWritingResult(raw, ctx){
+    raw = raw || {};
+    var percent = percentFrom(raw);
+    var wrong = normalizeWrongParts(raw);
+    var falseClaimRemoved = false;
+
+    wrong = wrong.filter(function(item){
+      var all = item.wrong + ' ' + item.should_be + ' ' + item.why_vi;
+      if(falseMissingClaim(all, ctx)){
+        falseClaimRemoved = true;
+        return false;
+      }
+      return true;
+    });
+
+    var corrected = String(
+      raw.corrected_zh ||
+      raw.full_corrected_sentence_zh ||
+      raw.corrected_answer_zh ||
+      raw.corrected ||
+      ''
+    ).trim();
+
+    var correctedMissing = corrected ?
+      ctx.words.filter(function(w){ return corrected.indexOf(w) === -1; }) : [];
+    var invalidCorrection = corrected && correctedMissing.length > 0;
+    if(invalidCorrection) corrected = '';
+
+    var comment = sanitizeComment(
+      raw.comment_vi ||
+      raw.summary ||
+      raw.short_feedback_vi ||
+      raw.detailed_feedback_vi ||
+      '',
+      ctx
+    );
+
+    if(ctx.missingWords.length){
+      var coverageCap = Math.round(35 + 45 * (ctx.usedWords.length / Math.max(1, ctx.words.length)));
+      if(percent > coverageCap) percent = coverageCap;
+    }
+
+    if(!ctx.missingWords.length && falseClaimRemoved){
+      percent = Math.max(percent, localFloor(ctx));
+    }
+
+    var checklist = ctx.words.map(function(w){
+      return w + (ctx.answer.indexOf(w) !== -1 ? ' ✓' : ' ✗');
+    }).join(' · ');
+
+    var localSummary =
+      'Đối chiếu đúng yêu cầu đề: ' + ctx.usedWords.length + '/' + ctx.words.length +
+      ' từ bắt buộc. ' + checklist + '. ' +
+      'Độ dài: ' + ctx.hanCount + ' chữ Hán (' + ctx.noSpaceCount +
+      ' ký tự không tính khoảng trắng), mục tiêu khoảng ' + ctx.targetLength + ' chữ.';
+
+    var notes = [localSummary];
+    if(falseClaimRemoved){
+      notes.push('Hệ thống đã loại bỏ nhận xét AI nhầm “要全部使用” thành một cụm từ/cấu trúc bắt buộc phải chép vào bài.');
+    }
+    if(invalidCorrection){
+      notes.push('Bản sửa của AI đã bị ẩn vì không giữ đủ các từ bắt buộc hoặc có dấu hiệu lạc đề; app không hiển thị nó như một đáp án đúng.');
+    }
+    if(comment) notes.push(comment);
+
+    var verdict = percent >= 85 ? 'đúng' : (percent >= 50 ? 'gần đúng' : 'sai');
+    return {
+      result: {
+        percent: percent,
+        verdict: verdict,
+        wrong_parts: wrong,
+        corrected_zh: corrected,
+        comment_vi: notes.join(' ')
+      },
+      needsRetry: falseClaimRemoved || invalidCorrection
+    };
+  }
+
+  async function callWritingAI(ctx){
+    var firstRaw;
+    var firstError = null;
+
+    try {
+      firstRaw = await invokeWritingTutor(ctx, false);
+    } catch(err) {
+      firstError = err;
+      firstRaw = await invokeWritingGradeFallback(ctx);
+    }
+
+    var normalized = normalizeWritingResult(firstRaw, ctx);
+
+    if(normalized.needsRetry){
+      try {
+        var retryRaw = await invokeWritingTutor(ctx, true);
+        var retryNormalized = normalizeWritingResult(retryRaw, ctx);
+        if(!retryNormalized.needsRetry ||
+           retryNormalized.result.percent >= normalized.result.percent){
+          normalized = retryNormalized;
+        }
+      } catch(e) {
+        if(firstError) console.warn('HSK writing tutor fallback used:', firstError);
+      }
+    }
+
+    var result = normalized.result;
+    var answerText =
+      'Điểm: ' + result.percent + '% (' + result.verdict + ')' +
+      (result.corrected_zh ? '\nBản sửa: ' + result.corrected_zh : '') +
+      '\n' + result.comment_vi;
+
+    return {
+      result: result,
+      answer: answerText,
+      source: 'supabase-writing-ai'
+    };
+  }
+
+  async function accurateCallAIBackend(prompt, meta){
+    var rawPrompt = meta && meta.rawPrompt ? meta.rawPrompt : prompt;
+    var token = markerToken(rawPrompt) || markerToken(prompt);
+    var ctx = token && contexts[token];
+
+    if(!ctx){
+      if(typeof previousCallAIBackend === 'function'){
+        return previousCallAIBackend.apply(this, arguments);
+      }
+      throw new Error('Không tìm thấy hàm AI chấm gốc.');
+    }
+
+    return callWritingAI(ctx);
+  }
+
+  window.callAIBackend = accurateCallAIBackend;
+  try { callAIBackend = accurateCallAIBackend; } catch(e) {}
+})();
+</script>
+<!-- HSK Albert patch end: accurate AI grading for workbook writing question 32 -->
+
