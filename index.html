@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>HSK Albert — HSK 3 V9 · AI chấm ổn định · đầy đủ luyện tập</title>
+<title>HSK Albert — HSK 3 V11 · Toàn bộ AI dùng cùng model HSK 5</title>
 <!-- HSK3 V8 STABLE: synchronous lesson render; no retry observers; explanation + notes preserved -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -28574,6 +28574,1001 @@ window.H3V8={version:'2026.09.16-v9-ai-grade-practice-restored',diagnose:functio
 })();
 </script>
 <!-- /HSK3 V9 FINAL CONTROLLER -->
+
+<script id="hsk3-v10-hsk5-ai-pipeline">
+/* =========================================================
+   HSK 3 V10: AI chấm chi tiết dùng cùng pipeline/model HSK 5
+   - Same Supabase project and same hsk-ai-grade Edge Function.
+   - Same Supabase functions.invoke call path as HSK 5.
+   - Overrides the old HSK 3 direct-fetch detailed graders.
+========================================================= */
+(function(){
+  'use strict';
+  if (window.__H3V10_HSK5_AI_PIPELINE__) return;
+  window.__H3V10_HSK5_AI_PIPELINE__ = true;
+
+  var VERSION = 'v10-hsk5-ai-pipeline';
+
+  function esc(value){
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
+  }
+
+  function h3Data(name){
+    if (window[name]) return window[name];
+    try { return eval(name); } catch(e) { return null; }
+  }
+
+  function lessonOf(lid){
+    lid = Number(lid || 0);
+    var complete = window.HSK3_COMPLETE_DATA;
+    if (complete && Array.isArray(complete.lessons)) {
+      var c = complete.lessons.find(function(x){ return Number(x.id) === lid; });
+      if (c) return c;
+    }
+    var lessons = h3Data('LESSONS');
+    if (Array.isArray(lessons)) {
+      return lessons.find(function(x){ return Number(x.id) === lid; }) || {};
+    }
+    return {};
+  }
+
+  function ex4Of(lid, idx){
+    var data = h3Data('H3F_EX4') || {};
+    var list = data[Number(lid)] || data[String(lid)] || [];
+    return list[Number(idx)] || {};
+  }
+
+  function activityOf(lid, idx){
+    var data = h3Data('H3F_USAGE') || {};
+    var list = data[Number(lid)] || data[String(lid)] || [];
+    return list[Number(idx)] || {};
+  }
+
+  function selectedIndex(activity, lid, idx){
+    var el = document.getElementById('h3f-u-select-' + lid + '-' + idx);
+    var n = Number(el ? el.value : 0);
+    var questions = activity.questions || activity.prompts || [];
+    if (!Number.isFinite(n) || n < 0 || n >= questions.length) n = 0;
+    return n;
+  }
+
+  function show(resultId, html, kind){
+    if (typeof window.h3fShow === 'function') {
+      window.h3fShow(resultId, html, kind || '');
+      return;
+    }
+    var out = document.getElementById(resultId);
+    if (!out) return;
+    out.className = 'h3f-result show ' + (kind || '');
+    out.innerHTML = html;
+  }
+
+  function basePayload(lid){
+    var lesson = lessonOf(lid);
+    return {
+      course: 'hsk3',
+      hskLevel: 3,
+      studentLevel: 'HSK3',
+      lessonId: Number(lid),
+      lessonTitle: lesson.zh || '',
+      lessonTitleVi: lesson.vi || '',
+      vocabularyList: Array.isArray(lesson.vocab) ? lesson.vocab.map(function(v){ return v.zh; }) : [],
+      clientVersion: VERSION,
+      aiPipeline: 'same-as-hsk5'
+    };
+  }
+
+  function exactHsk5Body(payload){
+    payload = payload || {};
+    return {
+      lessonId: payload.lessonId || null,
+      lessonTitle: payload.lessonTitle || '',
+      exerciseType: payload.exerciseType || 'grammar_sentence',
+      exerciseId: payload.exerciseId || ('hsk3-ai-' + Date.now()),
+      instruction: payload.instruction || '',
+      questionText: payload.questionText || '',
+      fullSentenceBefore: payload.fullSentenceBefore || payload.questionText || '',
+      studentAnswer: payload.studentAnswer || '',
+      targetWord: payload.targetWord || '',
+      requiredUsage: payload.requiredUsage || '',
+      grammarPoint: payload.grammarPoint || '',
+      referenceAnswer: payload.referenceAnswer || '',
+      teacherRubric: payload.teacherRubric || '',
+      vocabularyList: Array.isArray(payload.vocabularyList) ? payload.vocabularyList : [],
+      course: 'hsk3',
+      hskLevel: 3,
+      studentLevel: 'HSK3',
+      lessonTitleVi: payload.lessonTitleVi || '',
+      clientVersion: VERSION,
+      aiPipeline: 'same-as-hsk5'
+    };
+  }
+
+  async function invokeLikeHsk5(payload){
+    if (!window.hskSupabase || !window.hskSupabase.auth || !window.hskSupabase.functions) {
+      throw new Error('Chưa kết nối Supabase. Hãy tải lại trang và đăng nhập.');
+    }
+    var sessionResult = await window.hskSupabase.auth.getSession();
+    var session = sessionResult && sessionResult.data && sessionResult.data.session;
+    if (!session || !session.access_token) {
+      throw new Error('Bạn cần đăng nhập trước khi dùng AI chấm chi tiết.');
+    }
+
+    var body = exactHsk5Body(payload);
+    if (!String(body.studentAnswer || '').trim()) {
+      throw new Error('Chưa có câu trả lời để chấm.');
+    }
+
+    window.H3V10_LAST_AI_PAYLOAD = body;
+    var response = await window.hskSupabase.functions.invoke('hsk-ai-grade', {
+      body: body,
+      headers: { Authorization: 'Bearer ' + session.access_token }
+    });
+    window.H3V10_LAST_AI_RESPONSE = response;
+
+    if (response && response.error) {
+      var edgeMessage = response.error.message || response.error.context || String(response.error);
+      throw new Error(edgeMessage || 'Không gọi được Supabase Edge Function hsk-ai-grade.');
+    }
+    var data = response && response.data;
+    if (!data) throw new Error('Edge Function không trả dữ liệu.');
+    if (data.ok === false) {
+      var detail = data.detail ? (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)) : '';
+      throw new Error((data.error || 'AI chấm bài lỗi.') + (detail ? ' | ' + detail : ''));
+    }
+
+    // HSK 5 backend returns {ok:true, model_used, result:{...}}.
+    // Older compatible backend may return the grade fields at top level.
+    var result = data.result && typeof data.result === 'object' ? data.result : data;
+    return {
+      data: data,
+      result: result,
+      model: data.model_used || data.model || result.model_used || result.model || '',
+      provider: data.provider || data.source || result.provider || result.source || 'openrouter'
+    };
+  }
+
+  function normalizeGrade(raw){
+    raw = raw && raw.result && typeof raw.result === 'object' ? raw.result : (raw || {});
+    var score = Number(raw.score);
+    if (!Number.isFinite(score)) score = Number(raw.percent);
+    if (!Number.isFinite(score)) score = 0;
+    if (score > 0 && score <= 10) score = score * 10;
+    score = Math.max(0, Math.min(100, Math.round(score)));
+
+    var errors = [];
+    if (Array.isArray(raw.errors)) {
+      errors = raw.errors.map(function(e){
+        return {
+          problem: e.problem_vi || e.text || e.problem || e.type || '',
+          fix: e.suggestion_vi || e.fix || e.should_be || ''
+        };
+      });
+    } else if (Array.isArray(raw.problems)) {
+      errors = raw.problems.map(function(e){
+        return {
+          problem: e.problem_vi || e.text || e.problem || e.type || '',
+          fix: e.suggestion_vi || e.fix || e.should_be || ''
+        };
+      });
+    } else if (Array.isArray(raw.wrong_parts)) {
+      errors = raw.wrong_parts.map(function(e){
+        return {
+          problem: e.why_vi || e.wrong || '',
+          fix: e.should_be || ''
+        };
+      });
+    }
+
+    return {
+      score: score,
+      verdict: raw.verdict || raw.level || (score >= 85 ? 'correct' : (score >= 55 ? 'partially_correct' : 'incorrect')),
+      short: raw.short_feedback_vi || raw.summary || raw.comment_vi || raw.teacher_comment || '',
+      detail: raw.detailed_feedback_vi || raw.explanation_vi || raw.explanation || '',
+      corrected: raw.full_corrected_sentence_zh || raw.corrected_answer_zh || raw.corrected_zh || raw.corrected || '',
+      pinyin: raw.corrected_pinyin || raw.pinyin || '',
+      target: raw.target_check_vi || '',
+      errors: errors,
+      suggestions: Array.isArray(raw.suggestions) ? raw.suggestions : [],
+      practice: Array.isArray(raw.practice_more) ? raw.practice_more : []
+    };
+  }
+
+  function renderGrade(ai, payload){
+    var g = normalizeGrade(ai.result);
+    var kind = g.score >= 80 ? 'good' : (g.score >= 60 ? 'warn' : 'bad');
+    var modelText = ai.model ? esc(ai.model) : 'model đang dùng của HSK 5';
+    var html = [];
+    html.push('<div class="h3-ai-grade-head"><span class="h3f-score">' + g.score + '/100</span>' +
+      '<span class="h3-ai-context-ok">AI HSK 5 · ' + modelText + '</span></div>');
+    if (g.short) html.push('<div><b>Nhận xét:</b> ' + esc(g.short) + '</div>');
+    if (g.target) html.push('<div><b>Kiểm tra yêu cầu:</b> ' + esc(g.target) + '</div>');
+    if (g.detail) html.push('<div><b>Phân tích:</b> ' + esc(g.detail).replace(/\n/g,'<br>') + '</div>');
+    if (g.errors.length) {
+      html.push('<div><b>Lỗi cần sửa:</b><ol>' + g.errors.map(function(e){
+        return '<li>' + esc(e.problem || 'Lỗi cần xem lại') + (e.fix ? '<br><span class="h3-ai-fix">→ ' + esc(e.fix) + '</span>' : '') + '</li>';
+      }).join('') + '</ol></div>');
+    }
+    if (g.corrected) {
+      html.push('<div class="h3-ai-corrected"><b>Câu sửa mẫu ở mức HSK 3:</b><br><span class="h3f-zh">' +
+        esc(g.corrected) + '</span>' + (g.pinyin ? '<br><i>' + esc(g.pinyin) + '</i>' : '') + '</div>');
+    }
+    if (g.suggestions.length) {
+      html.push('<div><b>Gợi ý:</b><ul>' + g.suggestions.slice(0,5).map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>');
+    }
+    html.push('<details class="h3-ai-context-details"><summary>🔎 Dữ liệu đã gửi tới AI</summary>' +
+      '<div><b>HSK 3 · Bài ' + esc(payload.lessonId) + '</b></div>' +
+      '<div>' + esc(payload.questionText || payload.instruction || '') + '</div>' +
+      '<div class="ok">Dùng cùng Supabase Edge Function và model với HSK 5.</div></details>');
+    return {html:html.join(''), kind:kind};
+  }
+
+  function buildEx4Payload(lid, idx, answer){
+    var row = ex4Of(lid, idx);
+    var base = basePayload(lid);
+    return Object.assign(base, {
+      exerciseType: 'hsk3_textbook_answer',
+      exerciseId: 'h3-ex4-' + lid + '-' + idx,
+      instruction: '练习4 · 回答问题。Hãy chấm câu trả lời mở đúng trình độ HSK 3.',
+      questionText: row.q || '',
+      fullSentenceBefore: 'HSK 3 · Bài ' + lid + ' · 练习4\nCâu hỏi: ' + (row.q || ''),
+      studentAnswer: answer,
+      targetWord: '',
+      requiredUsage: '',
+      grammarPoint: '',
+      referenceAnswer: row.a || '',
+      teacherRubric: [
+        'Chỉ chấm câu hỏi hiện tại.',
+        'Đây là câu trả lời mở HSK 3; đáp án tham khảo không phải cách trả lời duy nhất.',
+        'Chấp nhận cách diễn đạt khác nếu đúng nghĩa, đúng ngữ pháp và tự nhiên.',
+        'Chỉ sửa bằng từ vựng/ngữ pháp phù hợp HSK 3.',
+        'Không chấm thanh điệu vì đầu vào là bản chép chữ.'
+      ].join('\n')
+    });
+  }
+
+  function buildUsePayload(lid, idx, answer){
+    var activity = activityOf(lid, idx);
+    var n = selectedIndex(activity, lid, idx);
+    var questions = activity.questions || activity.prompts || [];
+    var responses = activity.responses || [];
+    var selected = questions[n] || activity.zh || '';
+    var required = Array.isArray(activity.required) ? activity.required : [];
+    var coverage = Array.isArray(activity.coverage) ? activity.coverage : [];
+    var base = basePayload(lid);
+    return Object.assign(base, {
+      exerciseType: 'hsk3_group_activity',
+      exerciseId: 'h3-use-' + lid + '-' + idx,
+      instruction: activity.zh || '运用 · 小组活动',
+      questionText: selected,
+      fullSentenceBefore: [
+        'HSK 3 · Bài ' + lid + ' · Hoạt động ' + (Number(idx)+1),
+        'Tên hoạt động: ' + (activity.title || ''),
+        'Hướng dẫn: ' + (activity.zh || ''),
+        'Ví dụ: ' + (activity.example || ''),
+        'Lượt đang chọn: ' + selected,
+        'Cấu trúc cần dùng: ' + (required.join('、') || 'theo hoạt động'),
+        'Ý cần có: ' + (coverage.join('、') || 'trả lời đúng câu hỏi')
+      ].join('\n'),
+      studentAnswer: answer,
+      targetWord: '',
+      requiredUsage: required.join('、'),
+      grammarPoint: required.join(' / '),
+      referenceAnswer: responses[n] || activity.example || '',
+      teacherRubric: [
+        'Chỉ chấm đúng hoạt động và lượt đang chọn.',
+        'Đây là bài nói mở HSK 3; không so khớp từng chữ với đáp án mẫu.',
+        required.length ? 'Kiểm tra cấu trúc: ' + required.join('、') + '.' : '',
+        coverage.length ? 'Kiểm tra đủ ý: ' + coverage.join('、') + '.' : '',
+        'Chỉ sửa bằng ngôn ngữ HSK 3 và không chấm thanh điệu.'
+      ].filter(Boolean).join('\n')
+    });
+  }
+
+  async function gradeDetailed(payload, resultId){
+    show(resultId, '⏳ Đang chấm bằng cùng model AI của app HSK 5…', 'warn');
+    try {
+      var ai = await invokeLikeHsk5(payload);
+      var view = renderGrade(ai, payload);
+      show(resultId, view.html, view.kind);
+      return ai;
+    } catch(err) {
+      var msg = '<b>AI chấm chi tiết chưa hoạt động:</b> ' + esc(err && err.message ? err.message : err) +
+        '<br><br>App đã gửi đúng pipeline HSK 5. Hãy kiểm tra bạn đã đăng nhập và Edge Function <code>hsk-ai-grade</code> của HSK 5 vẫn đang hoạt động.';
+      show(resultId, msg, 'bad');
+      return null;
+    }
+  }
+
+  window.h3fDeepEx4 = async function(lid, idx){
+    var inputId = 'h3f-e4-' + lid + '-' + idx;
+    var resultId = 'h3f-e4-result-' + lid + '-' + idx;
+    var answer = String((document.getElementById(inputId) || {}).value || '').trim();
+    if (!answer) {
+      show(resultId, 'Bạn chưa có câu trả lời để AI chấm.', 'bad');
+      return;
+    }
+    return gradeDetailed(buildEx4Payload(Number(lid), Number(idx), answer), resultId);
+  };
+
+  window.h3fUseDeep = async function(lid, idx){
+    var inputId = 'h3f-u-' + lid + '-' + idx;
+    var resultId = 'h3f-u-result-' + lid + '-' + idx;
+    var answer = String((document.getElementById(inputId) || {}).value || '').trim();
+    if (!answer) {
+      show(resultId, 'Bạn chưa có bài nói để AI chấm.', 'bad');
+      return;
+    }
+    return gradeDetailed(buildUsePayload(Number(lid), Number(idx), answer), resultId);
+  };
+
+  // Keep global aliases in browsers where inline onclick resolves lexical globals.
+  try { h3fDeepEx4 = window.h3fDeepEx4; } catch(e) {}
+  try { h3fUseDeep = window.h3fUseDeep; } catch(e) {}
+
+  window.H3V10_AI = {
+    version: VERSION,
+    invoke: invokeLikeHsk5,
+    buildEx4Payload: buildEx4Payload,
+    buildUsePayload: buildUsePayload,
+    normalizeGrade: normalizeGrade,
+    diagnose: function(){
+      return {
+        version: VERSION,
+        supabase: !!window.hskSupabase,
+        auth: !!(window.hskSupabase && window.hskSupabase.auth),
+        functions: !!(window.hskSupabase && window.hskSupabase.functions),
+        deepEx4: window.h3fDeepEx4 === h3fDeepEx4,
+        deepUse: window.h3fUseDeep === h3fUseDeep,
+        pipeline: 'same-as-hsk5'
+      };
+    }
+  };
+
+  document.documentElement.setAttribute('data-hsk3-ai-build', VERSION);
+})();
+</script>
+
+<!-- HSK3 V11: route every HSK3 AI action through the same Supabase/OpenRouter model pipeline as HSK5 -->
+<style id="h3v11-all-ai-style">
+  body.h3-course-active button[onclick*="runInternalAIGrading"] { display:none !important; }
+  body.h3-course-active .h3v11-ai-model-badge {
+    display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;
+    background:var(--teal-light);color:var(--teal);font-size:11px;font-weight:800;
+    border:1px solid #b8ded5;margin-left:6px;
+  }
+  body.h3-course-active .h3v11-ai-error {
+    background:var(--red-light);border:1px solid #efb5ae;color:var(--red);
+    border-radius:10px;padding:10px 12px;line-height:1.7;
+  }
+  body.h3-course-active .h3v11-ai-answer {
+    white-space:pre-wrap;line-height:1.75;word-break:break-word;
+  }
+  body.h3-course-active .h3v11-ai-grade-html {display:grid;gap:9px;line-height:1.7}
+  body.h3-course-active .h3v11-ai-grade-head {display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  body.h3-course-active .h3v11-ai-score {font-size:24px;font-weight:900;color:var(--teal)}
+  body.h3-course-active .h3v11-ai-corrected {padding:9px 11px;border-radius:9px;background:var(--teal-light)}
+  body.h3-course-active .h3v11-ai-errors {margin:0;padding-left:20px}
+</style>
+<script id="h3v11-all-ai-unified-controller">
+(function(){
+  'use strict';
+  if(window.__H3V11_ALL_AI_UNIFIED__) return;
+  window.__H3V11_ALL_AI_UNIFIED__ = true;
+
+  var VERSION = '2026.09.16-v11-all-hsk3-ai-same-as-hsk5';
+  var FUNCTION_NAME = 'hsk-ai-grade';
+  var legacy = {
+    callAIBackend: window.callAIBackend,
+    askAI: window.askAI,
+    askChineseTutorAI: window.askChineseTutorAI,
+    openGPTModal: window.openGPTModal,
+    runCurrentGPTPrompt: window.runCurrentGPTPrompt,
+    runExternalAIGrading: window.runExternalAIGrading,
+    runInternalAIGrading: window.runInternalAIGrading,
+    runAIInlineChoice: window.runAIInlineChoice,
+    sendMessage: window.sendMessage,
+    h3gAskAI: window.h3gAskAI,
+    h3fDeepEx4: window.h3fDeepEx4,
+    h3fUseDeep: window.h3fUseDeep,
+    h3fUseAsk: window.h3fUseAsk,
+    h3fUseReply: window.h3fUseReply,
+    h3fUseModel: window.h3fUseModel,
+    h3fSendAI: window.h3fSendAI
+  };
+
+  function isH3(){
+    return String(window.CURRENT_COURSE || '') === 'hsk3' ||
+      !!(document.body && document.body.classList && document.body.classList.contains('h3-course-active'));
+  }
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function currentLessonId(explicit){
+    var values=[explicit];
+    try{ values.push(window.STATE && window.STATE.currentLesson); }catch(e){}
+    try{ values.push(document.getElementById('lesson-selector') && document.getElementById('lesson-selector').value); }catch(e){}
+    for(var i=0;i<values.length;i++){
+      var n=Number(values[i]);
+      if(n>=1 && n<=20) return n;
+    }
+    return 1;
+  }
+  function lessons(){
+    try{ if(typeof LESSONS!=='undefined' && Array.isArray(LESSONS)) return LESSONS; }catch(e){}
+    return Array.isArray(window.LESSONS) ? window.LESSONS : [];
+  }
+  function lessonInfo(explicit){
+    var id=currentLessonId(explicit);
+    var l=lessons().find(function(x){return Number(x.id)===id;}) || {};
+    return {
+      id:id,
+      zh:String(l.zh||''),
+      vi:String(l.vi||''),
+      grammar:Array.isArray(l.grammar)?l.grammar:[],
+      keyVocab:Array.isArray(l.keyVocab)?l.keyVocab:[],
+      vocabulary:Array.isArray(l.vocab)?l.vocab.map(function(v){return String(v.zh||'');}).filter(Boolean):[]
+    };
+  }
+  function supabaseClient(){
+    var sb=window.hskSupabase;
+    if(!sb || !sb.auth || !sb.functions || typeof sb.functions.invoke!=='function'){
+      throw new Error('Chưa kết nối Supabase. Hãy kiểm tra URL/Key trong index.html và tải lại trang.');
+    }
+    return sb;
+  }
+  async function getSession(){
+    var sb=supabaseClient();
+    var out=await sb.auth.getSession();
+    var session=out && out.data && out.data.session;
+    if(out && out.error) throw new Error(out.error.message || 'Không đọc được phiên đăng nhập Supabase.');
+    if(!session || !session.access_token) throw new Error('Bạn cần đăng nhập trước khi dùng AI.');
+    return {sb:sb,session:session};
+  }
+  async function withTimeout(promise,ms){
+    var timer=null;
+    try{
+      return await Promise.race([
+        promise,
+        new Promise(function(_,reject){timer=setTimeout(function(){reject(new Error('AI phản hồi quá lâu. Hãy thử lại sau.'));},ms||65000);})
+      ]);
+    } finally {
+      if(timer) clearTimeout(timer);
+    }
+  }
+  function basePayload(explicitLesson){
+    var l=lessonInfo(explicitLesson);
+    return {
+      course:'hsk3',
+      hskLevel:3,
+      level:3,
+      studentLevel:3,
+      lessonId:l.id,
+      lessonTitle:l.zh,
+      lessonTitleVi:l.vi,
+      vocabularyList:l.vocabulary,
+      grammarPoints:l.grammar,
+      keyVocab:l.keyVocab,
+      clientBuild:VERSION,
+      useSameModelAs:'hsk5'
+    };
+  }
+  async function invoke(payload){
+    if(!isH3()) throw new Error('Bộ điều phối V11 chỉ áp dụng cho HSK 3.');
+    var auth=await getSession();
+    var body=Object.assign({},basePayload(payload && payload.lessonId),payload||{});
+    body.course='hsk3'; body.hskLevel=3; body.level=3; body.studentLevel=3;
+    window.H3V11_LAST_AI_PAYLOAD=body;
+    var call=auth.sb.functions.invoke(FUNCTION_NAME,{
+      body:body,
+      headers:{Authorization:'Bearer '+auth.session.access_token}
+    });
+    var response=await withTimeout(call,65000);
+    window.H3V11_LAST_AI_RESPONSE=response;
+    if(response && response.error){
+      var em=response.error.message || response.error.context || String(response.error);
+      throw new Error(em || 'Không gọi được Supabase Edge Function '+FUNCTION_NAME+'.');
+    }
+    var data=response && response.data;
+    if(!data) throw new Error('Edge Function không trả dữ liệu.');
+    if(data.ok===false){
+      var detail=data.detail ? (typeof data.detail==='string'?data.detail:JSON.stringify(data.detail)) : '';
+      throw new Error((data.error||'AI trả về lỗi.')+(detail?' | '+detail:''));
+    }
+    var mode=String(body.mode||'grade').toLowerCase();
+    var result=data.result && typeof data.result==='object' ? data.result : null;
+    var answer=String(data.answer || data.reply || data.text || data.message || (result && (result.answer||result.text)) || '');
+    return {
+      mode:mode,
+      data:data,
+      result:result,
+      answer:answer,
+      model:String(data.model_used||data.model||(result&&(result.model_used||result.model))||''),
+      provider:String(data.provider||data.source||'openrouter'),
+      payload:body
+    };
+  }
+
+  function explicitMode(meta){
+    var m=String(meta && (meta.forceMode||meta.aiMode||meta.mode) || '').toLowerCase();
+    if(/tutor|chat|explain|translate|translation|generate|quiz|teacher|coach|partner/.test(m)) return 'tutor';
+    if(/grade|grading|score|check|cham|chấm|writing/.test(m)) return 'grade';
+    return '';
+  }
+  function isGradePrompt(prompt,meta){
+    var ex=explicitMode(meta); if(ex) return ex==='grade';
+    var s=String(prompt||'');
+    return /\bchấm\b|\bcham\b|đáp án của tôi|câu trả lời của tôi|bài làm|bài viết của tôi|bản chép lời người học|练一练|sai ở đâu|đúng\/sai|cho điểm|grade|score/i.test(s);
+  }
+  function extractAfter(text,markers){
+    var s=String(text||''), best=-1, len=0;
+    markers.forEach(function(m){var i=s.toLowerCase().lastIndexOf(String(m).toLowerCase());if(i>=0 && i>=best){best=i;len=String(m).length;}});
+    return best>=0 ? s.slice(best+len).trim() : '';
+  }
+  function extractStudentAnswer(prompt,meta){
+    if(meta && meta.studentAnswer) return String(meta.studentAnswer).trim();
+    var s=String(prompt||'');
+    var xml=s.match(/<student_answer>([\s\S]*?)<\/student_answer>/i);
+    if(xml) return xml[1].trim();
+    var v=extractAfter(s,[
+      'Đáp án của tôi:','Câu trả lời của tôi:','Bài viết của tôi:','Bài làm:',
+      'Bản chép lời người học:','Câu của tôi:','Học viên trả lời:','Student answer:'
+    ]);
+    return v || s.trim();
+  }
+  function extractReference(prompt,meta){
+    if(meta && meta.referenceAnswer) return String(meta.referenceAnswer);
+    return extractAfter(String(prompt||''),['Đáp án sách tham khảo:','Đáp án tham khảo:','Đáp án sách:','参考答案:']);
+  }
+  function targetFromPrompt(prompt,meta){
+    if(meta && meta.targetWord) return String(meta.targetWord);
+    var s=String(prompt||''), m=s.match(/(?:Công thức|Cấu trúc(?: cần dùng)?|Ngữ pháp trọng tâm|Từ bắt buộc)\s*[:：]\s*([^\n]+)/i);
+    return m ? m[1].trim() : '';
+  }
+  function tutorPrompt(raw,meta){
+    var l=lessonInfo(meta && meta.lessonId);
+    var purpose=String(meta && (meta.purpose||meta.mode) || 'tutor');
+    return [
+      'BỐI CẢNH APP: HSK 3 · Bài '+l.id+(l.zh?' · '+l.zh:'')+(l.vi?' · '+l.vi:''),
+      'MỤC ĐÍCH: '+purpose,
+      'YÊU CẦU CẤP ĐỘ: Chỉ dùng và giải thích ở mức HSK 3, trừ khi người học chủ động hỏi kiến thức cao hơn.',
+      'NGÔN NGỮ TRẢ LỜI: giải thích bằng tiếng Việt; ví dụ tiếng Trung kèm pinyin và nghĩa Việt khi hữu ích.',
+      '',
+      'YÊU CẦU CỦA NGƯỜI HỌC:',
+      String(raw||'')
+    ].join('\n');
+  }
+  function buildPayload(prompt,meta){
+    meta=meta||{};
+    var l=lessonInfo(meta.lessonId);
+    if(!isGradePrompt(prompt,meta)){
+      return Object.assign(basePayload(l.id),{
+        mode:'tutor',
+        purpose:String(meta.purpose||meta.mode||'hsk3_tutor'),
+        exerciseType:String(meta.exerciseType||'tutor_chat'),
+        prompt:tutorPrompt(prompt,meta),
+        userQuestion:String(prompt||''),
+        maxTokens:Number(meta.maxTokens||meta.max_tokens||2600)
+      });
+    }
+    var answer=extractStudentAnswer(prompt,meta);
+    return Object.assign(basePayload(l.id),{
+      mode:'grade',
+      purpose:String(meta.purpose||meta.mode||'hsk3_grade'),
+      exerciseType:String(meta.exerciseType||'hsk3_general_grade'),
+      exerciseId:String(meta.exerciseId||''),
+      instruction:String(meta.instruction||'Chấm đúng theo yêu cầu trong ngữ cảnh được gửi.'),
+      questionText:String(meta.questionText||meta.question||''),
+      fullSentenceBefore:String(meta.fullSentenceBefore||prompt||''),
+      studentAnswer:answer,
+      targetWord:String(meta.targetWord||targetFromPrompt(prompt,meta)),
+      requiredUsage:String(meta.requiredUsage||''),
+      grammarPoint:String(meta.grammarPoint||targetFromPrompt(prompt,meta)),
+      referenceAnswer:String(meta.referenceAnswer||extractReference(prompt,meta)),
+      teacherRubric:String(meta.teacherRubric||[
+        'Chấm đúng trình độ HSK 3.',
+        'Nếu là câu mở, chấp nhận nhiều cách diễn đạt đúng.',
+        'Nêu lỗi cụ thể, cách sửa và một câu sửa tự nhiên.',
+        'Không dùng tiêu chuẩn HSK 5 để trừ điểm HSK 3.'
+      ].join('\n')),
+      maxTokens:Number(meta.maxTokens||meta.max_tokens||2200)
+    });
+  }
+  function normalizedGrade(raw){
+    raw=raw||{};
+    var score=Number(raw.score);
+    if(!Number.isFinite(score)) score=Number(raw.percent);
+    if(!Number.isFinite(score)) score=0;
+    if(score>0 && score<=10) score*=10;
+    score=Math.max(0,Math.min(100,Math.round(score)));
+    var errors=[];
+    var source=Array.isArray(raw.errors)?raw.errors:(Array.isArray(raw.wrong_parts)?raw.wrong_parts:[]);
+    source.forEach(function(e){
+      errors.push({
+        problem:String(e.problem_vi||e.why_vi||e.wrong||e.problem||e.type||''),
+        fix:String(e.suggestion_vi||e.should_be||e.fix||'')
+      });
+    });
+    return {
+      score:score,
+      verdict:String(raw.verdict||raw.level||(score>=85?'correct':score>=55?'partially_correct':'incorrect')),
+      short:String(raw.short_feedback_vi||raw.summary||raw.comment_vi||raw.teacher_comment||''),
+      detail:String(raw.detailed_feedback_vi||raw.explanation_vi||raw.explanation||''),
+      corrected:String(raw.full_corrected_sentence_zh||raw.corrected_answer_zh||raw.corrected_zh||raw.corrected||''),
+      pinyin:String(raw.corrected_pinyin||raw.pinyin||''),
+      target:String(raw.target_check_vi||''),
+      errors:errors,
+      practice:Array.isArray(raw.practice_more)?raw.practice_more:[]
+    };
+  }
+  function gradeText(ai){
+    var g=normalizedGrade(ai.result||{}), lines=[];
+    lines.push('🤖 AI chấm · cùng model với HSK 5'+(ai.model?' ('+ai.model+')':''));
+    lines.push('Điểm: '+g.score+'/100');
+    if(g.short) lines.push('Nhận xét: '+g.short);
+    if(g.target) lines.push('Kiểm tra yêu cầu: '+g.target);
+    if(g.detail) lines.push('Phân tích: '+g.detail);
+    if(g.errors.length){
+      lines.push('Lỗi cần sửa:');
+      g.errors.forEach(function(e,i){lines.push((i+1)+'. '+(e.problem||'Lỗi cần xem lại')+(e.fix?' → '+e.fix:''));});
+    }
+    if(g.corrected) lines.push('Câu sửa mẫu: '+g.corrected+(g.pinyin?'\nPinyin: '+g.pinyin:''));
+    return lines.join('\n\n');
+  }
+  function gradeHtml(ai){
+    var g=normalizedGrade(ai.result||{}), model=ai.model||'model HSK 5 đang cấu hình', html=[];
+    html.push('<div class="h3v11-ai-grade-html"><div class="h3v11-ai-grade-head"><span class="h3v11-ai-score">'+g.score+'/100</span><span class="h3v11-ai-model-badge">Cùng model HSK 5 · '+esc(model)+'</span></div>');
+    if(g.short) html.push('<div><b>Nhận xét:</b> '+esc(g.short)+'</div>');
+    if(g.target) html.push('<div><b>Kiểm tra yêu cầu:</b> '+esc(g.target)+'</div>');
+    if(g.detail) html.push('<div><b>Phân tích:</b> '+esc(g.detail).replace(/\n/g,'<br>')+'</div>');
+    if(g.errors.length) html.push('<div><b>Lỗi cần sửa:</b><ol class="h3v11-ai-errors">'+g.errors.map(function(e){return '<li>'+esc(e.problem||'Lỗi cần xem lại')+(e.fix?'<br><span style="color:var(--teal)">→ '+esc(e.fix)+'</span>':'')+'</li>';}).join('')+'</ol></div>');
+    if(g.corrected) html.push('<div class="h3v11-ai-corrected"><b>Câu sửa mẫu:</b><br><span class="zh">'+esc(g.corrected)+'</span>'+(g.pinyin?'<br><i>'+esc(g.pinyin)+'</i>':'')+'</div>');
+    html.push('</div>');
+    return html.join('');
+  }
+  function tutorText(ai){
+    return String(ai.answer||'').trim() || 'AI chưa trả về nội dung.';
+  }
+  async function dispatch(prompt,meta){
+    var payload=buildPayload(prompt,meta||{});
+    var ai=await invoke(payload);
+    ai.text=payload.mode==='grade' ? gradeText(ai) : tutorText(ai);
+    ai.html=payload.mode==='grade' ? gradeHtml(ai) : '<div class="h3v11-ai-answer">'+esc(tutorText(ai)).replace(/\n/g,'<br>')+'</div>';
+    return ai;
+  }
+
+  function setCurrent(context,title,target,raw){
+    try{ CURRENT_GPT_CONTEXT=context||''; }catch(e){}
+    try{ CURRENT_GPT_RAW_PROMPT=raw||context||''; }catch(e){}
+    try{ CURRENT_GPT_TITLE=title||'AI HSK 3'; }catch(e){}
+    try{ CURRENT_GPT_INLINE_TARGET=target||null; }catch(e){}
+    window.CURRENT_GPT_CONTEXT=context||'';
+    window.CURRENT_GPT_RAW_PROMPT=raw||context||'';
+    window.CURRENT_GPT_TITLE=title||'AI HSK 3';
+    window.CURRENT_GPT_INLINE_TARGET=target||null;
+  }
+  function getCurrent(name,fallback){
+    try{
+      if(name==='context' && typeof CURRENT_GPT_CONTEXT!=='undefined') return CURRENT_GPT_CONTEXT;
+      if(name==='raw' && typeof CURRENT_GPT_RAW_PROMPT!=='undefined') return CURRENT_GPT_RAW_PROMPT;
+      if(name==='title' && typeof CURRENT_GPT_TITLE!=='undefined') return CURRENT_GPT_TITLE;
+      if(name==='target' && typeof CURRENT_GPT_INLINE_TARGET!=='undefined') return CURRENT_GPT_INLINE_TARGET;
+    }catch(e){}
+    var map={context:'CURRENT_GPT_CONTEXT',raw:'CURRENT_GPT_RAW_PROMPT',title:'CURRENT_GPT_TITLE',target:'CURRENT_GPT_INLINE_TARGET'};
+    return window[map[name]]!=null?window[map[name]]:fallback;
+  }
+  function modalShow(title){
+    var modal=document.getElementById('gpt-modal'); if(modal) modal.style.display='flex';
+    var t=document.getElementById('gpt-modal-title'); if(t) t.textContent=title||'AI HSK 3';
+  }
+  function modalStatus(text){
+    if(typeof window.setGPTModalStatus==='function') window.setGPTModalStatus(text);
+    else {var x=document.getElementById('gpt-modal-status');if(x)x.textContent=text||'';}
+  }
+  function modalAnswer(text,mode){
+    if(typeof window.setGPTModalAnswer==='function') window.setGPTModalAnswer(text,mode||'');
+    else {var x=document.getElementById('gpt-modal-answer');if(x){x.textContent=text||'';x.className='gpt-answer'+(mode?' '+mode:'');}}
+  }
+  function inlineText(id,text,mode){
+    if(!id) return;
+    var box=document.getElementById(id); if(!box) return;
+    box.classList.add('show');
+    box.innerHTML='<div class="gpt-inline-title">'+(mode==='error'?'⚠️ Lỗi AI':'🤖 AI HSK 3')+'</div><div class="gpt-inline-text h3v11-ai-answer">'+esc(text).replace(/\n/g,'<br>')+'</div>';
+  }
+  function inlineHtml(id,html,mode){
+    if(!id) return;
+    var box=document.getElementById(id); if(!box) return;
+    box.classList.add('show');
+    if(mode==='error') box.innerHTML='<div class="h3v11-ai-error">'+html+'</div>';
+    else box.innerHTML=html;
+  }
+  function resultBoxHtml(id,html,kind){
+    if(typeof window.h3fShow==='function' && /^h3f-/.test(String(id||''))){
+      try{ window.h3fShow(id,html,kind||'good'); return; }catch(e){}
+    }
+    var box=document.getElementById(id); if(!box) return;
+    box.classList.add('show'); box.innerHTML=html;
+  }
+  function errorMessage(err){
+    return 'AI chưa hoạt động: '+String(err && err.message ? err.message : err)+
+      '\n\nHãy kiểm tra: (1) đã đăng nhập; (2) Edge Function hsk-ai-grade đã deploy; (3) OPENROUTER_API_KEY và OPENROUTER_MODEL còn hiệu lực/quota.';
+  }
+
+  async function runPrompt(prompt,opts){
+    opts=opts||{};
+    var title=opts.title||'AI HSK 3';
+    var target=opts.inlineTarget||opts.inlineTargetId||null;
+    var showModal=opts.showModal!==false;
+    setCurrent(tutorPrompt(prompt,opts),title,target,prompt);
+    if(showModal){modalShow(title);modalStatus('Đang gọi cùng model AI với HSK 5…');modalAnswer('⏳ AI đang xử lý…','loading');}
+    if(target) inlineText(target,'Đang gọi cùng model AI với HSK 5…','loading');
+    try{
+      var ai=await dispatch(prompt,opts);
+      var status='Đã hoàn thành bằng '+(ai.model||'model AI đang dùng của HSK 5')+'.';
+      if(showModal){modalStatus(status);modalAnswer(ai.text,'');}
+      if(target){
+        if(ai.mode==='grade') inlineHtml(target,ai.html,'');
+        else inlineText(target,ai.text,'');
+      }
+      if(opts.appendChat && typeof window.appendChatMessage==='function') window.appendChatMessage('ai',ai.text);
+      return {answer:ai.text,result:ai.result,source:'supabase-hsk5-model',model_used:ai.model,tutor:ai.mode==='tutor',data:ai.data,html:ai.html};
+    }catch(err){
+      var msg=errorMessage(err);
+      if(showModal){modalStatus('AI lỗi.');modalAnswer(msg,'error');}
+      if(target) inlineHtml(target,esc(msg).replace(/\n/g,'<br>'),'error');
+      if(opts.appendChat && typeof window.appendChatMessage==='function') window.appendChatMessage('ai',msg);
+      throw err;
+    }
+  }
+
+  window.callAIBackend = async function(prompt,meta){
+    if(!isH3() && typeof legacy.callAIBackend==='function') return legacy.callAIBackend.apply(this,arguments);
+    var ai=await dispatch(String(prompt||''),meta||{});
+    return {answer:ai.text,result:ai.result,source:'supabase-hsk5-model',model_used:ai.model,tutor:ai.mode==='tutor',data:ai.data,html:ai.html};
+  };
+  window.askAI = function(prompt,opts){
+    if(!isH3() && typeof legacy.askAI==='function') return legacy.askAI.apply(this,arguments);
+    opts=Object.assign({},opts||{});
+    if(!opts.title) opts.title=isGradePrompt(prompt,opts)?'AI chấm HSK 3':'AI gia sư HSK 3';
+    return runPrompt(String(prompt||''),opts);
+  };
+  window.askChineseTutorAI = function(prompt,opts){
+    if(!isH3() && typeof legacy.askChineseTutorAI==='function') return legacy.askChineseTutorAI.apply(this,arguments);
+    opts=Object.assign({},opts||{},{forceMode:'tutor',purpose:'tutor_chat'});
+    return runPrompt(String(prompt||''),opts);
+  };
+  window.openGPTModal = function(context,title,inlineTargetId,rawPrompt){
+    if(!isH3() && typeof legacy.openGPTModal==='function') return legacy.openGPTModal.apply(this,arguments);
+    var prompt=String(rawPrompt||context||'');
+    return runPrompt(prompt,{title:title||'AI HSK 3',inlineTarget:inlineTargetId||null,showModal:true});
+  };
+  window.runCurrentGPTPrompt = function(){
+    if(!isH3() && typeof legacy.runCurrentGPTPrompt==='function') return legacy.runCurrentGPTPrompt.apply(this,arguments);
+    var raw=String(getCurrent('raw','')||getCurrent('context','')||'');
+    return runPrompt(raw,{title:getCurrent('title','AI HSK 3'),inlineTarget:getCurrent('target',null),showModal:true});
+  };
+  window.runExternalAIGrading = function(){
+    if(!isH3() && typeof legacy.runExternalAIGrading==='function') return legacy.runExternalAIGrading.apply(this,arguments);
+    return window.runCurrentGPTPrompt();
+  };
+  window.runInternalAIGrading = function(){
+    if(!isH3() && typeof legacy.runInternalAIGrading==='function') return legacy.runInternalAIGrading.apply(this,arguments);
+    return window.runCurrentGPTPrompt();
+  };
+  window.runAIInlineChoice = function(prompt,opts,mode){
+    if(!isH3() && typeof legacy.runAIInlineChoice==='function') return legacy.runAIInlineChoice.apply(this,arguments);
+    if(typeof opts==='string') opts={inlineTarget:opts};
+    opts=Object.assign({},opts||{});
+    opts.inlineTarget=opts.inlineTarget||opts.inlineTargetId||null;
+    opts.forceMode=opts.forceMode||(/internal|external|grade|chấm|cham/i.test(String(mode||''))?'grade':'');
+    opts.showModal=opts.showModal!==false;
+    return runPrompt(String(prompt||''),opts);
+  };
+  window.sendMessage = async function(){
+    if(!isH3() && typeof legacy.sendMessage==='function') return legacy.sendMessage.apply(this,arguments);
+    var input=document.getElementById('ai-input');
+    var text=String(input&&input.value||'').trim();
+    if(!text) return;
+    if(input) input.value='';
+    if(typeof window.appendChatMessage==='function') window.appendChatMessage('user',text);
+    try{
+      return await runPrompt(text,{title:'AI hỏi đáp HSK 3',purpose:'main_chat',showModal:false,appendChat:true});
+    }catch(e){return null;}
+  };
+
+  // Structured HSK3 练一练 grading.
+  window.h3gAskAI = async function(lid,pi){
+    if(!isH3() && typeof legacy.h3gAskAI==='function') return legacy.h3gAskAI.apply(this,arguments);
+    lid=Number(lid);pi=Number(pi);
+    var data=window.HSK3_OFFICIAL_GRAMMAR||{};
+    var point=((data[String(lid)]||data[lid]||{}).points||[])[pi]||{};
+    var answers=[], references=[];
+    (point.drills||[]).forEach(function(dr,di){
+      var bi=0, values=[];
+      var filled=String(dr.prompt||'').replace(/\{\{\}\}/g,function(){
+        var el=document.getElementById('h3g-in-'+lid+'-'+pi+'-'+di+'-'+bi);bi++;
+        var v=String(el&&el.value||'').trim(); values.push(v); return '【'+(v||'chưa trả lời')+'】';
+      });
+      answers.push((di+1)+'. '+filled);
+      var a=Array.isArray(dr.answers)?dr.answers:[dr.answers]; references.push((di+1)+'. '+a.filter(Boolean).join(' / '));
+    });
+    var target='h3g-ai-'+lid+'-'+pi;
+    inlineText(target,'Đang gọi cùng model AI với HSK 5…','loading');
+    try{
+      var ai=await invoke(Object.assign(basePayload(lid),{
+        mode:'grade',purpose:'grammar_drill',exerciseType:'hsk3_textbook_grammar_drill',exerciseId:'h3g-'+lid+'-'+pi,
+        instruction:'练一练 · Chấm từng câu theo điểm ngữ pháp của giáo trình HSK 3.',
+        questionText:String(point.title||'')+' · '+String(point.viTitle||''),
+        fullSentenceBefore:'Công thức: '+String(point.formula||'')+'\n'+answers.join('\n'),
+        studentAnswer:answers.join('\n'),targetWord:String(point.formula||''),requiredUsage:String(point.formula||''),grammarPoint:String(point.formula||''),
+        referenceAnswer:references.join('\n'),
+        teacherRubric:'Chấm từng câu. Câu mở có thể có nhiều đáp án đúng. Chỉ dùng tiêu chuẩn HSK 3; nêu rõ lỗi và câu sửa.'
+      }));
+      inlineHtml(target,gradeHtml(ai),''); return ai;
+    }catch(err){inlineHtml(target,esc(errorMessage(err)).replace(/\n/g,'<br>'),'error');return null;}
+  };
+
+  window.h3fSendAI = async function(prompt,resultId){
+    if(!isH3() && typeof legacy.h3fSendAI==='function') return legacy.h3fSendAI.apply(this,arguments);
+    try{
+      var ai=await dispatch(String(prompt||''),{forceMode:'grade',purpose:'textbook_detailed_grade'});
+      resultBoxHtml(resultId,ai.html,normalizedGrade(ai.result||{}).score>=80?'good':normalizedGrade(ai.result||{}).score>=60?'warn':'bad');
+      return ai;
+    }catch(err){resultBoxHtml(resultId,'<div class="h3v11-ai-error">'+esc(errorMessage(err)).replace(/\n/g,'<br>')+'</div>','bad');return null;}
+  };
+  window.h3fDeepEx4 = async function(lid,idx){
+    if(!isH3() && typeof legacy.h3fDeepEx4==='function') return legacy.h3fDeepEx4.apply(this,arguments);
+    lid=Number(lid);idx=Number(idx);
+    var inputId='h3f-e4-'+lid+'-'+idx, resultId='h3f-e4-result-'+lid+'-'+idx;
+    var answer=String((document.getElementById(inputId)||{}).value||'').trim();
+    if(!answer){resultBoxHtml(resultId,'Bạn chưa có câu trả lời để AI chấm.','bad');return;}
+    var payload=null;
+    try{if(window.H3V10_AI&&typeof window.H3V10_AI.buildEx4Payload==='function')payload=window.H3V10_AI.buildEx4Payload(lid,idx,answer);}catch(e){}
+    if(!payload){
+      var rows=window.H3F_EX4||{}, row=(rows[lid]||[])[idx]||{};
+      payload=Object.assign(basePayload(lid),{mode:'grade',purpose:'exercise4',exerciseType:'hsk3_textbook_answer',exerciseId:'h3-ex4-'+lid+'-'+idx,instruction:'练习4 · 回答问题',questionText:String(row.q||''),fullSentenceBefore:String(row.q||''),studentAnswer:answer,referenceAnswer:String(row.a||''),teacherRubric:'Câu mở HSK 3; chấp nhận nhiều cách diễn đạt đúng; không chấm thanh điệu.'});
+    }
+    resultBoxHtml(resultId,'⏳ Đang gọi cùng model AI với HSK 5…','warn');
+    try{var ai=await invoke(payload);var g=normalizedGrade(ai.result||{});resultBoxHtml(resultId,gradeHtml(ai),g.score>=80?'good':g.score>=60?'warn':'bad');return ai;}catch(err){resultBoxHtml(resultId,'<div class="h3v11-ai-error">'+esc(errorMessage(err)).replace(/\n/g,'<br>')+'</div>','bad');return null;}
+  };
+  window.h3fUseDeep = async function(lid,idx){
+    if(!isH3() && typeof legacy.h3fUseDeep==='function') return legacy.h3fUseDeep.apply(this,arguments);
+    lid=Number(lid);idx=Number(idx);
+    var inputId='h3f-u-'+lid+'-'+idx, resultId='h3f-u-result-'+lid+'-'+idx;
+    var answer=String((document.getElementById(inputId)||{}).value||'').trim();
+    if(!answer){resultBoxHtml(resultId,'Bạn chưa có bài nói để AI chấm.','bad');return;}
+    var payload=null;
+    try{if(window.H3V10_AI&&typeof window.H3V10_AI.buildUsePayload==='function')payload=window.H3V10_AI.buildUsePayload(lid,idx,answer);}catch(e){}
+    if(!payload){
+      var acts=window.H3F_USAGE||{}, a=(acts[lid]||[])[idx]||{};
+      payload=Object.assign(basePayload(lid),{mode:'grade',purpose:'usage_activity',exerciseType:'hsk3_group_activity',exerciseId:'h3-use-'+lid+'-'+idx,instruction:String(a.zh||a.title||'运用'),questionText:String((a.questions||a.prompts||[])[0]||''),fullSentenceBefore:String(a.example||''),studentAnswer:answer,requiredUsage:(a.required||[]).join('、'),grammarPoint:(a.required||[]).join(' / '),referenceAnswer:String((a.responses||[])[0]||a.example||''),teacherRubric:'Bài nói mở HSK 3; kiểm tra đủ ý và cấu trúc; không chấm thanh điệu.'});
+    }
+    resultBoxHtml(resultId,'⏳ Đang gọi cùng model AI với HSK 5…','warn');
+    try{var ai=await invoke(payload);var g=normalizedGrade(ai.result||{});resultBoxHtml(resultId,gradeHtml(ai),g.score>=80?'good':g.score>=60?'warn':'bad');return ai;}catch(err){resultBoxHtml(resultId,'<div class="h3v11-ai-error">'+esc(errorMessage(err)).replace(/\n/g,'<br>')+'</div>','bad');return null;}
+  };
+
+  function activity(lid,idx){var all=window.H3F_USAGE||{};return (all[Number(lid)]||all[String(lid)]||[])[Number(idx)]||{};}
+  function selectedActivityIndex(a,lid,idx){var el=document.getElementById('h3f-u-select-'+lid+'-'+idx);var n=Number(el&&el.value||0);var q=a.questions||a.prompts||[];return n>=0&&n<q.length?n:0;}
+  function activityLog(lid,idx,who,text){
+    var log=document.getElementById('h3f-u-log-'+lid+'-'+idx);if(!log)return;
+    log.insertAdjacentHTML('beforeend','<div class="h3f-bubble '+(who==='AI'?'ai':'me')+'"><small>'+esc(who)+'</small>'+esc(text).replace(/\n/g,'<br>')+'</div>');
+    log.scrollTop=log.scrollHeight;
+  }
+  function speakChinese(text){try{if(typeof window.h3fSpeech==='function')return window.h3fSpeech(String(text||'').replace(/[*#`_]/g,''));}catch(e){} }
+  async function activityTutor(lid,idx,prompt,resultId){
+    if(resultId) resultBoxHtml(resultId,'⏳ Đang gọi bạn học AI bằng cùng model với HSK 5…','warn');
+    try{
+      var ai=await invoke(Object.assign(basePayload(lid),{mode:'tutor',purpose:'hsk3_group_partner',exerciseType:'hsk3_group_partner',prompt:tutorPrompt(prompt,{lessonId:lid,purpose:'group_partner'}),maxTokens:900}));
+      if(resultId) resultBoxHtml(resultId,'<span class="h3v11-ai-model-badge">Cùng model HSK 5 · '+esc(ai.model||'đang cấu hình')+'</span>','good');
+      return tutorText(ai);
+    }catch(err){if(resultId)resultBoxHtml(resultId,'<div class="h3v11-ai-error">'+esc(errorMessage(err)).replace(/\n/g,'<br>')+'</div>','bad');throw err;}
+  }
+  window.h3fUseAsk = async function(lid,idx){
+    if(!isH3() && typeof legacy.h3fUseAsk==='function') return legacy.h3fUseAsk.apply(this,arguments);
+    var a=activity(lid,idx),n=selectedActivityIndex(a,lid,idx),seed=(a.questions||a.prompts||[])[n]||a.zh||'';
+    var prompt='Đóng vai một bạn học cùng nhóm HSK 3. Dựa vào hoạt động sau, hãy hỏi tôi đúng MỘT câu ngắn bằng tiếng Trung, không giải thích, không dịch.\nHoạt động: '+String(a.zh||a.title||'')+'\nLượt đã chọn: '+seed;
+    try{var text=await activityTutor(Number(lid),Number(idx),prompt,'h3f-u-result-'+lid+'-'+idx);activityLog(lid,idx,'AI',text);speakChinese(text);return text;}catch(e){return null;}
+  };
+  window.h3fUseReply = async function(lid,idx,text){
+    if(!isH3() && typeof legacy.h3fUseReply==='function') return legacy.h3fUseReply.apply(this,arguments);
+    var a=activity(lid,idx),user=String(text||((document.getElementById('h3f-u-'+lid+'-'+idx)||{}).value)||'').trim();
+    if(!user){resultBoxHtml('h3f-u-result-'+lid+'-'+idx,'Bạn chưa nhập hoặc nói câu hỏi.','bad');return;}
+    activityLog(lid,idx,'Bạn',user);
+    var prompt='Đóng vai bạn học cùng nhóm ở trình độ HSK 3. Trả lời câu hỏi của tôi bằng 1–2 câu tiếng Trung tự nhiên, đúng chủ đề; không giải thích tiếng Việt.\nHoạt động: '+String(a.zh||a.title||'')+'\nCâu của tôi: '+user;
+    try{var ans=await activityTutor(Number(lid),Number(idx),prompt,'h3f-u-result-'+lid+'-'+idx);activityLog(lid,idx,'AI',ans);speakChinese(ans);return ans;}catch(e){return null;}
+  };
+  window.h3fUseModel = async function(lid,idx){
+    if(!isH3() && typeof legacy.h3fUseModel==='function') return legacy.h3fUseModel.apply(this,arguments);
+    var a=activity(lid,idx),n=selectedActivityIndex(a,lid,idx),q=(a.questions||a.prompts||[])[n]||a.zh||'';
+    var prompt='Hãy đưa MỘT câu trả lời mẫu bằng tiếng Trung ở mức HSK 3 cho câu hỏi sau. Chỉ trả lời mẫu, không giải thích.\nCâu hỏi: '+q+'\nCấu trúc nên dùng: '+((a.required||[]).join('、')||'theo hoạt động');
+    try{var ans=await activityTutor(Number(lid),Number(idx),prompt,'h3f-u-result-'+lid+'-'+idx);activityLog(lid,idx,'AI',ans);speakChinese(ans);return ans;}catch(e){return null;}
+  };
+
+  // Any legacy V10 direct caller now uses the V11 dispatcher as well.
+  if(window.H3V10_AI){
+    window.H3V10_AI.invoke=function(payload){return invoke(payload);};
+  }
+  if(window.H3_AI_CONTEXT_FIX){
+    window.H3_AI_CONTEXT_FIX.invokeAI=async function(payload){return (await invoke(payload)).data;};
+  }
+
+  function patchLabels(){
+    if(!isH3()) return;
+    var scope=document.getElementById('page-lessons')||document;
+    Array.prototype.forEach.call(scope.querySelectorAll('button'),function(btn){
+      var t=String(btn.textContent||'').trim();
+      if(/AI ngoài/i.test(t)) btn.textContent=t.replace(/AI ngoài/gi,'AI chấm');
+      if(/AI trong app/i.test(t)) btn.style.display='none';
+      if(t==='🔊 AI đọc câu hỏi') btn.textContent='🔊 Đọc câu hỏi';
+      var oc=String(btn.getAttribute('onclick')||'');
+      if(/runInternalAIGrading/.test(oc)) btn.style.display='none';
+      if(/runExternalAIGrading/.test(oc) && /AI/.test(t)) btn.textContent='AI chấm';
+    });
+    Array.prototype.forEach.call(scope.querySelectorAll('.h3-ai-guard-banner'),function(banner){
+      var text=String(banner.textContent||'');
+      if(/AI HSK 5 không được dùng cho phần này/i.test(text)){
+        banner.innerHTML='<b>🧠 Ngữ cảnh đã khóa:</b> HSK 3 · đúng bài và đúng hoạt động đang chọn. Toàn bộ nút AI dùng cùng model với HSK 5 qua Edge Function <code>hsk-ai-grade</code>.';
+      }
+    });
+  }
+  var previousLoad=window.loadLesson;
+  if(typeof previousLoad==='function' && !previousLoad.__h3v11){
+    var wrappedLoad=function(){var r=previousLoad.apply(this,arguments);if(isH3())setTimeout(patchLabels,0);return r;};
+    wrappedLoad.__h3v11=true;window.loadLesson=wrappedLoad;try{loadLesson=wrappedLoad;}catch(e){}
+  }
+  var previousSwitch=window.switchCourse;
+  if(typeof previousSwitch==='function' && !previousSwitch.__h3v11){
+    var wrappedSwitch=function(){var r=previousSwitch.apply(this,arguments);if(isH3())setTimeout(patchLabels,0);return r;};
+    wrappedSwitch.__h3v11=true;window.switchCourse=wrappedSwitch;try{switchCourse=wrappedSwitch;}catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){setTimeout(patchLabels,0);},{once:true});
+  else setTimeout(patchLabels,0);
+
+  // Keep inline onclick global names synchronized.
+  try{callAIBackend=window.callAIBackend;}catch(e){}
+  try{askAI=window.askAI;}catch(e){}
+  try{askChineseTutorAI=window.askChineseTutorAI;}catch(e){}
+  try{openGPTModal=window.openGPTModal;}catch(e){}
+  try{runCurrentGPTPrompt=window.runCurrentGPTPrompt;}catch(e){}
+  try{runExternalAIGrading=window.runExternalAIGrading;}catch(e){}
+  try{runInternalAIGrading=window.runInternalAIGrading;}catch(e){}
+  try{runAIInlineChoice=window.runAIInlineChoice;}catch(e){}
+  try{sendMessage=window.sendMessage;}catch(e){}
+  try{h3gAskAI=window.h3gAskAI;}catch(e){}
+  try{h3fSendAI=window.h3fSendAI;}catch(e){}
+  try{h3fDeepEx4=window.h3fDeepEx4;}catch(e){}
+  try{h3fUseDeep=window.h3fUseDeep;}catch(e){}
+  try{h3fUseAsk=window.h3fUseAsk;}catch(e){}
+  try{h3fUseReply=window.h3fUseReply;}catch(e){}
+  try{h3fUseModel=window.h3fUseModel;}catch(e){}
+
+  window.H3V11_AI={
+    version:VERSION,
+    functionName:FUNCTION_NAME,
+    invoke:invoke,
+    dispatch:dispatch,
+    buildPayload:buildPayload,
+    normalizeGrade:normalizedGrade,
+    patchLabels:patchLabels,
+    audit:function(){
+      return {
+        version:VERSION,
+        course:String(window.CURRENT_COURSE||''),
+        sameFunctionAsHsk5:FUNCTION_NAME,
+        generic:{callAIBackend:window.callAIBackend===callAIBackend,askAI:window.askAI===askAI,runAIInlineChoice:window.runAIInlineChoice===runAIInlineChoice,sendMessage:window.sendMessage===sendMessage},
+        hsk3:{grammar:window.h3gAskAI===h3gAskAI,exercise4:window.h3fDeepEx4===h3fDeepEx4,usageGrade:window.h3fUseDeep===h3fUseDeep,usageAsk:window.h3fUseAsk===h3fUseAsk,usageReply:window.h3fUseReply===h3fUseReply,usageModel:window.h3fUseModel===h3fUseModel},
+        sessionReady:!!(window.hskSupabase&&window.hskSupabase.auth&&window.hskSupabase.functions),
+        localAIFallbackForHsk3:false
+      };
+    }
+  };
+  document.documentElement.setAttribute('data-hsk3-ai-build',VERSION);
+})();
+</script>
 
 </body>
 </html>
