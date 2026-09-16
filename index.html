@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>HSK Albert — HSK 3 · V8 ổn định</title>
-<!-- Rebuilt from index final UI.html: restored UI + HSK5 exercise explanation tab + Supabase online sync -->
+<title>HSK Albert — HSK 3 V9 · AI chấm ổn định · đầy đủ luyện tập</title>
+<!-- HSK3 V8 STABLE: synchronous lesson render; no retry observers; explanation + notes preserved -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -645,7 +645,7 @@ audio.ex-player { height:34px;border-radius:8px;outline:none;flex:1;min-width:0;
 .chatgpt-setup input { flex:1;min-width:240px; }
 .ai-copy-btn { margin-top:8px;padding:5px 10px;border:1px solid var(--border);border-radius:8px;background:white;cursor:pointer;font-size:12px;font-family:inherit; }
 
-/* ── Unified AI grade result (cả AI trong app và AI ngoài) ── */
+/* ── Unified AI grade result (cả AI trong app và AI chấm) ── */
 .grade-box { font-size:13px; line-height:1.6; }
 .grade-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
 .grade-src { font-size:11px; font-weight:700; color:var(--muted); }
@@ -13572,7 +13572,7 @@ document.addEventListener('DOMContentLoaded', function(){
 /* =========================================================
    HSK Albert: two AI options
    - AI trong app chấm: offline internal checker, no server, no fee.
-   - AI ngoài chấm: Supabase Edge Function hsk-ai-grade -> API AI ngoài.
+   - AI chấm: Supabase Edge Function hsk-ai-grade -> API AI chấm.
    This block intentionally overrides old endpoint/local-server UI.
 ========================================================= */
 (function(){
@@ -13593,10 +13593,10 @@ document.addEventListener('DOMContentLoaded', function(){
     var t = String(text || '');
     t = t.replace(/🧠 AI Albert 3\.0 — chấm câu nâng cao/g, '🧠 AI trong app chấm — chấm câu nhanh');
     t = t.replace(/Nguồn AI: AI Albert 3\.0 nội bộ trong HTML\. Không thấy server ChatGPT nên app dùng bộ chấm offline nâng cao\./g,
-      'Nguồn AI: AI trong app chấm. Chế độ này không cần server và không mất phí, nhưng độ chính xác thấp hơn AI ngoài.');
+      'Nguồn AI: bộ chấm dự phòng trong app. Chế độ này không cần server; kết quả câu mở chỉ mang tính tham khảo.');
     t = t.replace(/Nguồn AI: AI Albert 3\.0 nội bộ trong HTML\./g,
       'Nguồn AI: AI trong app chấm.');
-    t = t.replace(/server ChatGPT nội bộ/g, 'AI ngoài');
+    t = t.replace(/server ChatGPT nội bộ/g, 'AI chấm');
     return t;
   }
 
@@ -13943,7 +13943,7 @@ document.addEventListener('DOMContentLoaded', function(){
       throw new Error('Chưa cấu hình Supabase URL/Key trong index.html.');
     }
     var sess = await hskSupabase.auth.getSession();
-    if(sess.error || !sess.data || !sess.data.session) throw new Error('Bạn cần đăng nhập trước khi dùng AI ngoài.');
+    if(sess.error || !sess.data || !sess.data.session) throw new Error('Bạn cần đăng nhập trước khi dùng AI chấm.');
     var lesson = getCurrentLessonSafe();
     var rawPrompt = String(prompt || '');
 
@@ -14046,7 +14046,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var rawText = await response.text();
     var data = null;
     try { data = JSON.parse(rawText); } catch(e) { data = { ok:false, error:'Function trả về không phải JSON.', raw: rawText }; }
-    console.log('HSK Albert kết quả AI ngoài:', {status: response.status, data: data});
+    console.log('HSK Albert kết quả AI chấm:', {status: response.status, data: data});
     if(!response.ok || !data.ok) {
       var detail = data && data.detail ? ('\nChi tiết: ' + JSON.stringify(data.detail).slice(0, 1200)) : '';
       throw new Error((data && data.error ? data.error : ('HTTP ' + response.status)) + detail);
@@ -14069,8 +14069,8 @@ document.addEventListener('DOMContentLoaded', function(){
     if(!raw) { setGPTModalAnswer('Chưa có nội dung.', 'error'); return; }
     var tutorMode = (typeof isTutorPrompt === 'function') && isTutorPrompt(raw);
     updateModalChrome('external');
-    setGPTModalAnswer((tutorMode ? '⏳ Gia sư AI đang soạn câu trả lời...' : '⏳ AI ngoài đang chấm qua Supabase hsk-ai-grade...') + '\n\nBài: ' + (currentLesson.id ? currentLesson.id + ' · ' + currentLesson.zh : '') + '\n\nNếu lỗi, hệ thống sẽ hiện nguyên nhân để bạn sửa API key/model/quota.', 'loading');
-    if(!tutorMode) setInlineGPTAnswer(CURRENT_GPT_INLINE_TARGET, 'Đang chấm bằng AI ngoài...', '', 'chatgpt');
+    setGPTModalAnswer((tutorMode ? '⏳ Gia sư AI đang soạn câu trả lời...' : '⏳ AI đang chấm qua Supabase hsk-ai-grade...') + '\n\nBài: ' + (currentLesson.id ? currentLesson.id + ' · ' + currentLesson.zh : '') + '\n\nNếu lỗi, hệ thống sẽ hiện nguyên nhân để bạn sửa API key/model/quota.', 'loading');
+    if(!tutorMode) setInlineGPTAnswer(CURRENT_GPT_INLINE_TARGET, 'AI đang chấm...', '', 'chatgpt');
     try {
       var res = await callAIBackend(CURRENT_GPT_CONTEXT || raw, { rawPrompt: raw, mode: 'external-openai' });
       if(requestId !== CURRENT_AI_REQUEST_ID) return;
@@ -14080,7 +14080,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if(typeof appendChatMessage === 'function') appendChatMessage('ai', res.answer);
         return;
       }
-      setGPTModalStatus('Đã chấm bằng AI ngoài qua Supabase/OpenRouter.');
+      setGPTModalStatus('AI đã chấm xong qua Supabase/OpenRouter.');
       showGradeResult(res.result, 'external');
     } catch(err) {
       if(requestId !== CURRENT_AI_REQUEST_ID) return;
@@ -14098,8 +14098,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
   window.getDefaultAIEndpoint = getDefaultAIEndpoint = function(){ return 'supabase:hsk-ai-grade'; };
   window.getAIEndpoint = getAIEndpoint = function(){ return 'supabase:hsk-ai-grade'; };
-  window.saveAIEndpoint = function(){ alert('Endpoint cũ đã bị bỏ. AI ngoài dùng Supabase Edge Function hsk-ai-grade.'); };
-  window.resetAIEndpoint = function(){ alert('Endpoint cũ đã bị bỏ. AI ngoài dùng Supabase Edge Function hsk-ai-grade.'); };
+  window.saveAIEndpoint = function(){ alert('Endpoint cũ đã bị bỏ. AI chấm dùng Supabase Edge Function hsk-ai-grade.'); };
+  window.resetAIEndpoint = function(){ alert('Endpoint cũ đã bị bỏ. AI chấm dùng Supabase Edge Function hsk-ai-grade.'); };
 
   document.addEventListener('DOMContentLoaded', patchAIModalContent);
 })();
@@ -14112,7 +14112,7 @@ document.addEventListener('DOMContentLoaded', function(){
    Direct AI buttons outside exercises
    - No choice modal when clicking textbook drills.
    - AI trong app: uses local AI checker.
-   - AI ngoài: uses Supabase Edge Function hsk-ai-grade.
+   - AI chấm: dùng Supabase Edge Function hsk-ai-grade.
 ========================================================= */
 (function(){
   function getTbDrillData(lessonId, secIdx, itemIdx) {
@@ -14144,7 +14144,7 @@ document.addEventListener('DOMContentLoaded', function(){
     prepareDirectGrading(data.prompt, data.inlineTarget, 'AI chấm · 练一练');
     if(mode === 'external') {
       if(typeof runExternalAIGrading === 'function') return runExternalAIGrading();
-      alert('Chưa tìm thấy hàm AI ngoài.');
+      alert('Chưa tìm thấy hàm AI chấm.');
       return;
     }
     if(typeof runInternalAIGrading === 'function') return runInternalAIGrading();
@@ -14172,7 +14172,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if(modal) modal.style.display = 'flex';
     if(mode === 'external') {
       if(typeof runExternalAIGrading === 'function') return runExternalAIGrading();
-      alert('Chưa tìm thấy hàm AI ngoài.');
+      alert('Chưa tìm thấy hàm AI chấm.');
       return;
     }
     if(typeof runInternalAIGrading === 'function') return runInternalAIGrading();
@@ -14704,7 +14704,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if(typeof prepareDirectGrading === 'function') prepareDirectGrading(prompt, id+'-result', 'AI chấm');
     if(mode==='external'){
       if(typeof runExternalAIGrading === 'function') return runExternalAIGrading();
-      alert('Chưa tìm thấy hàm AI ngoài.'); return;
+      alert('Chưa tìm thấy hàm AI chấm.'); return;
     }
     if(typeof runInternalAIGrading === 'function') return runInternalAIGrading();
     alert('Chưa sẵn sàng chấm. Thử lại sau.');
@@ -15289,7 +15289,7 @@ document.addEventListener('DOMContentLoaded', function(){
         setInlineGPTAnswer(resultId, local, '', 'local');
       }
     } catch(err){
-      setInlineGPTAnswer(resultId, 'AI ngoài lỗi: '+(err && err.message ? err.message : err)+'', 'error', 'chatgpt');
+      setInlineGPTAnswer(resultId, 'AI chấm lỗi: '+(err && err.message ? err.message : err)+'', 'error', 'chatgpt');
     }
   };
 
@@ -15893,7 +15893,7 @@ document.addEventListener('DOMContentLoaded', function(){
         var local = typeof localAIResponse==='function' ? localAIResponse(prompt,prompt,null) : 'AI trong app: hãy kiểm tra chủ ngữ + vị ngữ, pinyin, thanh điệu và từ vựng HSK 1.';
         setInlineGPTAnswer(resultId, local, '', 'local');
       }
-    } catch(e){ setInlineGPTAnswer(resultId, 'AI ngoài lỗi: '+(e&&e.message?e.message:e)+'', 'error', 'chatgpt'); }
+    } catch(e){ setInlineGPTAnswer(resultId, 'AI chấm lỗi: '+(e&&e.message?e.message:e)+'', 'error', 'chatgpt'); }
   };
 
   function hsk1TabsFinal(lesson){
@@ -16087,10 +16087,10 @@ document.addEventListener('DOMContentLoaded', function(){
   function renderCircle(skill, val){return '<div class="h1c-circle" style="--p:'+val+'"><div><b>'+val+'</b><span>'+esc(skill)+'</span></div></div>';}
   function renderAssessment(lesson){var s=lessonScores(lesson.id), a=avgScores(lesson.id), weak=weakest(s); var html='<div class="h1c-note"><b>📊 学习评估 · Đánh giá năng lực</b><p>Theo dõi riêng từng bài và toàn bộ quá trình từ bài 1 đến bài đang học. Dữ liệu này có thể gửi cho AI đóng vai cô giáo tiếng Trung để đề xuất cách học tốt hơn.</p></div><div class="h1c-eval-grid"><div class="h1c-section"><h3>本课评估 · Đánh giá bài '+lesson.id+'</h3><div class="h1c-circles">'+SKILLS.slice(0,6).map(function(x){return renderCircle(x[1],s[x[0]]||0);}).join('')+'</div><div class="h1c-sliders">'+SKILLS.map(function(x){return '<label><span>'+x[2]+' · '+x[1]+'</span><input type="range" min="0" max="100" value="'+(s[x[0]]||0)+'" oninput="h1cUpdateScore('+lesson.id+',\''+x[0]+'\',this.value)"><b id="score-'+lesson.id+'-'+x[0]+'">'+(s[x[0]]||0)+'</b></label>';}).join('')+'</div><div class="h1c-weak"><b>Phần cần bổ trợ:</b> '+weak.map(function(w){return w.zh+' · '+w.vi+' ('+w.v+')';}).join('； ')+'</div></div><div class="h1c-section"><h3>过程评估 · Quá trình đến bài '+lesson.id+'</h3><div class="h1c-bars">'+SKILLS.map(function(x){return '<div><span>'+x[2]+' · '+x[1]+'</span><div><i style="width:'+(a[x[0]]||0)+'%"></i></div><b>'+(a[x[0]]||0)+'</b></div>';}).join('')+'</div><textarea id="h1c-ai-plan-'+lesson.id+'" class="ex-write-area" placeholder="Ghi thêm nhận xét của phụ huynh: con thích gì, hay quên gì, nghe khó ở âm nào..."></textarea><div class="h1c-ai-row"><button class="btn btn-teal" onclick="h1cAskTeacher('+lesson.id+',\'external\')">AI tư vấn</button></div><div id="h1c-ai-plan-res-'+lesson.id+'" class="gpt-inline-result"></div></div></div>'; return html;}
   window.h1cUpdateScore=function(id,key,val){var all=readScores(); all[id]=Object.assign(defaultScores(),all[id]||{}); all[id][key]=Number(val); writeScores(all); var b=document.getElementById('score-'+id+'-'+key); if(b)b.textContent=val;};
-  window.h1cAskTeacher=async function(id,mode){var lesson=(Array.isArray(LESSONS)?LESSONS.find(function(l){return l.id===id;}):{}), s=lessonScores(id), a=avgScores(id), note=(document.getElementById('h1c-ai-plan-'+id)||{}).value||''; var prompt='Bạn là cô giáo tiếng Trung cho trẻ em học HSK 1. Hãy dựa vào điểm bài hiện tại và quá trình học để đề xuất kế hoạch học 7 ngày, rất cụ thể, dễ làm, vui vẻ.\nBài hiện tại: '+id+' '+(lesson.zh||'')+'\nĐiểm bài này: '+JSON.stringify(s)+'\nĐiểm quá trình: '+JSON.stringify(a)+'\nNhận xét phụ huynh: '+note; var rid='h1c-ai-plan-res-'+id; if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(rid,'Đang xin cô giáo AI tư vấn...','','chatgpt'); try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=rid; var res=await callAIBackend(prompt,{mode:'hsk1-child-plan'}); setInlineGPTAnswer(rid,res.answer||JSON.stringify(res),'','chatgpt');}else{var low=weakest(s).map(function(w){return w.vi;}).join(', '); setInlineGPTAnswer(rid,'👩‍🏫 Gợi ý của cô giáo AI trong app:\n- Mỗi ngày nghe bài khóa 5 phút, đọc theo vai A/B 2 lượt.\n- Phần cần bổ trợ: '+low+'.\n- Ngày 1-2: luyện nghe + chỉ tay theo pinyin.\n- Ngày 3-4: đọc không nhìn tiếng Việt.\n- Ngày 5: viết 3 chữ Hán khó.\n- Ngày 6: nói 5 câu ngắn.\n- Ngày 7: kiểm tra lại bằng audio và tự chấm biểu đồ.','','local');}}catch(e){setInlineGPTAnswer(rid,'AI ngoài lỗi: '+(e.message||e)+'\nCó thể dùng AI trong app tư vấn.','error','chatgpt');}};
+  window.h1cAskTeacher=async function(id,mode){var lesson=(Array.isArray(LESSONS)?LESSONS.find(function(l){return l.id===id;}):{}), s=lessonScores(id), a=avgScores(id), note=(document.getElementById('h1c-ai-plan-'+id)||{}).value||''; var prompt='Bạn là cô giáo tiếng Trung cho trẻ em học HSK 1. Hãy dựa vào điểm bài hiện tại và quá trình học để đề xuất kế hoạch học 7 ngày, rất cụ thể, dễ làm, vui vẻ.\nBài hiện tại: '+id+' '+(lesson.zh||'')+'\nĐiểm bài này: '+JSON.stringify(s)+'\nĐiểm quá trình: '+JSON.stringify(a)+'\nNhận xét phụ huynh: '+note; var rid='h1c-ai-plan-res-'+id; if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(rid,'Đang xin cô giáo AI tư vấn...','','chatgpt'); try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=rid; var res=await callAIBackend(prompt,{mode:'hsk1-child-plan'}); setInlineGPTAnswer(rid,res.answer||JSON.stringify(res),'','chatgpt');}else{var low=weakest(s).map(function(w){return w.vi;}).join(', '); setInlineGPTAnswer(rid,'👩‍🏫 Gợi ý của cô giáo AI trong app:\n- Mỗi ngày nghe bài khóa 5 phút, đọc theo vai A/B 2 lượt.\n- Phần cần bổ trợ: '+low+'.\n- Ngày 1-2: luyện nghe + chỉ tay theo pinyin.\n- Ngày 3-4: đọc không nhìn tiếng Việt.\n- Ngày 5: viết 3 chữ Hán khó.\n- Ngày 6: nói 5 câu ngắn.\n- Ngày 7: kiểm tra lại bằng audio và tự chấm biểu đồ.','','local');}}catch(e){setInlineGPTAnswer(rid,'AI chấm lỗi: '+(e.message||e)+'\nCó thể dùng AI trong app tư vấn.','error','chatgpt');}};
 
   function aiBtns(tid,rid,prefix){return '<div class="h1c-ai-row"><button class="btn btn-teal" onclick="h1cGradeText(\''+tid+'\',\''+rid+'\',\'external\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI chấm</button></div><div id="'+rid+'" class="gpt-inline-result"></div>';}
-  window.h1cGradeText=async function(tid,rid,mode,prefix){var ta=document.getElementById(tid); if(!ta||!ta.value.trim()){alert('Hãy nhập câu trả lời trước.');return;} var lesson=getLesson(); var prompt=(prefix||'Chấm bài HSK1')+'\nBài '+lesson.id+': '+lesson.zh+'\nHãy đóng vai cô giáo tiếng Trung cho trẻ em, chấm nhẹ nhàng, sửa lỗi pinyin/chữ Hán/từ vựng, giải thích bằng tiếng Việt.\nĐáp án của con: '+ta.value.trim(); if(typeof setInlineGPTAnswer==='function')setInlineGPTAnswer(rid,'Đang chấm bằng AI...','','chatgpt'); try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=rid; var res=await callAIBackend(prompt,{mode:'hsk1-child'}); setInlineGPTAnswer(rid,res.answer||JSON.stringify(res),'','chatgpt');}else{setInlineGPTAnswer(rid,'✅ AI nhận xét:\n- Kiểm tra xem câu có đúng mẫu HSK 1 chưa.\n- Đọc lại pinyin và thanh điệu.\n- Câu nên ngắn: chủ ngữ + vị ngữ.\n- Nếu có chữ Hán khó, hãy viết lại 3 lần.','','local');}}catch(e){setInlineGPTAnswer(rid,'AI ngoài lỗi: '+(e.message||e),'error','chatgpt');}};
+  window.h1cGradeText=async function(tid,rid,mode,prefix){var ta=document.getElementById(tid); if(!ta||!ta.value.trim()){alert('Hãy nhập câu trả lời trước.');return;} var lesson=getLesson(); var prompt=(prefix||'Chấm bài HSK1')+'\nBài '+lesson.id+': '+lesson.zh+'\nHãy đóng vai cô giáo tiếng Trung cho trẻ em, chấm nhẹ nhàng, sửa lỗi pinyin/chữ Hán/từ vựng, giải thích bằng tiếng Việt.\nĐáp án của con: '+ta.value.trim(); if(typeof setInlineGPTAnswer==='function')setInlineGPTAnswer(rid,'Đang chấm bằng AI...','','chatgpt'); try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=rid; var res=await callAIBackend(prompt,{mode:'hsk1-child'}); setInlineGPTAnswer(rid,res.answer||JSON.stringify(res),'','chatgpt');}else{setInlineGPTAnswer(rid,'✅ AI nhận xét:\n- Kiểm tra xem câu có đúng mẫu HSK 1 chưa.\n- Đọc lại pinyin và thanh điệu.\n- Câu nên ngắn: chủ ngữ + vị ngữ.\n- Nếu có chữ Hán khó, hãy viết lại 3 lần.','','local');}}catch(e){setInlineGPTAnswer(rid,'AI chấm lỗi: '+(e.message||e),'error','chatgpt');}};
 
   function renderWarmup(lesson){return '<div class="h1c-note"><b>🔥 热身 · Khởi động</b><p>Nhìn hình/từ trước khi học. Hình dưới đây là hình tự tạo, không sao chép từ PDF.</p></div>'+renderWordPictureGrid(lesson)+'<div class="h1c-section"><h3>说一说 · Nói thử</h3><textarea id="h1c-warm-'+lesson.id+'" class="ex-write-area" placeholder="Dùng 2–3 từ trong hình để nói câu đơn giản..."></textarea>'+aiBtns('h1c-warm-'+lesson.id,'h1c-warm-res-'+lesson.id,'Chấm khởi động HSK1 bài '+lesson.id)+'</div>';}
   function renderTabs(lesson){var tabs=[]; if(lesson.id>2)tabs.push({id:'h1c-warm',label:'🔥 热身 · Khởi động',html:renderWarmup(lesson)}); tabs.push({id:'h1c-kewen',label:'📖 课文 · Bài khóa',html:renderReading(lesson)}); tabs.push({id:'h1c-pinyin',label:'🗣️ 拼音 · Ghép âm',html:renderPinyin(lesson)}); if(lesson.id<=2)tabs.push({id:'h1c-classroom',label:'🏫 课堂用语 · Mẫu câu lớp học',html:renderClassroom(lesson)}); if(lesson.id>2)tabs.push({id:'h1c-zhushi',label:'📌 注释 · Chú thích',html:renderNotes(lesson)}); tabs.push({id:'h1c-lianxi',label:'📘 练习 · Bài tập giáo trình',html:renderTextbookExercises(lesson)}); tabs.push({id:'h1c-hanzi',label:'✍️ 汉字 · Chữ Hán',html:renderHanzi(lesson)}); tabs.push({id:'h1c-yunyong',label:'🤝 运用 · Vận dụng',html:renderUsage(lesson)}); tabs.push({id:'h1c-workbook',label:'📚 练习册 · Sách bài tập',html:renderWorkbook(lesson)}); tabs.push({id:'h1c-assess',label:'📊 评估 · Đánh giá',html:renderAssessment(lesson)}); tabs.push({id:'notes-tab',label:'🗒️ 笔记 · Ghi chép',html:(typeof renderNotesTab==='function'?renderNotesTab(lesson):'')}); return tabs;}
@@ -16279,9 +16279,9 @@ document.addEventListener('DOMContentLoaded', function(){
   function renderBars(data){return '<div class="h1bars">'+SKILLS.map(function(s){var v=Number(data[s[0]])||0;return '<div class="h1bar"><label>'+E(s[1])+' <small>'+E(s[2])+'</small></label><div><span style="width:'+v+'%"></span></div><b>'+v+'%</b></div>';}).join('')+'</div>';}
   function renderAssessment(lesson){var id=lesson.id,d=loadSkill(id),avg=averageTo(id);return '<div class="h1kid-note"><b>📊 成长评估 · Đánh giá tiến bộ</b><p>Cho con học HSK 1 cần theo dõi nghe, phát âm, ghép âm, đọc, chữ Hán, nói và viết. Có đánh giá từng bài và toàn quá trình đến bài hiện tại.</p></div><div class="h1dash-grid"><div class="h1kid-card"><div class="h1kid-title">Đánh giá bài '+id+' · 本课</div><div class="h1sliders">'+SKILLS.map(function(s){var v=d[s[0]]||50;return '<label>'+E(s[1])+' · '+E(s[2])+' <output id="out-'+s[0]+'">'+v+'</output>%<input type="range" min="0" max="100" value="'+v+'" oninput="document.getElementById(\'out-'+s[0]+'\').textContent=this.value" id="skill-'+s[0]+'"></label>';}).join('')+'</div><label>Phần cần bổ trợ · 需要加强<textarea id="skill-focus" class="ex-write-area" placeholder="Ví dụ: thanh 3, zh/ch/sh, nghe chưa nhận ra từ...">'+E(d.focus||'')+'</textarea></label><button class="btn btn-teal" onclick="hsk1SaveAssessment('+id+')">Lưu đánh giá bài này</button></div><div class="h1kid-card"><div class="h1kid-title">Vòng năng lực bài này</div><div class="h1score-grid">'+SKILLS.slice(0,4).map(function(s){return scoreCircle(s[1],d[s[0]]||50);}).join('')+'</div></div></div><div class="h1kid-card"><div class="h1kid-title">Quá trình từ bài 1 đến bài '+id+' · 累计进步</div>'+renderBars(avg)+'<div class="h1advice"><button class="btn btn-outline" onclick="hsk1AskTeacher('+id+',\'internal\')">Hỏi AI cô giáo trong app</button><button class="btn btn-teal" onclick="hsk1AskTeacher('+id+',\'external\')">Hỏi AI cô giáo ngoài</button></div><div id="h1-teacher-advice-'+id+'" class="gpt-inline-result"></div></div>';}
   window.hsk1SaveAssessment=function(id){var d={};SKILLS.forEach(function(s){var el=document.getElementById('skill-'+s[0]);d[s[0]]=el?Number(el.value):0;});var f=document.getElementById('skill-focus');d.focus=f?f.value:'';saveSkill(id,d);alert('Đã lưu đánh giá bài '+id); if(window.loadLesson) window.loadLesson(id);};
-  window.hsk1AskTeacher=async function(id,mode){var lesson=getLesson(id),d=loadSkill(id),avg=averageTo(id),target='h1-teacher-advice-'+id;var prompt='Bạn là cô giáo tiếng Trung cho trẻ em Việt Nam học HSK 1. Dựa vào dữ liệu học tập, hãy đưa kế hoạch cải thiện cụ thể, vui vẻ, dễ làm trong 7 ngày.\nBài hiện tại: '+id+' '+(lesson.zh||'')+' - '+(lesson.vi||'')+'\nĐánh giá bài này: '+JSON.stringify(d)+'\nTrung bình quá trình: '+JSON.stringify(avg)+'\nNội dung cần bổ trợ: '+(d.focus||'chưa ghi');if(typeof setInlineGPTAnswer==='function')setInlineGPTAnswer(target,'Đang hỏi AI...','','');try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=target;var r=await callAIBackend(prompt,{mode:'hsk1-teacher'});setInlineGPTAnswer(target,r.answer||JSON.stringify(r),'','chatgpt');}else{var ans='Cô giáo gợi ý: mỗi ngày 10 phút nghe lại audio bài '+id+', 5 phút đọc bảng pinyin, 5 phút viết 3 chữ Hán. Phần cần bổ trợ: '+(d.focus||'phát âm và nghe từ mới')+'. Hãy khen con sau mỗi lần đọc đúng 3 câu.';setInlineGPTAnswer(target,ans,'','local');}}catch(e){setInlineGPTAnswer(target,'AI ngoài lỗi: '+(e&&e.message?e.message:e),'error','chatgpt');}};
+  window.hsk1AskTeacher=async function(id,mode){var lesson=getLesson(id),d=loadSkill(id),avg=averageTo(id),target='h1-teacher-advice-'+id;var prompt='Bạn là cô giáo tiếng Trung cho trẻ em Việt Nam học HSK 1. Dựa vào dữ liệu học tập, hãy đưa kế hoạch cải thiện cụ thể, vui vẻ, dễ làm trong 7 ngày.\nBài hiện tại: '+id+' '+(lesson.zh||'')+' - '+(lesson.vi||'')+'\nĐánh giá bài này: '+JSON.stringify(d)+'\nTrung bình quá trình: '+JSON.stringify(avg)+'\nNội dung cần bổ trợ: '+(d.focus||'chưa ghi');if(typeof setInlineGPTAnswer==='function')setInlineGPTAnswer(target,'Đang hỏi AI...','','');try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=target;var r=await callAIBackend(prompt,{mode:'hsk1-teacher'});setInlineGPTAnswer(target,r.answer||JSON.stringify(r),'','chatgpt');}else{var ans='Cô giáo gợi ý: mỗi ngày 10 phút nghe lại audio bài '+id+', 5 phút đọc bảng pinyin, 5 phút viết 3 chữ Hán. Phần cần bổ trợ: '+(d.focus||'phát âm và nghe từ mới')+'. Hãy khen con sau mỗi lần đọc đúng 3 câu.';setInlineGPTAnswer(target,ans,'','local');}}catch(e){setInlineGPTAnswer(target,'AI chấm lỗi: '+(e&&e.message?e.message:e),'error','chatgpt');}};
   function aiButtons(textareaId,resultId,prompt){return '<div class="hsk1-ai-row"><button class="btn btn-teal" onclick="hsk1KidGrade(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+E(prompt).replace(/'/g,'&#39;')+'\')">AI chấm</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';}
-  window.hsk1KidGrade=async function(textareaId,resultId,mode,prefix){var el=document.getElementById(textareaId);if(!el||!el.value.trim()){alert('Hãy nhập câu trả lời trước.');return;}var lesson=getLesson((window.STATE&&STATE.currentLesson)||1);var prompt=(prefix||'Chấm bài HSK 1')+'\nBài: '+lesson.id+' '+(lesson.zh||'')+'\nYêu cầu: chấm nhẹ cho trẻ, sửa lỗi bằng tiếng Việt, chú ý pinyin/thanh điệu/chữ Hán.\nĐáp án của con: '+el.value.trim();if(typeof setInlineGPTAnswer==='function')setInlineGPTAnswer(resultId,'Đang chấm bằng AI...','','');try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=resultId;var r=await callAIBackend(prompt,{mode:'hsk1-child'});setInlineGPTAnswer(resultId,r.answer||JSON.stringify(r),'','chatgpt');}else{var local=typeof localAIResponse==='function'?localAIResponse(prompt,prompt,null):'AI trong app: con đã viết câu. Hãy kiểm tra đủ chủ ngữ + vị ngữ, đúng pinyin/thanh điệu và dùng từ bài học.';setInlineGPTAnswer(resultId,local,'','local');}}catch(e){setInlineGPTAnswer(resultId,'AI ngoài lỗi: '+(e&&e.message?e.message:e)+'','error','chatgpt');}};
+  window.hsk1KidGrade=async function(textareaId,resultId,mode,prefix){var el=document.getElementById(textareaId);if(!el||!el.value.trim()){alert('Hãy nhập câu trả lời trước.');return;}var lesson=getLesson((window.STATE&&STATE.currentLesson)||1);var prompt=(prefix||'Chấm bài HSK 1')+'\nBài: '+lesson.id+' '+(lesson.zh||'')+'\nYêu cầu: chấm nhẹ cho trẻ, sửa lỗi bằng tiếng Việt, chú ý pinyin/thanh điệu/chữ Hán.\nĐáp án của con: '+el.value.trim();if(typeof setInlineGPTAnswer==='function')setInlineGPTAnswer(resultId,'Đang chấm bằng AI...','','');try{if(mode==='external'&&typeof callAIBackend==='function'){window.CURRENT_GPT_INLINE_TARGET=resultId;var r=await callAIBackend(prompt,{mode:'hsk1-child'});setInlineGPTAnswer(resultId,r.answer||JSON.stringify(r),'','chatgpt');}else{var local=typeof localAIResponse==='function'?localAIResponse(prompt,prompt,null):'AI trong app: con đã viết câu. Hãy kiểm tra đủ chủ ngữ + vị ngữ, đúng pinyin/thanh điệu và dùng từ bài học.';setInlineGPTAnswer(resultId,local,'','local');}}catch(e){setInlineGPTAnswer(resultId,'AI chấm lỗi: '+(e&&e.message?e.message:e)+'','error','chatgpt');}};
   function tabs(lesson){var base=[]; if(lesson.id>2)base.push({id:'h1-warm',label:'🔥 热身 · Khởi động',html:renderWarmup(lesson)}); base.push({id:'h1-kewen',label:'📖 课文 · Bài khóa',html:renderKewen(lesson)},{id:'h1-pinyin',label:'🗣️ 拼音/语音 · Ghép âm',html:renderPinyin(lesson)}); if(lesson.id<=2)base.push({id:'h1-class',label:'🏫 课堂用语 · Mẫu câu lớp học',html:renderClassroom(lesson)}); if(lesson.id>2)base.push({id:'h1-notes',label:'📌 注释 · Chú thích',html:renderNotes(lesson)},{id:'h1-lx',label:'📘 练习 · Bài tập',html:renderLianxi(lesson)}); base.push({id:'h1-hanzi',label:'✍️ 汉字 · Chữ Hán',html:renderHanzi(lesson)}); if(lesson.id>2)base.push({id:'h1-yy',label:'🤝 运用 · Vận dụng',html:renderYunyong(lesson)}); base.push({id:'h1-wb',label:'📚 练习册 · Sách bài tập',html:renderWorkbook(lesson)},{id:'h1-assess',label:'📊 成长 · Đánh giá',html:renderAssessment(lesson)},{id:'notes-tab',label:'🗒️ 笔记 · Ghi chép',html:typeof renderNotesTab==='function'?renderNotesTab(lesson):''});return base;}
   function loadH1(id){var lesson=getLesson(id); if(!lesson.id)return; if(window.STATE)STATE.currentLesson=lesson.id;var sel=document.getElementById('lesson-selector');if(sel)sel.value=id;var title=document.getElementById('lesson-page-title');if(title)title.textContent='HSK 1 · Bài '+id+': '+lesson.zh;var sub=document.getElementById('lesson-page-sub');if(sub)sub.textContent=lesson.vi+' · bài khóa + ghép âm + đánh giá trẻ em';var list=document.getElementById('lesson-list-view');if(list)list.style.display='none';var det=document.getElementById('lesson-detail-view');if(det)det.style.display='flex';var header=document.getElementById('lesson-detail-header');if(header)header.innerHTML='<div class="lesson-num-badge">'+id+'</div><div><div class="lesson-zh">'+E(lesson.zh)+'</div><div class="lesson-vi">'+E(lesson.vi)+'</div><div class="lesson-topic">HSK 1 · chữ Hán + pinyin + tiếng Việt · có theo dõi năng lực</div></div><div style="margin-left:auto"><button class="btn" style="background:rgba(255,255,255,.15);color:white;font-size:12px" onclick="markLessonDone('+id+')">✓ Hoàn thành</button></div>';var ts=tabs(lesson);var te=document.getElementById('lesson-tabs');if(te)te.innerHTML=ts.map(function(t,i){return '<button class="tab-btn '+(i===0?'active':'')+'" onclick="switchTab(\''+t.id+'\',this)">'+t.label+'</button>';}).join('');var ce=document.getElementById('lesson-tab-content');if(ce)ce.innerHTML=ts.map(function(t,i){return '<div id="'+t.id+'" class="tab-content '+(i===0?'active':'')+'">'+t.html+'</div>';}).join('');try{if(typeof saveState==='function')saveState();}catch(e){}}
   window.loadLesson=function(id){ if(isH1())return loadH1(Number(id)); return PREV_LOAD?PREV_LOAD(Number(id)):null; };
@@ -16462,7 +16462,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function chartHTML(id,p,scope){var a=avg(p); return '<div class="h1-chart-wrap"><div class="h1-donut" style="--pct:'+a+'"><span>'+a+'%</span><em>'+scope+'</em></div><div class="h1-bars">'+Object.keys(PROG_LABELS).map(function(k){return '<div class="h1-bar-row"><label>'+PROG_LABELS[k]+'</label><div><i style="width:'+p[k]+'%"></i></div><span>'+p[k]+'%</span></div>';}).join('')+'</div></div><div class="h1-support"><b>Phần cần bổ trợ:</b> '+supportList(p)+'</div>';}
   function renderProgressNumbers(id){var lesson=currentLesson(id)||{id:id}; var p=getProgress(id), o=overallProgress(id); var el=document.getElementById('h1-progress-charts-'+id); if(el) el.innerHTML=chartHTML(id,p,'Bài '+id)+chartHTML(id,o,'Tổng');}
   window.hsk1SetProgress=function(id,k,v){setProgress(id,k,v);};
-  window.hsk1AskCoach=async function(id,mode){var p=getProgress(id), o=overallProgress(id); var out=document.getElementById('h1-coach-result-'+id); var prompt='Bạn là cô giáo tiếng Trung HSK 1 dạy trẻ em. Dựa vào dữ liệu học tập, hãy đưa kế hoạch cải tiến 7 ngày thật cụ thể, vui vẻ, dễ làm.\nBài hiện tại: '+id+'\nĐánh giá bài này: '+JSON.stringify(p)+'\nQuá trình từ bài 1 đến bài '+id+': '+JSON.stringify(o)+'\nĐiểm yếu: '+supportList(p)+'\nHãy tư vấn bằng tiếng Việt, kèm mẫu luyện tiếng Trung ngắn.'; if(out) out.innerHTML='<div class="h1-coach-loading">Đang xin lời khuyên cô giáo AI...</div>'; try{ if(mode==='external' && typeof callAIBackend==='function'){ var res=await callAIBackend(prompt,{mode:'hsk1-coach'}); if(out) out.innerHTML='<pre class="h1-coach-text">'+esc(res.answer||JSON.stringify(res,null,2))+'</pre>'; } else { var weak=supportList(p); var msg='Cô giáo gợi ý: tuần này hãy ưu tiên '+weak+'. Mỗi ngày học 15 phút: 5 phút nghe, 5 phút đọc nhại, 3 phút viết chữ, 2 phút nói 3 câu. Khi phát âm sai, hãy quay lại bảng 拼音 và đọc chậm theo audio.'; if(out) out.innerHTML='<div class="h1-coach-text">'+esc(msg)+'</div>'; } } catch(e){ if(out) out.innerHTML='<div class="h1-coach-text error">AI ngoài lỗi: '+esc(e.message||e)+'. Hãy thử lại sau.</div>'; }};
+  window.hsk1AskCoach=async function(id,mode){var p=getProgress(id), o=overallProgress(id); var out=document.getElementById('h1-coach-result-'+id); var prompt='Bạn là cô giáo tiếng Trung HSK 1 dạy trẻ em. Dựa vào dữ liệu học tập, hãy đưa kế hoạch cải tiến 7 ngày thật cụ thể, vui vẻ, dễ làm.\nBài hiện tại: '+id+'\nĐánh giá bài này: '+JSON.stringify(p)+'\nQuá trình từ bài 1 đến bài '+id+': '+JSON.stringify(o)+'\nĐiểm yếu: '+supportList(p)+'\nHãy tư vấn bằng tiếng Việt, kèm mẫu luyện tiếng Trung ngắn.'; if(out) out.innerHTML='<div class="h1-coach-loading">Đang xin lời khuyên cô giáo AI...</div>'; try{ if(mode==='external' && typeof callAIBackend==='function'){ var res=await callAIBackend(prompt,{mode:'hsk1-coach'}); if(out) out.innerHTML='<pre class="h1-coach-text">'+esc(res.answer||JSON.stringify(res,null,2))+'</pre>'; } else { var weak=supportList(p); var msg='Cô giáo gợi ý: tuần này hãy ưu tiên '+weak+'. Mỗi ngày học 15 phút: 5 phút nghe, 5 phút đọc nhại, 3 phút viết chữ, 2 phút nói 3 câu. Khi phát âm sai, hãy quay lại bảng 拼音 và đọc chậm theo audio.'; if(out) out.innerHTML='<div class="h1-coach-text">'+esc(msg)+'</div>'; } } catch(e){ if(out) out.innerHTML='<div class="h1-coach-text error">AI chấm lỗi: '+esc(e.message||e)+'. Hãy thử lại sau.</div>'; }};
   function renderAssessment(lesson){var id=lesson.id; var p=getProgress(id); var sliders=Object.keys(PROG_LABELS).map(function(k){return '<div class="h1-slider"><label>'+PROG_LABELS[k]+' <span id="h1-'+k+'-val-'+id+'">'+p[k]+'%</span></label><input type="range" min="0" max="100" value="'+p[k]+'" oninput="hsk1SetProgress('+id+',\''+k+'\',this.value)"></div>';}).join(''); return '<div class="h1-tip"><b>📊 Đánh giá năng lực:</b> theo dõi từng bài và quá trình từ bài 1 đến bài đang học. Dữ liệu lưu trong trình duyệt.</div><div class="h1-card"><div class="h1-title">Nhập đánh giá sau khi học bài '+id+'</div>'+sliders+'</div><div id="h1-progress-charts-'+id+'">'+chartHTML(id,p,'Bài '+id)+chartHTML(id,overallProgress(id),'Tổng')+'</div><div class="h1-card"><div class="h1-title">👩‍🏫 Hỏi AI cách cải tiến</div><p>AI đóng vai cô giáo tiếng Trung và tư vấn dựa trên năng lực từng bài + quá trình học.</p><div class="hsk1-ai-row"><button class="btn btn-teal" onclick="hsk1AskCoach('+id+',\'external\')">AI tư vấn</button></div><div id="h1-coach-result-'+id+'"></div></div>';}
 
   function aiButtons(textareaId,resultId,prefix){return '<div class="hsk1-ai-row"><button class="btn btn-teal" onclick="hsk1FinalGrade(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+esc(prefix).replace(/'/g,'&#39;')+'\')">AI chấm</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';}
@@ -16919,9 +16919,9 @@ document.addEventListener('DOMContentLoaded', function(){
     return '<div class="h1stable-tip"><b>📊 Đánh giá:</b> theo dõi năng lực từng bài và quá trình từ bài 1 đến bài đang học. Có thể hỏi AI đóng vai cô giáo tiếng Trung để cải tiến cách học.</div><div class="h1stable-assess-grid"><section class="h1stable-card"><h3>本课评估 · Đánh giá bài '+id+'</h3><div class="h1stable-circles">'+Object.keys(SKILLS).slice(0,6).map(function(k){return circle(SKILLS[k],p[k]);}).join('')+'</div><div class="h1stable-sliders">'+Object.keys(SKILLS).map(function(k){return '<label>'+E(SKILLS[k])+' <output id="h1stable-out-'+id+'-'+k+'">'+p[k]+'</output>%<input type="range" min="0" max="100" value="'+p[k]+'" oninput="hsk1StableSetProgress('+id+',\''+k+'\',this.value)"></label>';}).join('')+'</div></section><section class="h1stable-card"><h3>过程评估 · Quá trình đến bài '+id+'</h3>'+bars(avg)+'<textarea id="h1stable-coach-'+id+'" class="ex-write-area" placeholder="Ghi nhận xét của phụ huynh: con thích gì, hay quên gì, nghe khó âm nào..."></textarea><div class="hsk1-ai-row"><button class="btn btn-teal" onclick="hsk1StableCoach('+id+',\'external\')">AI tư vấn</button></div><div id="h1stable-coach-res-'+id+'" class="gpt-inline-result"></div></section></div>';
   }
   window.hsk1StableSetProgress=function(id,k,v){var p=getProgress(id); p[k]=Number(v)||0; localStorage.setItem('hsk1_progress_'+id,JSON.stringify(p)); var out=document.getElementById('h1stable-out-'+id+'-'+k); if(out) out.textContent=p[k];};
-  window.hsk1StableCoach=async function(id,mode){var p=getProgress(id), avg=avgProgress(id), extra=(document.getElementById('h1stable-coach-'+id)||{}).value||''; var prompt='Bạn là cô giáo tiếng Trung cho trẻ học HSK 1. Hãy tư vấn cách cải thiện dựa trên điểm bài '+id+' và quá trình. Điểm bài: '+JSON.stringify(p)+'. Trung bình quá trình: '+JSON.stringify(avg)+'. Ghi chú phụ huynh: '+extra; var rid='h1stable-coach-res-'+id; if(mode==='external' && typeof callAIBackend==='function'){try{CURRENT_GPT_INLINE_TARGET=rid; var r=await callAIBackend(prompt,{mode:'hsk1-coach'}); if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(rid,r.answer,'','chatgpt');}catch(e){if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(rid,'AI ngoài lỗi: '+(e.message||e),'error','chatgpt');}} else {var advice='👩‍🏫 AI trong app: Hôm nay nên nghe lại bài khóa 2 lần, đọc to pinyin 3 lượt, chọn 5 chữ Hán khó nhất để luyện. Nếu điểm phát âm dưới 70, ưu tiên thanh điệu và zh/ch/sh/z/c/s.'; if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(rid,advice,'','local'); else alert(advice);}};
+  window.hsk1StableCoach=async function(id,mode){var p=getProgress(id), avg=avgProgress(id), extra=(document.getElementById('h1stable-coach-'+id)||{}).value||''; var prompt='Bạn là cô giáo tiếng Trung cho trẻ học HSK 1. Hãy tư vấn cách cải thiện dựa trên điểm bài '+id+' và quá trình. Điểm bài: '+JSON.stringify(p)+'. Trung bình quá trình: '+JSON.stringify(avg)+'. Ghi chú phụ huynh: '+extra; var rid='h1stable-coach-res-'+id; if(mode==='external' && typeof callAIBackend==='function'){try{CURRENT_GPT_INLINE_TARGET=rid; var r=await callAIBackend(prompt,{mode:'hsk1-coach'}); if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(rid,r.answer,'','chatgpt');}catch(e){if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(rid,'AI chấm lỗi: '+(e.message||e),'error','chatgpt');}} else {var advice='👩‍🏫 AI trong app: Hôm nay nên nghe lại bài khóa 2 lần, đọc to pinyin 3 lượt, chọn 5 chữ Hán khó nhất để luyện. Nếu điểm phát âm dưới 70, ưu tiên thanh điệu và zh/ch/sh/z/c/s.'; if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(rid,advice,'','local'); else alert(advice);}};
   function aiButtons(textareaId,resultId,prefix){return '<div class="hsk1-ai-row"><button class="btn btn-teal" onclick="hsk1StableGrade(\''+textareaId+'\',\''+resultId+'\',\'external\',\''+E(prefix).replace(/'/g,'&#39;')+'\')">AI chấm</button></div><div id="'+resultId+'" class="gpt-inline-result"></div>';}
-  window.hsk1StableGrade=async function(textareaId,resultId,mode,prefix){var ta=document.getElementById(textareaId); if(!ta || !ta.value.trim()){alert('Hãy nhập câu trả lời trước.');return;} var lesson=getLesson(getState().currentLesson||1); var prompt=String(prefix||'Chấm HSK 1')+'\nBài '+lesson.id+': '+lesson.zh+'\nĐáp án của tôi: '+ta.value.trim(); if(mode==='external' && typeof callAIBackend==='function'){try{CURRENT_GPT_INLINE_TARGET=resultId; var r=await callAIBackend(prompt,{mode:'hsk1-stable'}); if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(resultId,r.answer,'','chatgpt');}catch(e){if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(resultId,'AI ngoài lỗi: '+(e.message||e),'error','chatgpt'); else alert('AI ngoài lỗi: '+(e.message||e));}} else {var ans=typeof localAIResponse==='function'?localAIResponse(prompt,prompt,null):'AI trong app: kiểm tra câu có đúng từ HSK 1, đúng trật tự chủ ngữ-vị ngữ, pinyin/thanh điệu nếu có.'; if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(resultId,ans,'','local'); else alert(ans);}};
+  window.hsk1StableGrade=async function(textareaId,resultId,mode,prefix){var ta=document.getElementById(textareaId); if(!ta || !ta.value.trim()){alert('Hãy nhập câu trả lời trước.');return;} var lesson=getLesson(getState().currentLesson||1); var prompt=String(prefix||'Chấm HSK 1')+'\nBài '+lesson.id+': '+lesson.zh+'\nĐáp án của tôi: '+ta.value.trim(); if(mode==='external' && typeof callAIBackend==='function'){try{CURRENT_GPT_INLINE_TARGET=resultId; var r=await callAIBackend(prompt,{mode:'hsk1-stable'}); if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(resultId,r.answer,'','chatgpt');}catch(e){if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(resultId,'AI chấm lỗi: '+(e.message||e),'error','chatgpt'); else alert('AI chấm lỗi: '+(e.message||e));}} else {var ans=typeof localAIResponse==='function'?localAIResponse(prompt,prompt,null):'AI trong app: kiểm tra câu có đúng từ HSK 1, đúng trật tự chủ ngữ-vị ngữ, pinyin/thanh điệu nếu có.'; if(typeof setInlineGPTAnswer==='function') setInlineGPTAnswer(resultId,ans,'','local'); else alert(ans);}};
   function renderTabs(lesson){
     var arr=[];
     if(Number(lesson.id)>2) arr.push(['h1stable-warm','🔥 热身 · Khởi động',renderWarmup(lesson)]);
@@ -18866,10 +18866,8 @@ document.addEventListener('DOMContentLoaded', function(){
     var sub = appbar.querySelector('span');
     var pageTitle = document.querySelector('.page-content[style*="display:flex"] .topbar-title, .page-content[style*="display: flex"] .topbar-title');
     var activeNav = document.querySelector('.nav-item.active');
-    var nextTitle = pageTitle ? pageTitle.textContent.trim().replace(/\s+/g,' ') : 'HSK Albert';
-    var nextSub = activeNav ? activeNav.textContent.trim().replace(/\s+/g,' ') : 'Menu học tập';
-    if(title && title.textContent !== nextTitle) title.textContent = nextTitle;
-    if(sub && sub.textContent !== nextSub) sub.textContent = nextSub;
+    if(title) title.textContent = pageTitle ? pageTitle.textContent.trim().replace(/\s+/g,' ') : 'HSK Albert';
+    if(sub) sub.textContent = activeNav ? activeNav.textContent.trim().replace(/\s+/g,' ') : 'Menu học tập';
   }
 
   function wrapShowPage(){
@@ -18905,9 +18903,15 @@ document.addEventListener('DOMContentLoaded', function(){
     syncMode();
     wrapShowPage();
     bindGlobalEvents();
-    // V8: keep the mobile shell deterministic. The old body-wide observer rewrote
-    // the title after every DOM change and created a permanent 80 ms render loop.
-    [100, 500].forEach(function(ms){ setTimeout(function(){ moveAuthIntoSidebar(); syncMode(); }, ms); });
+    // Existing older patches sometimes move the auth box again; keep it in the sidebar.
+    [100, 500, 1200, 2200, 4200].forEach(function(ms){ setTimeout(function(){ moveAuthIntoSidebar(); syncMode(); }, ms); });
+    if(window.MutationObserver){
+      var obs = new MutationObserver(function(){
+        clearTimeout(window.__hskMobileMutationTimer);
+        window.__hskMobileMutationTimer = setTimeout(function(){ moveAuthIntoSidebar(); updateMobileTitle(); }, 80);
+      });
+      obs.observe(document.body, { childList:true, subtree:true });
+    }
   }
 
   window.hskMobileOpenMenu = openMobileMenu;
@@ -26416,7 +26420,19 @@ window.HSK3_COMPLETE_DATA = {"version":"2026.09.10-hsk3-complete","lessons":[{"i
   window.showPage=function(id){if(!isH3())return typeof PREV.showPage==='function'?PREV.showPage.apply(this,arguments):undefined;applyChrome('hsk3');if(id==='roadmap'||id==='quiz'||id==='mock')return h3DirectPage(id);return typeof PREV.showPage==='function'?PREV.showPage.apply(this,arguments):undefined;};
   try{showPage=window.showPage;}catch(e){}
 
-  function openLesson(id,tab){ showPage('lessons');setTimeout(function(){window.loadLesson(id);if(tab)setTimeout(function(){var b=[].slice.call(document.querySelectorAll('#lesson-tabs .tab-btn')).find(function(x){return x.getAttribute('data-h3-tab')===tab;});if(b)b.click();},20);},20); }
+  var H3_OPEN_TOKEN=0;
+  function openLesson(id,tab){
+    id=Number(id); if(!(id>=1&&id<=20)) return;
+    var token=++H3_OPEN_TOKEN;
+    var detail=document.getElementById('lesson-detail-view');
+    var alreadyOpen=detail&&getComputedStyle(detail).display!=='none'&&window.STATE&&Number(window.STATE.currentLesson)===id;
+    if(!alreadyOpen) showPage('lessons');
+    window.loadLesson(id);
+    if(tab&&token===H3_OPEN_TOKEN){
+      var b=[].slice.call(document.querySelectorAll('#lesson-tabs .tab-btn')).find(function(x){return x.getAttribute('data-h3-tab')===tab;});
+      if(b)b.click();
+    }
+  }
   window.h3OpenLesson=openLesson;
 
   window.renderToday = function(){
@@ -26645,11 +26661,11 @@ window.HSK3_COMPLETE_DATA = {"version":"2026.09.10-hsk3-complete","lessons":[{"i
   window.h3ApplyOfficialLesson=applyLesson;
   installOfficial();
   var baseList=window.renderLessonList;window.renderLessonList=function(){installOfficial();return typeof baseList==='function'?baseList.apply(this,arguments):undefined;};try{renderLessonList=window.renderLessonList;}catch(e){}
-  var baseLoad=window.loadLesson;window.loadLesson=function(id){installOfficial();var out=typeof baseLoad==='function'?baseLoad.apply(this,arguments):undefined;if(isH3()){var lid=Number(id);var sel=document.getElementById('lesson-selector');var now=Number(sel&&sel.value)||Number((typeof STATE!=='undefined'&&STATE&&STATE.currentLesson)||0);if(lid>=1&&lid<=20&&(!now||now===lid))applyLesson(lid);}return out;};try{loadLesson=window.loadLesson;}catch(e){}
-  var baseSwitch=window.switchCourse;window.switchCourse=function(course){installOfficial();var out=typeof baseSwitch==='function'?baseSwitch.apply(this,arguments):undefined;if(course==='hsk3'){setTimeout(function(){installOfficial();var id=Number(window.STATE&&window.STATE.currentLesson)||1;var detail=document.getElementById('lesson-detail-view');if(detail&&detail.style.display!=='none')applyLesson(id);},80);}return out;};
+  var baseLoad=window.loadLesson;window.loadLesson=function(id){installOfficial();var out=typeof baseLoad==='function'?baseLoad.apply(this,arguments):undefined;if(isH3()){var lid=Number(id);if(lid>=1&&lid<=20)applyLesson(lid);}return out;};try{loadLesson=window.loadLesson;}catch(e){}
+  var baseSwitch=window.switchCourse;window.switchCourse=function(course){installOfficial();var out=typeof baseSwitch==='function'?baseSwitch.apply(this,arguments):undefined;if(course==='hsk3'){installOfficial();var id=Number(window.STATE&&window.STATE.currentLesson)||1;var detail=document.getElementById('lesson-detail-view');if(detail&&getComputedStyle(detail).display!=='none')applyLesson(id);}return out;};
   ['renderReview','renderQuiz','renderVocabPage','renderToday'].forEach(function(name){var base=window[name];if(typeof base!=='function')return;window[name]=function(){installOfficial();return base.apply(this,arguments);};try{if(name==='renderReview')renderReview=window[name];if(name==='renderQuiz')renderQuiz=window[name];if(name==='renderVocabPage')renderVocabPage=window[name];if(name==='renderToday')renderToday=window[name];}catch(e){}});
-  function boot(){installOfficial();if(isH3()){var id=Number(window.STATE&&window.STATE.currentLesson)||1;setTimeout(function(){var detail=document.getElementById('lesson-detail-view');if(detail&&detail.style.display!=='none')applyLesson(id);else if(typeof window.renderLessonList==='function')window.renderLessonList();},120);}}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();window.addEventListener('load',function(){setTimeout(boot,180);});
+  function boot(){installOfficial();if(isH3()){var id=Number(window.STATE&&window.STATE.currentLesson)||1;var detail=document.getElementById('lesson-detail-view');if(detail&&getComputedStyle(detail).display!=='none')applyLesson(id);else if(typeof window.renderLessonList==='function')window.renderLessonList();}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
 </script>
 <!-- HSK3 OFFICIAL TEXTBOOK COMPLETE PATCH END -->
@@ -26755,7 +26771,7 @@ window.HSK3_OFFICIAL_GRAMMAR = {"1":{"pages":"20-22","points":[{"title":"结果�
   function examplesHtml(point){return point.examples.map(function(x){return '<div class="h3g-example"><div class="h3g-example-zh"><span>'+E(x.zh).replace(/\n/g,'<br>')+'</span><button class="h3g-speak" type="button" onclick="h3gSpeak(this.dataset.text,this)" data-text="'+E(x.zh)+'">🔊</button></div><div class="h3g-example-vi">'+E(x.vi)+'</div></div>';}).join('');}
   function drillsHtml(id,pi,point){
     var rows=point.drills.map(function(d,ii){return '<div class="h3g-drill-row"><div class="h3g-drill-num">'+(ii+1)+'</div><div><div class="h3g-drill-prompt">'+renderPrompt(d.prompt,id,pi,ii)+'</div>'+(d.hint?'<div class="h3g-hint">Gợi ý sách: '+E(d.hint)+'</div>':'')+'</div></div>';}).join('');
-    return '<section class="h3g-drill"><div class="h3g-drill-head"><span style="font-size:19px">●</span><div><div class="h3g-drill-title">练一练 · Luyện tập</div><div class="h3g-drill-sub">Bài tập đặt ngay sau điểm ngữ pháp trong giáo trình. Câu mở có thể có nhiều đáp án đúng.</div></div></div><div class="h3g-drill-body">'+rows+'</div><div class="h3g-drill-tools"><button class="btn btn-outline" onclick="h3gReset('+id+','+pi+')">Làm lại</button><button class="btn btn-teal ai-btn-external" onclick="h3gAskAI('+id+','+pi+',\'external\')">AI ngoài</button><button class="btn btn-primary" onclick="h3gCheck('+id+','+pi+')">Chấm theo sách ✓</button></div><div class="h3g-local-result" id="h3g-local-'+id+'-'+pi+'"></div><div class="h3g-answer" id="h3g-answer-'+id+'-'+pi+'"></div><div class="gpt-inline-result" id="h3g-ai-'+id+'-'+pi+'"></div></section>';
+    return '<section class="h3g-drill"><div class="h3g-drill-head"><span style="font-size:19px">●</span><div><div class="h3g-drill-title">练一练 · Luyện tập</div><div class="h3g-drill-sub">Bài tập đặt ngay sau điểm ngữ pháp trong giáo trình. Câu mở có thể có nhiều đáp án đúng.</div></div></div><div class="h3g-drill-body">'+rows+'</div><div class="h3g-drill-tools"><button class="btn btn-outline" onclick="h3gReset('+id+','+pi+')">Làm lại</button><button class="btn btn-teal ai-btn-external" onclick="h3gAskAI('+id+','+pi+',\'external\')">AI chấm</button><button class="btn btn-primary" onclick="h3gCheck('+id+','+pi+')">Chấm theo sách ✓</button></div><div class="h3g-local-result" id="h3g-local-'+id+'-'+pi+'"></div><div class="h3g-answer" id="h3g-answer-'+id+'-'+pi+'"></div><div class="gpt-inline-result" id="h3g-ai-'+id+'-'+pi+'"></div></section>';
   }
   function pointHtml(id,p,pi){return '<article class="h3g-point"><div class="h3g-point-head"><div class="h3g-point-no">'+(pi+1)+'</div><div><div class="h3g-point-title">'+E(p.title)+'</div><div class="h3g-point-vi">'+E(p.viTitle)+'</div></div><div class="h3g-formula">'+E(p.formula)+'</div></div><div class="h3g-point-body"><div class="h3g-book-explain"><div class="h3g-book-structure"><strong>Cấu trúc:</strong> <span class="zh">'+E(p.formula)+'</span></div><p class="h3g-book-zh">'+E(p.explainZh)+'</p><p class="h3g-book-vi">'+E(p.explainVi)+'</p></div><div class="h3g-example-title"><span>📌</span> 例句 · Toàn bộ ví dụ của điểm ngữ pháp</div><div class="h3g-example-grid">'+examplesHtml(p)+'</div>'+(p.note?'<div class="h3g-note"><b>注意 · Ghi chú:</b> '+E(p.note)+'</div>':'')+drillsHtml(id,pi,p)+'</div></article>';} 
   function exerciseHtml(id,d){
@@ -26768,11 +26784,11 @@ window.HSK3_OFFICIAL_GRAMMAR = {"1":{"pages":"20-22","points":[{"title":"结果�
   function eachInput(l,p,fn){var d=DATA[String(l)]||DATA[l],point=d&&d.points[p];if(!point)return;point.drills.forEach(function(dr,ii){var count=(String(dr.prompt).match(/\{\{\}\}/g)||[]).length;for(var b=0;b<count;b++){var el=document.getElementById('h3g-in-'+l+'-'+p+'-'+ii+'-'+b);if(el)fn(el,dr,ii,b,count);}});}
   function restore(l){var d=DATA[String(l)]||DATA[l];if(!d)return;d.points.forEach(function(_,p){eachInput(l,p,function(el,dr,ii,b){try{el.value=localStorage.getItem(storageKey(l,p,ii,b))||'';}catch(e){}});});}
   function h3gAnswerText(l,p){var d=DATA[String(l)]||DATA[l],point=d&&d.points[p];if(!point)return '';var lines=[];point.drills.forEach(function(dr,i){var n=(String(dr.prompt).match(/\{\{\}\}/g)||[]).length,a=Array.isArray(dr.answers)?dr.answers:[dr.answers];lines.push((i+1)+'. '+(n===1&&a.length>1?a.join(' / '):a.join('；')));});return '参考答案 · Đáp án sách\n'+lines.join('\n');}
-  window.h3gCheck=function(l,p){var total=0,correct=0,openCount=0;eachInput(l,p,function(el,dr,ii,b,count){total++;var accepted=answerFor(dr,b,count).map(norm),ok=accepted.indexOf(norm(el.value))>=0;el.classList.toggle('correct',ok);el.classList.toggle('wrong',!ok);if(ok)correct++;if(dr.open)openCount++;});var pct=Math.round(correct/Math.max(1,total)*100),box=document.getElementById('h3g-local-'+l+'-'+p),answerBox=document.getElementById('h3g-answer-'+l+'-'+p);if(box){box.className='h3g-local-result show '+(pct===100?'good':pct>=50?'mid':'bad');box.innerHTML='<b>Kết quả đối chiếu đáp án sách: '+correct+'/'+total+' ô đúng ('+pct+'%).</b>'+(openCount?'<br>Câu mở có thể có đáp án khác vẫn đúng; dùng AI ngoài để chấm cách diễn đạt của bạn.':'');}if(answerBox){answerBox.textContent=h3gAnswerText(l,p);answerBox.classList.add('show');}};
+  window.h3gCheck=function(l,p){var total=0,correct=0,openCount=0;eachInput(l,p,function(el,dr,ii,b,count){total++;var accepted=answerFor(dr,b,count).map(norm),ok=accepted.indexOf(norm(el.value))>=0;el.classList.toggle('correct',ok);el.classList.toggle('wrong',!ok);if(ok)correct++;if(dr.open)openCount++;});var pct=Math.round(correct/Math.max(1,total)*100),box=document.getElementById('h3g-local-'+l+'-'+p),answerBox=document.getElementById('h3g-answer-'+l+'-'+p);if(box){box.className='h3g-local-result show '+(pct===100?'good':pct>=50?'mid':'bad');box.innerHTML='<b>Kết quả đối chiếu đáp án sách: '+correct+'/'+total+' ô đúng ('+pct+'%).</b>'+(openCount?'<br>Câu mở có thể có đáp án khác vẫn đúng; dùng AI chấm để chấm cách diễn đạt của bạn.':'');}if(answerBox){answerBox.textContent=h3gAnswerText(l,p);answerBox.classList.add('show');}};
   window.h3gShowAnswers=function(l,p){var box=document.getElementById('h3g-answer-'+l+'-'+p);if(!box)return;box.textContent=h3gAnswerText(l,p);box.classList.add('show');};
   window.h3gReset=function(l,p){eachInput(l,p,function(el,dr,ii,b){el.value='';el.classList.remove('correct','wrong');try{localStorage.removeItem(storageKey(l,p,ii,b));}catch(e){}});['h3g-local-','h3g-answer-','h3g-ai-'].forEach(function(pre){var x=document.getElementById(pre+l+'-'+p);if(x){x.classList.remove('show','good','mid','bad');x.innerHTML='';}});};
   function gather(l,p){var d=DATA[String(l)]||DATA[l],point=d.points[p],answers=[];point.drills.forEach(function(dr,ii){var vals=[],count=(String(dr.prompt).match(/\{\{\}\}/g)||[]).length;for(var b=0;b<count;b++){var x=document.getElementById('h3g-in-'+l+'-'+p+'-'+ii+'-'+b);vals.push(x?x.value.trim():'');}answers.push((ii+1)+'. '+dr.prompt.replace(/\{\{\}\}/g,function(){return '【'+(vals.shift()||'chưa trả lời')+'】';}));});return {d:d,p:point,text:answers.join('\n')};}
-  window.h3gAskAI=function(l,p){var g=gather(l,p),rid='h3g-ai-'+l+'-'+p,nl=String.fromCharCode(10),prompt=['Bạn là giáo viên tiếng Trung chấm bài 练一练 HSK 3 theo Giáo trình chuẩn.','Bài '+l+' · '+g.p.title+' ('+g.p.viTitle+')','Công thức: '+g.p.formula,'Hãy chấm từng câu, chỉ ra phần đúng/sai, sửa bằng tiếng Trung và giải thích ngắn bằng tiếng Việt. Với câu mở, chấp nhận các đáp án tự nhiên khác đáp án mẫu nếu đúng ngữ pháp.','','Bài làm:',g.text].join(nl);if(typeof runAIInlineChoice==='function')return runAIInlineChoice(prompt,{title:'AI ngoài chấm 练一练 · Bài '+l,inlineTarget:rid},'external');if(typeof openGPTModal==='function')return openGPTModal(prompt,'AI ngoài chấm 练一练 · Bài '+l,rid,prompt);alert('Chức năng AI ngoài chưa sẵn sàng.');};
+  window.h3gAskAI=function(l,p){var g=gather(l,p),rid='h3g-ai-'+l+'-'+p,nl=String.fromCharCode(10),prompt=['Bạn là giáo viên tiếng Trung chấm bài 练一练 HSK 3 theo Giáo trình chuẩn.','Bài '+l+' · '+g.p.title+' ('+g.p.viTitle+')','Công thức: '+g.p.formula,'Hãy chấm từng câu, chỉ ra phần đúng/sai, sửa bằng tiếng Trung và giải thích ngắn bằng tiếng Việt. Với câu mở, chấp nhận các đáp án tự nhiên khác đáp án mẫu nếu đúng ngữ pháp.','','Bài làm:',g.text].join(nl);if(typeof runAIInlineChoice==='function')return runAIInlineChoice(prompt,{title:'AI chấm 练一练 · Bài '+l,inlineTarget:rid},'external');if(typeof openGPTModal==='function')return openGPTModal(prompt,'AI chấm 练一练 · Bài '+l,rid,prompt);alert('Chức năng AI chấm chưa sẵn sàng.');};
   window.h3gSpeak=function(text,btn){try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(String(text||''));u.lang='zh-CN';u.rate=.84;if(btn)btn.classList.add('speaking');u.onend=function(){if(btn)btn.classList.remove('speaking');};speechSynthesis.speak(u);}catch(e){}};
   window.h3gRewind=function(id){var a=document.getElementById('h3g-audio-'+id);if(a)a.currentTime=Math.max(0,a.currentTime-5);};
   window.h3gToggleAudio=function(id){var a=document.getElementById('h3g-audio-'+id);if(!a)return;if(a.paused)a.play().catch(function(){h3gAudioError(id);});else a.pause();};
@@ -26784,12 +26800,11 @@ window.HSK3_OFFICIAL_GRAMMAR = {"1":{"pages":"20-22","points":[{"title":"结果�
   function apply(id,force){if(!isH3()||applying)return;id=validId(id)||currentLessonId();ACTIVE_ID=id;var d=DATA[String(id)]||DATA[id],tab=document.getElementById('grammar-tab');if(!d||!tab)return;if(!force&&tab.getAttribute('data-h3g')===String(id))return;applying=true;installData();reorderTabs();tab.innerHTML=render(Number(id));tab.setAttribute('data-h3g',String(id));restore(Number(id));applying=false;}
   window.h3ApplyOfficialGrammar=function(id){ACTIVE_ID=currentLessonId(id);apply(ACTIVE_ID,true);};
   installData();
-  var baseLoad=window.loadLesson;window.loadLesson=function(id){var lid=validId(id);if(isH3()&&lid)ACTIVE_ID=lid;installData();var r=typeof baseLoad==='function'?baseLoad.apply(this,arguments):undefined;if(isH3()){lid=lid||currentLessonId();ACTIVE_ID=lid;var sel=document.getElementById('lesson-selector');if(sel)sel.value=String(lid);if(currentLessonId()===lid)apply(lid,true);}return r;};try{loadLesson=window.loadLesson;}catch(e){}
-  var baseSwitch=window.switchCourse;window.switchCourse=function(c){installData();var r=typeof baseSwitch==='function'?baseSwitch.apply(this,arguments):undefined;if(c==='hsk3')setTimeout(function(){ACTIVE_ID=currentLessonId();apply(ACTIVE_ID,true);},180);return r;};
+  var baseLoad=window.loadLesson;window.loadLesson=function(id){var lid=validId(id);if(isH3()&&lid)ACTIVE_ID=lid;installData();var r=typeof baseLoad==='function'?baseLoad.apply(this,arguments):undefined;if(isH3()){lid=lid||currentLessonId();ACTIVE_ID=lid;var sel=document.getElementById('lesson-selector');if(sel)sel.value=String(lid);apply(lid,true);}return r;};try{loadLesson=window.loadLesson;}catch(e){}
+  var baseSwitch=window.switchCourse;window.switchCourse=function(c){installData();var r=typeof baseSwitch==='function'?baseSwitch.apply(this,arguments):undefined;if(c==='hsk3'){ACTIVE_ID=currentLessonId();var detail=document.getElementById('lesson-detail-view');if(detail&&getComputedStyle(detail).display!=='none')apply(ACTIVE_ID,true);}return r;};
   var baseList=window.renderLessonList;if(typeof baseList==='function'){window.renderLessonList=function(){installData();return baseList.apply(this,arguments);};try{renderLessonList=window.renderLessonList;}catch(e){}}
-  document.addEventListener('click',function(ev){var b=ev.target&&ev.target.closest?ev.target.closest('#lesson-tabs .tab-btn'):null;if(isH3()&&b&&(b.getAttribute('data-h3-tab')==='grammar-tab'||/Ngữ pháp|语法/.test(b.textContent||'')))setTimeout(function(){ACTIVE_ID=currentLessonId();apply(ACTIVE_ID,true);},0);},true);
-  function boot(){installData();if(isH3()){ACTIVE_ID=currentLessonId();var detail=document.getElementById('lesson-detail-view');if(detail&&detail.style.display!=='none')apply(ACTIVE_ID,true);}}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();window.addEventListener('load',function(){setTimeout(boot,250);});
+  function boot(){installData();if(isH3()){ACTIVE_ID=currentLessonId();var detail=document.getElementById('lesson-detail-view');if(detail&&getComputedStyle(detail).display!=='none')apply(ACTIVE_ID,true);}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
 </script>
 <!-- HSK3 OFFICIAL GRAMMAR 20 LESSONS PATCH END -->
@@ -26978,7 +26993,7 @@ function h3fCleanSources(){
     if(/PDF|bản quét|scan|trang sách|nguồn sách|thư viện nguồn|đáp án bài học|transcript\s*&\s*đáp án/i.test(t)||(/h3/i.test(oc)&&/pdf|source|scan/i.test(oc)))el.remove();
   });
 }
-function h3fRenameGrammar(){const tab=document.querySelector('#lesson-tabs [data-h3-tab="grammar-tab"]');if(tab&&tab.textContent!=='📝 Ngữ pháp · Bài tập · Vận dụng')tab.textContent='📝 Ngữ pháp · Bài tập · Vận dụng';}
+function h3fRenameGrammar(){const tab=document.querySelector('#lesson-tabs [data-h3-tab="grammar-tab"]');if(tab)tab.textContent='📝 Ngữ pháp · Bài tập · Vận dụng';}
 function h3fApply(){
   if(!h3fIsH3()){document.querySelectorAll('.h3f-root').forEach(x=>x.remove());return;}
   h3fCleanSources();h3fRenameGrammar();
@@ -26991,10 +27006,12 @@ function h3fApply(){
   else tab.insertAdjacentHTML('beforeend',h3fRender(lid));
 }
 window.h3fReset=function(kind,lid){const sel=kind==='e2'?`[id^="h3f-e2-${lid}-"]`:`[id^="h3f-${kind}-${lid}-"]`;document.querySelectorAll(sel).forEach(el=>{if('value'in el){el.value='';el.classList.remove('ok','bad');h3fStore(el.id,'');}});const r=document.getElementById(`h3f-${kind}-result-${lid}`);if(r)r.className='h3f-result';};
-let h3fTimer=0;function h3fSchedule(){clearTimeout(h3fTimer);h3fTimer=setTimeout(function(){h3fApply();if(typeof window.h3PatchRenderedUI==='function')window.h3PatchRenderedUI();},0);}
-['loadLesson','switchCourse','selectLesson','showLesson','h3OpenLesson'].forEach(name=>{const old=window[name];if(typeof old==='function'&&!old.__h3f){const w=function(){const r=old.apply(this,arguments);if(h3fIsH3()){h3fApply();if(typeof window.h3PatchRenderedUI==='function')window.h3PatchRenderedUI();}return r;};w.__h3f=true;window[name]=w;}});
-document.addEventListener('change',ev=>{if(ev.target&&(/^(course-selector|lesson-selector)$/.test(ev.target.id)))h3fSchedule();},true);
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',h3fSchedule);else h3fSchedule();window.addEventListener('load',h3fSchedule,{once:true});
+window.h3fApply=h3fApply;
+const h3fOldLoad=window.loadLesson;
+if(typeof h3fOldLoad==='function'&&!h3fOldLoad.__h3f){const w=function(){const r=h3fOldLoad.apply(this,arguments);h3fApply();return r;};w.__h3f=true;window.loadLesson=w;try{loadLesson=w;}catch(e){}}
+const h3fOldSwitch=window.switchCourse;
+if(typeof h3fOldSwitch==='function'&&!h3fOldSwitch.__h3f){const w=function(){const r=h3fOldSwitch.apply(this,arguments);h3fApply();return r;};w.__h3f=true;window.switchCourse=w;try{switchCourse=w;}catch(e){}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',h3fApply,{once:true});else h3fApply();
 })();
 </script>
 
@@ -27715,11 +27732,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     });
   }
 
-  window.h3PatchRenderedUI = patchRenderedUI;
+  var observer = new MutationObserver(function(){ patchRenderedUI(); });
+  observer.observe(document.documentElement, {childList:true, subtree:true});
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(patchRenderedUI, 0); });
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(patchRenderedUI, 300); });
   } else {
-    setTimeout(patchRenderedUI, 0);
+    setTimeout(patchRenderedUI, 300);
   }
 
   window.H3_AI_CONTEXT_FIX = {
@@ -27838,7 +27856,7 @@ function writingDone(n){var x=d(n),s=load(n),done=0;(x.writing||[]).forEach(func
 function reviewDone(n){var x=d(n),s=load(n),done=0,total=0;(x.review||[]).forEach(function(it){var vals=(s.review||{})[it.q]||[];(it.answers||[]).forEach(function(a,i){total++;if(String(vals[i]||'').trim())done++;});});return{done:done,total:total};}
 function overall(n){var a=scoreRange(n,1,35),w=writingDone(n),r=reviewDone(n);return{done:a.done+w.done+r.done,total:a.total+w.total+r.total};}
 function pct(a,b){return b?Math.round(a/b*100):0;}
-function updateProgress(n){if(Number(n)!==lid())return;var o=overall(n),p=pct(o.done,o.total);var fill=document.getElementById('h3wbv2-progress-fill'),num=document.getElementById('h3wbv2-progress-num'),lab=document.getElementById('h3wbv2-progress-label');var width=p+'%',numText=p+'%',labText=o.done+'/'+o.total+' nội dung đã làm';if(fill&&fill.style.width!==width)fill.style.width=width;if(num&&num.textContent!==numText)num.textContent=numText;if(lab&&lab.textContent!==labText)lab.textContent=labText;['listening','reading','writing','review'].forEach(function(sec){var stat=sec==='listening'?scoreRange(n,1,20):sec==='reading'?scoreRange(n,21,35):sec==='writing'?writingDone(n):reviewDone(n);var el=document.getElementById('h3wbv2-mini-'+sec);if(el){var bar=el.querySelector('i'),barWidth=pct(stat.done,stat.total)+'%';if(bar&&bar.style.width!==barWidth)bar.style.width=barWidth;var t=el.parentNode.querySelector('.h3wbv2-overview-foot span'),txt=stat.done+'/'+stat.total;if(t&&t.textContent!==txt)t.textContent=txt;}});}
+function updateProgress(n){if(Number(n)!==lid())return;var o=overall(n),p=pct(o.done,o.total);var fill=document.getElementById('h3wbv2-progress-fill'),num=document.getElementById('h3wbv2-progress-num'),lab=document.getElementById('h3wbv2-progress-label');if(fill)fill.style.width=p+'%';if(num)num.textContent=p+'%';if(lab)lab.textContent=o.done+'/'+o.total+' nội dung đã làm';['listening','reading','writing','review'].forEach(function(sec){var stat=sec==='listening'?scoreRange(n,1,20):sec==='reading'?scoreRange(n,21,35):sec==='writing'?writingDone(n):reviewDone(n);var el=document.getElementById('h3wbv2-mini-'+sec);if(el){el.querySelector('i').style.width=pct(stat.done,stat.total)+'%';var t=el.parentNode.querySelector('.h3wbv2-overview-foot span');if(t)t.textContent=stat.done+'/'+stat.total;}});}
 function viewName(v){return v==='overview'?'Tổng quan':v==='listening'?'一、听力 · Nghe':v==='reading'?'二、阅读 · Đọc':v==='writing'?'三、书写 · Viết':v==='review'?'四、复习 · Ôn tập':'Transcript & đáp án';}
 function setView(n,v){if(VIEWS.indexOf(v)<0)v='overview';var s=load(n);s.view=v;save(n,s);document.querySelectorAll('#'+TAB_ID+' .h3wbv2-view').forEach(function(x){x.classList.toggle('active',x.dataset.view===v);});document.querySelectorAll('#'+TAB_ID+' .h3wbv2-subtab').forEach(function(x){x.classList.toggle('active',x.dataset.view===v);});var panel=document.getElementById(TAB_ID);if(panel&&panel.parentElement)panel.parentElement.scrollTop=0;}
 window.h3wbv2SetView=setView;
@@ -27889,9 +27907,12 @@ function render(n){var x=d(n),l=lesson(n),s=load(n),o=overall(n),p=pct(o.done,o.
 function rerender(n,anchor){var panel=document.getElementById(TAB_ID);if(!panel)return;var s=load(n),v=s.view;panel.innerHTML=render(n);setTimeout(function(){setView(n,v);if(anchor){var a=document.getElementById(anchor);if(a)a.scrollIntoView({block:'center'});}},0);}
 function removeLegacy(){['h3-workbook-tab','h3-bh-tab','h3-bt-tab','h3-source-tab'].forEach(function(id){var p=document.getElementById(id);if(p)p.remove();document.querySelectorAll('#lesson-tabs [data-h3-tab="'+id+'"]').forEach(function(x){x.remove();});});}
 function install(){if(!isH3()){var b=document.getElementById(BTN_ID),p=document.getElementById(TAB_ID);if(b)b.remove();if(p)p.remove();return;}var tabs=document.getElementById('lesson-tabs'),content=document.getElementById('lesson-tab-content');if(!tabs||!content)return;tabs.classList.add('h3wbv2-tab-scroll');removeLegacy();var n=lid(),btn=document.getElementById(BTN_ID),panel=document.getElementById(TAB_ID);if(!btn){btn=document.createElement('button');btn.id=BTN_ID;btn.type='button';btn.className='tab-btn';btn.dataset.h3Tab=TAB_ID;btn.textContent='✏️ Bài tập';btn.onclick=function(){var current=lid();window.__H3WBV2_ACTIVE_LESSON=current;var target=document.getElementById(TAB_ID);if(target&&(Number(target.dataset.lesson)!==current||!target.firstChild)){target.dataset.lesson=String(current);target.innerHTML=render(current);}try{if(typeof switchTab==='function')switchTab(TAB_ID,btn);}catch(e){}document.querySelectorAll('#lesson-tab-content .tab-content').forEach(function(el){el.classList.remove('active');});document.querySelectorAll('#lesson-tabs .tab-btn').forEach(function(el){el.classList.remove('active');});target=document.getElementById(TAB_ID);if(target)target.classList.add('active');btn.classList.add('active');};var g=tabs.querySelector('[data-h3-tab="grammar-tab"]')||Array.from(tabs.querySelectorAll('.tab-btn')).find(function(x){return /Ngữ pháp|语法/.test(x.textContent||'');});if(g&&g.nextSibling)tabs.insertBefore(btn,g.nextSibling);else tabs.appendChild(btn);}if(!panel){panel=document.createElement('div');panel.id=TAB_ID;panel.className='tab-content';var grammar=document.getElementById('grammar-tab');if(grammar&&grammar.nextSibling)content.insertBefore(panel,grammar.nextSibling);else content.appendChild(panel);}if(Number(panel.dataset.lesson)!==n||!panel.firstChild){panel.dataset.lesson=String(n);try{panel.innerHTML=render(n);}catch(err){console.error('HSK3 workbook render error',err);panel.innerHTML='<div class="h3wbv2-alert"><b>Không thể tải nội dung bài tập.</b><br>'+esc(err&&err.message?err.message:String(err))+'</div>';}}updateProgress(n);}
-var timer=0;function schedule(){clearTimeout(timer);timer=setTimeout(install,0);}
-['loadLesson','switchCourse','selectLesson','showLesson','h3OpenLesson'].forEach(function(name){var old=window[name];if(typeof old==='function'&&!old.__h3wbv2){var w=function(){if(name==='loadLesson'&&isH3()){var requested=Number(arguments[0]);if(requested>=1&&requested<=20)window.__H3WBV2_ACTIVE_LESSON=requested;}var r=old.apply(this,arguments);if(isH3())install();return r;};w.__h3wbv2=true;window[name]=w;try{if(name==='loadLesson')loadLesson=w;if(name==='switchCourse')switchCourse=w;}catch(e){}}});
-document.addEventListener('change',function(e){if(e.target&&/^(course-selector|lesson-selector)$/.test(e.target.id))schedule();},true);if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule);else schedule();window.addEventListener('load',schedule,{once:true});
+function schedule(){install();}
+var h3wbOldLoad=window.loadLesson;
+if(typeof h3wbOldLoad==='function'&&!h3wbOldLoad.__h3wbv2){var h3wbLoad=function(id){if(isH3()){var requested=Number(id);if(requested>=1&&requested<=20)window.__H3WBV2_ACTIVE_LESSON=requested;}var r=h3wbOldLoad.apply(this,arguments);install();return r;};h3wbLoad.__h3wbv2=true;window.loadLesson=h3wbLoad;try{loadLesson=h3wbLoad;}catch(e){}}
+var h3wbOldSwitch=window.switchCourse;
+if(typeof h3wbOldSwitch==='function'&&!h3wbOldSwitch.__h3wbv2){var h3wbSwitch=function(){var r=h3wbOldSwitch.apply(this,arguments);install();return r;};h3wbSwitch.__h3wbv2=true;window.switchCourse=h3wbSwitch;try{switchCourse=h3wbSwitch;}catch(e){}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 window.H3WBV2={version:VERSION,data:DATA,render:render,install:install,selfTest:function(){
   var problems=[],sigs={},reorderCount=0;
   for(var n=1;n<=20;n++){
@@ -27913,12 +27934,7 @@ window.H3WBV2={version:VERSION,data:DATA,render:render,install:install,selfTest:
 })();
 </script>
 
-<script id="h3wbv3-lesson-switch-guard">
-/* V8: redundant retry guard removed; H3WBV2 now updates atomically in loadLesson. */
-(function(){ window.H3WBV3_GUARD=true; window.H3WBV3_FORCE_LESSON=function(){try{if(window.H3WBV2&&typeof window.H3WBV2.install==='function')window.H3WBV2.install();}catch(e){}}; })();
-</script>
-
-
+<!-- V8: removed delayed lesson-switch guard; stable synchronous load owns the render transaction. -->
 <style id="h3wbv6-tab-visibility-fix">
 /* Keep every lesson tab reachable on desktop and mobile. */
 #lesson-tabs.h3wbv2-tab-scroll,
@@ -27926,21 +27942,7 @@ window.H3WBV2={version:VERSION,data:DATA,render:render,install:install,selfTest:
 #lesson-tabs .tab-btn { flex:0 0 auto; }
 #h3-workbook-text-btn { display:block !important; visibility:visible !important; }
 </style>
-<script id="h3wbv6-tab-repair">
-(function(){
-'use strict';
-if(window.__H3WBV6_TAB_REPAIR__)return;window.__H3WBV6_TAB_REPAIR__=true;
-function ensure(){try{if(window.CURRENT_COURSE==='hsk3'&&window.H3WBV2&&typeof window.H3WBV2.install==='function')window.H3WBV2.install();}catch(e){console.error('HSK3 tab repair error',e);}}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(ensure,0);});else setTimeout(ensure,0);
-})();
-</script>
-
-
-<style id="h3v8-stability-style">
-/* V8 stability: render a lesson as one atomic frame; no flashing half-built tab rows. */
-#lesson-detail-view.h3v8-rendering{visibility:hidden !important;}
-</style>
-<script>window.HSK3_V8_STABLE_VERSION='2026.09.16-v8-stable';</script>
+<!-- V8: removed multi-retry tab repair; tabs are installed in the synchronous load chain. -->
 <style id="h3v7-listening-explain-notes-style">
 /* HSK 3 V7 — listening explanation tab + HSK5-style notes */
 #lesson-tabs { overflow-x:auto !important; overflow-y:hidden !important; flex-wrap:nowrap !important; scrollbar-width:thin; }
@@ -28156,7 +28158,7 @@ function install(n){
 
   var notesBtn=tabs.querySelector('[data-h3-tab="notes-tab"]')||Array.from(tabs.querySelectorAll('.tab-btn')).find(function(b){return /Ghi chép|笔记/.test(b.textContent||'');});
   if(!notesBtn){notesBtn=document.createElement('button');notesBtn.type='button';notesBtn.className='tab-btn';notesBtn.dataset.h3Tab='notes-tab';notesBtn.textContent='🗒️ Ghi chép';notesBtn.onclick=function(){if(typeof window.switchTab==='function')window.switchTab('notes-tab',notesBtn);};tabs.appendChild(notesBtn);}
-  if(notesBtn.textContent!=='🗒️ Ghi chép')notesBtn.textContent='🗒️ Ghi chép';
+  notesBtn.textContent='🗒️ Ghi chép';
   if(tabs.lastElementChild!==notesBtn)tabs.appendChild(notesBtn);
   var notesPanel=document.getElementById('notes-tab');
   if(!notesPanel){notesPanel=document.createElement('div');notesPanel.id='notes-tab';notesPanel.className='tab-content';content.appendChild(notesPanel);}
@@ -28172,19 +28174,406 @@ function install(n){
   var week=document.getElementById('week-overview');if(week&&/luyện tập nhanh/i.test(week.textContent||''))week.innerHTML=week.innerHTML.replace(/luyện tập nhanh/gi,'giải thích nghe');
   if(quickWasActive){try{btn.click();}catch(e){}}
 }
-function schedule(n){clearTimeout(timer);timer=setTimeout(function(){if(!isH3())return;var now=currentLesson();install(now);},0);}
+function schedule(n){install(Number(n)||currentLesson());}
 
 var oldLoad=window.loadLesson;
-if(typeof oldLoad==='function'&&!oldLoad.__h3v7){var wrapped=function(id){var detail=document.getElementById('lesson-detail-view');if(isH3()&&detail)detail.classList.add('h3v8-rendering');var r=oldLoad.apply(this,arguments);if(isH3()){install(Number(id)||currentLesson());if(typeof window.h3PatchRenderedUI==='function')window.h3PatchRenderedUI();if(detail)detail.classList.remove('h3v8-rendering');}return r;};wrapped.__h3v7=true;window.loadLesson=wrapped;try{loadLesson=wrapped;}catch(e){}}
+if(typeof oldLoad==='function'&&!oldLoad.__h3v7){var wrapped=function(id){var r=oldLoad.apply(this,arguments);if(isH3())install(Number(id)||currentLesson());return r;};wrapped.__h3v7=true;window.loadLesson=wrapped;try{loadLesson=wrapped;}catch(e){}}
 var oldToday=window.renderToday;
-if(typeof oldToday==='function'&&!oldToday.__h3v7){var rt=function(){var r=oldToday.apply(this,arguments);if(isH3()){var w=document.getElementById('week-overview');if(w&&/luyện tập nhanh/i.test(w.textContent||''))w.innerHTML=w.innerHTML.replace(/luyện tập nhanh/gi,'giải thích nghe');}return r;};rt.__h3v7=true;window.renderToday=rt;try{renderToday=rt;}catch(e){}}
+if(typeof oldToday==='function'&&!oldToday.__h3v7){var rt=function(){var r=oldToday.apply(this,arguments);if(isH3()){var w=document.getElementById('week-overview');if(w)w.innerHTML=w.innerHTML.replace(/luyện tập nhanh/gi,'giải thích nghe');}return r;};rt.__h3v7=true;window.renderToday=rt;try{renderToday=rt;}catch(e){}}
 
-document.addEventListener('change',function(e){if(e.target&&e.target.id==='course-selector')schedule();},true);
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){schedule();});else schedule();
-window.addEventListener('load',function(){schedule();},{once:true});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){install(currentLesson());},{once:true});else install(currentLesson());
 window.H3V7={install:install,renderExplain:renderExplain,renderNotes:renderNotesLikeHsk5,selfTest:function(){var out={lessons:0,missingData:[],missingTranscript:[],missingAnswers:[]};for(var n=1;n<=20;n++){var d=dataObj(n);if(!d){out.missingData.push(n);continue;}out.lessons++;for(var k of ['p1','p2','p3','p4'])if(!d.transcriptSections||!String(d.transcriptSections[k]||'').trim())out.missingTranscript.push(n+':'+k);for(var q=1;q<=20;q++)if(!d.answers||!d.answers[String(q)])out.missingAnswers.push(n+':'+q);}out.ok=out.lessons===20&&!out.missingData.length&&!out.missingTranscript.length&&!out.missingAnswers.length;return out;}};
 })();
 </script>
+
+
+<style id="h3v8-stable-style">
+body.h3-course-active #lesson-detail-view.h3v8-rendering{visibility:hidden}
+body.h3-course-active #lesson-tabs{min-height:48px}
+</style>
+<script id="h3v8-stability-controller">
+(function(){
+'use strict';
+if(window.__H3V8_STABILITY__)return;window.__H3V8_STABILITY__=true;
+function isH3(){return window.CURRENT_COURSE==='hsk3';}
+window.switchTab=function(tabId,btn){
+  var tabs=document.getElementById('lesson-tabs'),content=document.getElementById('lesson-tab-content'),target=document.getElementById(tabId);
+  if(!tabs||!content||!target)return false;
+  Array.prototype.forEach.call(content.querySelectorAll(':scope > .tab-content'),function(x){x.classList.remove('active');});
+  Array.prototype.forEach.call(tabs.querySelectorAll(':scope > .tab-btn'),function(x){x.classList.remove('active');});
+  target.classList.add('active');
+  if(btn&&tabs.contains(btn))btn.classList.add('active');
+  else {var found=tabs.querySelector('[data-h3-tab="'+tabId+'"]');if(found)found.classList.add('active');}
+  try{if(tabId!=='reading-tab'&&window.readingPlaying&&typeof window.stopReadingAudio==='function')window.stopReadingAudio();}catch(e){}
+  return true;
+};
+try{switchTab=window.switchTab;}catch(e){}
+var rawLoad=window.loadLesson;
+if(typeof rawLoad==='function'&&!rawLoad.__h3v8){
+  var stableLoad=function(id){
+    if(!isH3())return rawLoad.apply(this,arguments);
+    id=Number(id);if(!(id>=1&&id<=20))return;
+    var detail=document.getElementById('lesson-detail-view');if(detail)detail.classList.add('h3v8-rendering');
+    try{
+      var r=rawLoad.apply(this,arguments);
+      var tabs=document.getElementById('lesson-tabs'),content=document.getElementById('lesson-tab-content');
+      if(tabs&&content){
+        var buttons=Array.prototype.slice.call(tabs.querySelectorAll(':scope > .tab-btn'));
+        var panels=Array.prototype.slice.call(content.querySelectorAll(':scope > .tab-content'));
+        if(!buttons.some(function(x){return x.classList.contains('active');})&&buttons[0])buttons[0].classList.add('active');
+        if(!panels.some(function(x){return x.classList.contains('active');})&&panels[0])panels[0].classList.add('active');
+      }
+      return r;
+    }finally{if(detail)detail.classList.remove('h3v8-rendering');}
+  };
+  stableLoad.__h3v8=true;window.loadLesson=stableLoad;try{loadLesson=stableLoad;}catch(e){}
+}
+window.H3V8={version:'2026.09.16-v9-ai-grade-practice-restored',diagnose:function(){
+  var tabs=document.getElementById('lesson-tabs'),content=document.getElementById('lesson-tab-content');
+  return {course:window.CURRENT_COURSE||'',lesson:Number(window.STATE&&window.STATE.currentLesson)||0,tabCount:tabs?tabs.querySelectorAll(':scope > .tab-btn').length:0,activeTabs:tabs?tabs.querySelectorAll(':scope > .tab-btn.active').length:0,panelCount:content?content.querySelectorAll(':scope > .tab-content').length:0,activePanels:content?content.querySelectorAll(':scope > .tab-content.active').length:0,labels:tabs?Array.prototype.map.call(tabs.querySelectorAll(':scope > .tab-btn'),function(x){return x.textContent.trim();}):[]};
+}};
+})();
+</script>
+
+
+
+<!-- HSK3 V9 FINAL CONTROLLER: reliable grading fallback + full V6-style practice restoration -->
+<style id="h3v9-final-style">
+  body.h3-course-active #lesson-detail-view.h3v9-rendering { visibility:hidden !important; }
+  body.h3-course-active #lesson-tabs { min-height:48px; overflow-x:auto; scrollbar-width:thin; }
+  body.h3-course-active #grammar-tab .h3g-page,
+  body.h3-course-active #grammar-tab .h3g-drill,
+  body.h3-course-active #grammar-tab .h3g-exercise,
+  body.h3-course-active #grammar-tab .h3f-root,
+  body.h3-course-active #grammar-tab .h3f-section { display:block !important; visibility:visible !important; opacity:1 !important; }
+  .h3v9-fallback-note { margin-top:8px; padding:8px 10px; border-radius:8px; background:var(--gold-light); color:#765d00; font-size:12px; line-height:1.65; }
+</style>
+<script id="h3v9-final-controller">
+(function(){
+  'use strict';
+  if(window.__H3V9_FINAL_CONTROLLER__) return;
+  window.__H3V9_FINAL_CONTROLLER__ = true;
+  var VERSION = '2026.09.16-v9-ai-grade-practice-restored';
+
+  function isH3(){ return String(window.CURRENT_COURSE || '') === 'hsk3'; }
+  function currentLesson(explicit){
+    var vals=[explicit];
+    try{ vals.push(window.STATE && window.STATE.currentLesson); }catch(e){}
+    try{ vals.push(document.getElementById('lesson-selector') && document.getElementById('lesson-selector').value); }catch(e){}
+    try{ vals.push(window.__H3WBV2_ACTIVE_LESSON); }catch(e){}
+    for(var i=0;i<vals.length;i++){ var n=Number(vals[i]); if(n>=1 && n<=20) return n; }
+    return 1;
+  }
+  function directChildren(host, selector){
+    if(!host) return [];
+    return Array.prototype.filter.call(host.children, function(x){ return x.matches && x.matches(selector); });
+  }
+  function tabIdOf(btn){
+    if(!btn) return '';
+    return btn.dataset && btn.dataset.h3Tab ? btn.dataset.h3Tab : (btn.getAttribute('data-tab') || '');
+  }
+  function buttonFor(tabs, id){
+    if(!tabs) return null;
+    if(id === 'h3-workbook-text-tab') return document.getElementById('h3-workbook-text-btn');
+    if(id === 'h3v7-listening-explain-tab') return document.getElementById('h3v7-listening-explain-btn');
+    return tabs.querySelector('[data-h3-tab="'+id+'"]') || tabs.querySelector('[data-tab="'+id+'"]');
+  }
+  function removeQuickPractice(tabs, content){
+    if(!tabs || !content) return;
+    directChildren(tabs,'.tab-btn').forEach(function(b){
+      var id=tabIdOf(b), t=(b.textContent||'').trim();
+      if(id==='h3-practice-tab' || /Luyện tập nhanh/i.test(t)) b.remove();
+    });
+    var p=document.getElementById('h3-practice-tab'); if(p) p.remove();
+  }
+  function ensureGrammar(id){
+    var panel=document.getElementById('grammar-tab');
+    if(!panel) return;
+    var page=panel.querySelector('.h3g-page');
+    var wrong=!page || Number(page.getAttribute('data-h3g'))!==id;
+    if(wrong && typeof window.h3ApplyOfficialGrammar==='function'){
+      try{ window.h3ApplyOfficialGrammar(id); }catch(e){ console.error('V9 restore official grammar',e); }
+      panel=document.getElementById('grammar-tab');
+    }
+    if(panel && !panel.querySelector('#h3f-root-'+id) && typeof window.h3fApply==='function'){
+      try{ window.h3fApply(); }catch(e){ console.error('V9 restore full practice',e); }
+    }
+  }
+  function ensureWorkbook(id){
+    window.__H3WBV2_ACTIVE_LESSON=id;
+    try{ if(window.H3WBV2 && typeof window.H3WBV2.install==='function') window.H3WBV2.install(); }catch(e){ console.error('V9 workbook install',e); }
+    var p=document.getElementById('h3-workbook-text-tab');
+    if(p && window.H3WBV2 && typeof window.H3WBV2.render==='function' && (Number(p.dataset.lesson)!==id || !p.firstElementChild)){
+      try{ p.dataset.lesson=String(id); p.innerHTML=window.H3WBV2.render(id); }catch(e){ console.error('V9 workbook render',e); }
+    }
+  }
+  function ensureExplainAndNotes(id){
+    try{ if(window.H3V7 && typeof window.H3V7.install==='function') window.H3V7.install(id); }catch(e){ console.error('V9 explain/notes install',e); }
+  }
+  function normalizeLabels(tabs){
+    if(!tabs) return;
+    var grammar=buttonFor(tabs,'grammar-tab'); if(grammar) grammar.textContent='📝 Ngữ pháp · Bài tập · Vận dụng';
+    var workbook=document.getElementById('h3-workbook-text-btn'); if(workbook) workbook.textContent='✏️ Bài tập';
+    var explain=document.getElementById('h3v7-listening-explain-btn'); if(explain) explain.textContent='🧩 解析 · Giải thích nghe';
+    var notes=buttonFor(tabs,'notes-tab'); if(notes) notes.textContent='🗒️ Ghi chép';
+    directChildren(tabs,'.tab-btn').forEach(function(b){
+      if((b.textContent||'').indexOf('AI ngoài')>=0) b.textContent=(b.textContent||'').replace(/AI ngoài/g,'AI chấm');
+    });
+  }
+  function reorder(tabs, content){
+    var ids=['vocab-tab','reading-tab','grammar-tab','h3-workbook-text-tab','h3v7-listening-explain-tab','notes-tab'];
+    ids.forEach(function(id){ var b=buttonFor(tabs,id); if(b) tabs.appendChild(b); });
+    ids.forEach(function(id){ var p=document.getElementById(id); if(p && p.parentNode===content) content.appendChild(p); });
+  }
+  function setOneActive(tabs, content, preferred){
+    var buttons=directChildren(tabs,'.tab-btn'), panels=directChildren(content,'.tab-content');
+    var id=preferred;
+    if(!id || !document.getElementById(id) || !buttonFor(tabs,id)) id=buttons.length?tabIdOf(buttons[0]):'';
+    buttons.forEach(function(b){ b.classList.toggle('active', tabIdOf(b)===id); });
+    panels.forEach(function(p){ p.classList.toggle('active', p.id===id); });
+    return id;
+  }
+  function isComplete(id){
+    var tabs=document.getElementById('lesson-tabs'), content=document.getElementById('lesson-tab-content');
+    if(!tabs||!content) return false;
+    var expected=['vocab-tab','reading-tab','grammar-tab','h3-workbook-text-tab','h3v7-listening-explain-tab','notes-tab'];
+    if(expected.some(function(x){ return !buttonFor(tabs,x) || !document.getElementById(x); })) return false;
+    var grammar=document.getElementById('grammar-tab');
+    var wb=document.getElementById('h3-workbook-text-tab');
+    return !!(grammar && grammar.querySelector('.h3g-page') && grammar.querySelector('#h3f-root-'+id) && wb && wb.querySelector('.h3wbv2-shell'));
+  }
+  function ensureLesson(id, preferred){
+    if(!isH3()) return false;
+    id=currentLesson(id);
+    document.body.classList.add('h3-course-active');
+    var tabs=document.getElementById('lesson-tabs'), content=document.getElementById('lesson-tab-content');
+    if(!tabs || !content) return false;
+    removeQuickPractice(tabs,content);
+    ensureGrammar(id);
+    ensureWorkbook(id);
+    ensureExplainAndNotes(id);
+    tabs=document.getElementById('lesson-tabs'); content=document.getElementById('lesson-tab-content');
+    removeQuickPractice(tabs,content);
+    normalizeLabels(tabs);
+    reorder(tabs,content);
+    setOneActive(tabs,content,preferred);
+    return isComplete(id);
+  }
+
+  var oldLoad=window.loadLesson;
+  if(typeof oldLoad==='function'){
+    var v9Load=function(id){
+      if(!isH3()) return oldLoad.apply(this,arguments);
+      id=currentLesson(id);
+      var detail=document.getElementById('lesson-detail-view');
+      if(detail) detail.classList.add('h3v9-rendering');
+      var result;
+      try{
+        result=oldLoad.apply(this,arguments);
+        var tabs=document.getElementById('lesson-tabs');
+        var active=tabs && tabs.querySelector(':scope > .tab-btn.active');
+        var preferred=tabIdOf(active)||'vocab-tab';
+        ensureLesson(id,preferred);
+        queueMicrotask(function(){ if(!isComplete(id)) ensureLesson(id,preferred); });
+        if(typeof requestAnimationFrame==='function') requestAnimationFrame(function(){ if(!isComplete(id)) ensureLesson(id,preferred); });
+        return result;
+      } finally {
+        if(detail) detail.classList.remove('h3v9-rendering');
+      }
+    };
+    v9Load.__h3v9=true;
+    window.loadLesson=v9Load; try{ loadLesson=v9Load; }catch(e){}
+  }
+  var oldSwitch=window.switchCourse;
+  if(typeof oldSwitch==='function'){
+    var v9Switch=function(course){
+      var r=oldSwitch.apply(this,arguments);
+      if(String(course)==='hsk3'){
+        document.body.classList.add('h3-course-active');
+        var detail=document.getElementById('lesson-detail-view');
+        if(detail && getComputedStyle(detail).display!=='none') ensureLesson(currentLesson(),'vocab-tab');
+      }
+      return r;
+    };
+    v9Switch.__h3v9=true;
+    window.switchCourse=v9Switch; try{ switchCourse=v9Switch; }catch(e){}
+  }
+
+  // ---------- AI grading: keep the real Supabase AI first, then fall back to book checking ----------
+  var serverCall=window.callAIBackend;
+  function timeoutPromise(ms){ return new Promise(function(_,reject){ setTimeout(function(){ reject(new Error('Máy chủ AI phản hồi quá lâu.')); },ms); }); }
+  function isTutorRequest(prompt,meta){
+    try{ if(typeof window.isTutorPrompt==='function' && window.isTutorPrompt(String(prompt||''))) return true; }catch(e){}
+    var mode=String(meta&&meta.mode||'').toLowerCase();
+    return /tutor|teacher|coach|plan/.test(mode) && !/grade|cham|chấm/.test(mode);
+  }
+  function isGradeRequest(prompt,meta){
+    if(isTutorRequest(prompt,meta)) return false;
+    var s=String(prompt||'')+' '+String(meta&&meta.mode||'');
+    return /chấm|cham|đáp án của tôi|câu trả lời của tôi|bài làm|bản chép lời người học|练一练|bài tập|学生答案|grade/i.test(s);
+  }
+  function officialFallbackForH3G(target){
+    var m=String(target||'').match(/^h3g-ai-(\d+)-(\d+)$/); if(!m) return null;
+    var lid=Number(m[1]), pi=Number(m[2]);
+    try{ if(typeof window.h3gCheck==='function') window.h3gCheck(lid,pi); }catch(e){}
+    var box=document.getElementById('h3g-local-'+lid+'-'+pi);
+    var pct=0, correct=0, total=0;
+    var mt=String(box&&box.textContent||'').match(/(\d+)\s*\/\s*(\d+)[^\d]+\((\d+)%\)/);
+    if(mt){correct=Number(mt[1]);total=Number(mt[2]);pct=Number(mt[3]);}
+    var wrong=[];
+    var corrected=[];
+    try{
+      var data=window.HSK3_OFFICIAL_GRAMMAR||{}, point=(data[String(lid)]||data[lid]||{}).points[pi];
+      (point&&point.drills||[]).forEach(function(dr,di){
+        var blanks=(String(dr.prompt||'').match(/\{\{\}\}/g)||[]).length || 1;
+        var vals=[];
+        for(var bi=0;bi<blanks;bi++){
+          var el=document.getElementById('h3g-in-'+lid+'-'+pi+'-'+di+'-'+bi);
+          vals.push(el?String(el.value||'').trim():'');
+          if(el && el.classList.contains('wrong')){
+            var a=Array.isArray(dr.answers)?dr.answers:[dr.answers];
+            var expected=blanks===1?a.join(' / '):String(a[bi]||a[0]||'');
+            wrong.push({wrong:vals[bi]||'(chưa trả lời)',should_be:expected,why_vi:'Chưa khớp đáp án sách ở câu '+(di+1)+'.'});
+          }
+        }
+        var a2=Array.isArray(dr.answers)?dr.answers:[dr.answers];
+        var ai=0;
+        corrected.push((di+1)+'. '+String(dr.prompt||'').replace(/\{\{\}\}/g,function(){
+          var v=blanks===1?String(a2[0]||''):String(a2[ai]||a2[0]||''); ai++; return v;
+        }));
+      });
+    }catch(e){}
+    return {
+      percent:pct,
+      verdict:pct>=90?'đúng':(pct>=50?'gần đúng':'sai'),
+      wrong_parts:wrong,
+      corrected_zh:corrected.join('\n'),
+      comment_vi:'Máy chủ AI tạm thời không phản hồi. App đã chấm dự phòng theo đáp án chính thức của sách HSK 3. Với câu mở, kết quả này chỉ là tham khảo vì có thể có nhiều cách diễn đạt đúng.'
+    };
+  }
+  function genericFallback(prompt,target,serverError){
+    var exact=officialFallbackForH3G(target); if(exact) return exact;
+    try{
+      if(typeof window.internalGradeUnified==='function'){
+        var r=window.internalGradeUnified(String(prompt||''));
+        if(r){
+          r.comment_vi=(r.comment_vi?r.comment_vi+' ':'')+'Máy chủ AI tạm thời không phản hồi; app đã dùng bộ chấm dự phòng trong trình duyệt. Kết quả câu mở chỉ mang tính tham khảo.';
+          return r;
+        }
+      }
+    }catch(e){}
+    return {percent:0,verdict:'sai',wrong_parts:[{wrong:'Không thể kết nối máy chủ AI',should_be:'Dùng nút “Chấm theo sách” hoặc thử lại sau',why_vi:String(serverError&&serverError.message||serverError||'Lỗi máy chủ AI')}],corrected_zh:'',comment_vi:'Không có đủ dữ liệu để chấm dự phòng chính xác.'};
+  }
+  if(typeof serverCall==='function'){
+    window.callAIBackend=callAIBackend=async function(prompt,meta){
+      try{
+        return await Promise.race([serverCall.call(this,prompt,meta),timeoutPromise(20000)]);
+      }catch(err){
+        if(!isGradeRequest(prompt,meta)) throw err;
+        var activeTarget=(typeof CURRENT_GPT_INLINE_TARGET!=='undefined'&&CURRENT_GPT_INLINE_TARGET)?CURRENT_GPT_INLINE_TARGET:window.CURRENT_GPT_INLINE_TARGET;
+        var result=genericFallback(prompt,activeTarget,err);
+        var p=Math.round(Number(result.percent)||0);
+        var txt='Điểm: '+p+'%\n'+(result.comment_vi||'');
+        if(result.corrected_zh) txt+='\nĐáp án/câu mẫu:\n'+result.corrected_zh;
+        return {result:result,answer:txt,source:'book-fallback',fallback:true,serverError:String(err&&err.message||err)};
+      }
+    };
+  }
+  window.runExternalAIGrading=async function(){
+    var raw=String((typeof CURRENT_GPT_RAW_PROMPT!=='undefined'&&CURRENT_GPT_RAW_PROMPT)||window.CURRENT_GPT_RAW_PROMPT||(typeof CURRENT_GPT_CONTEXT!=='undefined'&&CURRENT_GPT_CONTEXT)||window.CURRENT_GPT_CONTEXT||'');
+    var target=((typeof CURRENT_GPT_INLINE_TARGET!=='undefined'&&CURRENT_GPT_INLINE_TARGET)||window.CURRENT_GPT_INLINE_TARGET||null);
+    if(!raw){ if(typeof window.setGPTModalAnswer==='function') window.setGPTModalAnswer('Chưa có nội dung để chấm.','error'); return; }
+    var tutor=(typeof window.isTutorPrompt==='function') ? !!window.isTutorPrompt(raw) : false;
+    try{
+      if(typeof window.setGPTModalStatus==='function') window.setGPTModalStatus(tutor?'Gia sư AI đang trả lời...':'AI đang chấm...');
+      if(!tutor && typeof window.setInlineGPTAnswer==='function') window.setInlineGPTAnswer(target,'AI đang chấm...','loading','chatgpt');
+      var res=await window.callAIBackend(window.CURRENT_GPT_CONTEXT||raw,{rawPrompt:raw,mode:tutor?'tutor':'external-grade'});
+      if(res&&res.tutor){
+        if(typeof window.setGPTModalStatus==='function') window.setGPTModalStatus('Gia sư AI đã trả lời.');
+        if(typeof window.setGPTModalAnswer==='function') window.setGPTModalAnswer(res.answer||'','');
+        if(typeof window.appendChatMessage==='function') window.appendChatMessage('ai',res.answer||'');
+        return res;
+      }
+      if(res&&res.result&&typeof window.showGradeResult==='function'){
+        if(typeof window.setGPTModalStatus==='function') window.setGPTModalStatus(res.fallback?'Máy chủ AI đang bận; app đã chấm dự phòng theo đáp án sách.':'AI đã chấm xong.');
+        window.showGradeResult(res.result,res.fallback?'fallback':'external');
+        return res;
+      }
+      if(typeof window.setGPTModalAnswer==='function') window.setGPTModalAnswer((res&&res.answer)||'AI chưa trả về kết quả.','');
+      return res;
+    }catch(err){
+      var msg='AI chưa trả lời được. '+String(err&&err.message||err)+'\nVui lòng kiểm tra Supabase/OpenRouter hoặc thử lại sau.';
+      if(typeof window.setGPTModalStatus==='function') window.setGPTModalStatus('AI lỗi.');
+      if(typeof window.setGPTModalAnswer==='function') window.setGPTModalAnswer(msg,'error');
+      if(!tutor&&typeof window.setInlineGPTAnswer==='function') window.setInlineGPTAnswer(target,msg,'error','chatgpt');
+      return null;
+    }
+  };
+  try{ runExternalAIGrading=window.runExternalAIGrading; }catch(e){}
+  window.runCurrentGPTPrompt=function(){ return window.runExternalAIGrading(); };
+  try{ runCurrentGPTPrompt=window.runCurrentGPTPrompt; }catch(e){}
+
+  // The official HSK3 grammar patch had captured an older AI dispatcher.
+  // Replace its click handler so the visible "AI chấm" button always uses the V9 path.
+  window.h3gAskAI=function(lid,pi){
+    lid=Number(lid); pi=Number(pi);
+    var data=window.HSK3_OFFICIAL_GRAMMAR||{}, lesson=data[String(lid)]||data[lid]||{}, point=(lesson.points||[])[pi]||{};
+    var lines=[];
+    (point.drills||[]).forEach(function(dr,di){
+      var idx=0;
+      var text=String(dr.prompt||'').replace(/\{\{\}\}/g,function(){
+        var el=document.getElementById('h3g-in-'+lid+'-'+pi+'-'+di+'-'+idx); idx++;
+        return '【'+(el&&String(el.value||'').trim()?String(el.value||'').trim():'chưa trả lời')+'】';
+      });
+      lines.push((di+1)+'. '+text);
+    });
+    var prompt=[
+      'Bạn là giáo viên tiếng Trung chấm bài 练一练 HSK 3 theo Giáo trình chuẩn.',
+      'Bài '+lid+' · '+String(point.title||'')+' ('+String(point.viTitle||'')+')',
+      'Công thức: '+String(point.formula||''),
+      'Hãy chấm từng câu, chỉ ra phần đúng/sai, sửa bằng tiếng Trung và giải thích ngắn bằng tiếng Việt. Với câu mở, chấp nhận cách diễn đạt tự nhiên khác đáp án mẫu nếu đúng ngữ pháp.',
+      '', 'Bài làm:', lines.join('\n')
+    ].join('\n');
+    var target='h3g-ai-'+lid+'-'+pi;
+    window.CURRENT_GPT_RAW_PROMPT=prompt;
+    window.CURRENT_GPT_CONTEXT=(typeof window.buildAIContext==='function')?window.buildAIContext(prompt):prompt;
+    window.CURRENT_GPT_INLINE_TARGET=target;
+    window.CURRENT_GPT_TITLE='AI chấm 练一练 · Bài '+lid;
+    try{ CURRENT_GPT_RAW_PROMPT=window.CURRENT_GPT_RAW_PROMPT; CURRENT_GPT_CONTEXT=window.CURRENT_GPT_CONTEXT; CURRENT_GPT_INLINE_TARGET=target; CURRENT_GPT_TITLE=window.CURRENT_GPT_TITLE; }catch(e){}
+    if(typeof window.setInlineGPTAnswer==='function') window.setInlineGPTAnswer(target,'AI đang chấm...','loading','chatgpt');
+    return window.runExternalAIGrading();
+  };
+  try{ h3gAskAI=window.h3gAskAI; }catch(e){}
+
+  function boot(){
+    document.documentElement.setAttribute('data-hsk3-build','v9');
+    if(isH3()){
+      document.body.classList.add('h3-course-active');
+      var detail=document.getElementById('lesson-detail-view');
+      if(detail&&getComputedStyle(detail).display!=='none') ensureLesson(currentLesson());
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
+
+  window.H3V9={
+    version:VERSION,
+    repair:function(id){return ensureLesson(currentLesson(id));},
+    diagnose:function(){
+      var id=currentLesson(),tabs=document.getElementById('lesson-tabs'),content=document.getElementById('lesson-tab-content');
+      return {
+        version:VERSION,course:String(window.CURRENT_COURSE||''),lesson:id,
+        complete:isComplete(id),
+        labels:tabs?directChildren(tabs,'.tab-btn').map(function(b){return (b.textContent||'').trim();}):[],
+        panels:content?directChildren(content,'.tab-content').map(function(p){return {id:p.id,chars:(p.textContent||'').trim().length,active:p.classList.contains('active')};}):[],
+        grammarPractice:!!(document.querySelector('#grammar-tab .h3g-drill')&&document.querySelector('#grammar-tab .h3f-root')),
+        workbookQuestions:document.querySelectorAll('#h3-workbook-text-tab .h3wbv2-question').length,
+        oldAIOutsideText:(document.getElementById('lesson-detail-view')&&/AI ngoài/.test(document.getElementById('lesson-detail-view').textContent||''))||false
+      };
+    }
+  };
+})();
+</script>
+<!-- /HSK3 V9 FINAL CONTROLLER -->
 
 </body>
 </html>
