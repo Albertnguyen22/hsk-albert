@@ -29570,5 +29570,454 @@ window.H3V8={version:'2026.09.16-v9-ai-grade-practice-restored',diagnose:functio
 })();
 </script>
 
+<!-- HSK3 V12: per-user exercise history, lesson analytics, AI review recommendations -->
+<style id="h3la-v12-style">
+body.h3-course-active .h3la-wrap{display:grid;gap:16px;max-width:1180px;margin:0 auto 48px}
+body.h3-course-active .h3la-hero{background:linear-gradient(135deg,#eef8ff,#eefaf5 55%,#fff8eb);border:1px solid var(--border);border-radius:18px;padding:18px 20px;display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+body.h3-course-active .h3la-hero h2{margin:0 0 5px;font-size:22px;color:var(--ink)}
+body.h3-course-active .h3la-hero p{margin:0;color:var(--muted);line-height:1.7;max-width:760px}
+body.h3-course-active .h3la-actions{display:flex;gap:8px;flex-wrap:wrap}
+body.h3-course-active .h3la-status{border-radius:11px;padding:10px 13px;font-size:12px;line-height:1.65;border:1px solid var(--border);background:#fff}
+body.h3-course-active .h3la-status.ok{background:var(--teal-light);border-color:#adddcf;color:#075f53}
+body.h3-course-active .h3la-status.warn{background:var(--gold-light);border-color:#ead27b;color:#765d00}
+body.h3-course-active .h3la-status.bad{background:var(--red-light);border-color:#efb5ae;color:var(--red)}
+body.h3-course-active .h3la-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+body.h3-course-active .h3la-summary-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 16px;min-height:108px}
+body.h3-course-active .h3la-summary-card .num{font-size:28px;font-weight:900;line-height:1.1;color:var(--ink)}
+body.h3-course-active .h3la-summary-card .label{font-size:12px;color:var(--muted);margin-top:4px}
+body.h3-course-active .h3la-summary-card .sub{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.55}
+body.h3-course-active .h3la-section{background:#fff;border:1px solid var(--border);border-radius:15px;overflow:hidden}
+body.h3-course-active .h3la-section-head{padding:13px 16px;background:var(--paper2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+body.h3-course-active .h3la-section-head h3{margin:0;font-size:16px}
+body.h3-course-active .h3la-section-body{padding:15px 16px}
+body.h3-course-active .h3la-skill-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+body.h3-course-active .h3la-skill{border:1px solid var(--border);border-radius:12px;padding:12px 13px;background:#fff}
+body.h3-course-active .h3la-skill-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+body.h3-course-active .h3la-skill-name{font-weight:800}
+body.h3-course-active .h3la-skill-score{font-size:18px;font-weight:900}
+body.h3-course-active .h3la-bar{height:8px;background:var(--paper2);border-radius:99px;overflow:hidden;margin:9px 0 6px}
+body.h3-course-active .h3la-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--teal),#58bca9)}
+body.h3-course-active .h3la-skill.low .h3la-bar i{background:linear-gradient(90deg,var(--red),#e67e72)}
+body.h3-course-active .h3la-skill.mid .h3la-bar i{background:linear-gradient(90deg,var(--gold),#e0b84a)}
+body.h3-course-active .h3la-skill-meta{font-size:11px;color:var(--muted);line-height:1.55}
+body.h3-course-active .h3la-weak-list{display:grid;gap:9px}
+body.h3-course-active .h3la-weak-item{border-left:4px solid var(--red);background:var(--red-light);border-radius:0 10px 10px 0;padding:10px 12px;line-height:1.65}
+body.h3-course-active .h3la-weak-item b{display:block;margin-bottom:2px}
+body.h3-course-active .h3la-tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+body.h3-course-active .h3la-tag{display:inline-flex;padding:4px 8px;border-radius:99px;background:var(--paper2);border:1px solid var(--border);font-size:11px;font-weight:700}
+body.h3-course-active .h3la-ai-box{min-height:110px;border:1px dashed #b8cbc6;border-radius:12px;padding:13px 15px;background:#fbfffd;white-space:pre-wrap;line-height:1.75}
+body.h3-course-active .h3la-ai-box.loading{background:var(--blue-light);color:var(--blue)}
+body.h3-course-active .h3la-ai-box.error{background:var(--red-light);color:var(--red);border-color:#efb5ae}
+body.h3-course-active .h3la-course-table{width:100%;border-collapse:collapse;font-size:12px}
+body.h3-course-active .h3la-course-table th{background:var(--ink);color:#fff;padding:9px 10px;text-align:left}
+body.h3-course-active .h3la-course-table td{padding:9px 10px;border-bottom:1px solid var(--border)}
+body.h3-course-active .h3la-course-table tr:hover td{background:var(--blue-light);cursor:pointer}
+body.h3-course-active .h3la-pill{display:inline-flex;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:800}
+body.h3-course-active .h3la-pill.good{background:var(--teal-light);color:var(--teal)}
+body.h3-course-active .h3la-pill.mid{background:var(--gold-light);color:#806300}
+body.h3-course-active .h3la-pill.bad{background:var(--red-light);color:var(--red)}
+body.h3-course-active .h3la-pill.none{background:var(--paper2);color:var(--muted)}
+body.h3-course-active .h3la-empty{padding:28px 14px;text-align:center;color:var(--muted);line-height:1.7}
+@media(max-width:920px){body.h3-course-active .h3la-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}body.h3-course-active .h3la-skill-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){body.h3-course-active .h3la-summary-grid,body.h3-course-active .h3la-skill-grid{grid-template-columns:1fr}body.h3-course-active .h3la-section-body{padding:12px}body.h3-course-active .h3la-course-table{min-width:700px}body.h3-course-active .h3la-table-wrap{overflow-x:auto}}
+</style>
+<script id="h3la-v12-runtime">
+(function(){
+  'use strict';
+  if(window.__H3LA_V12__) return;
+  window.__H3LA_V12__=true;
+
+  var VERSION='2026.09.16-v12-user-learning-analytics';
+  var ATTEMPT_TABLE='hsk3_learning_attempts';
+  var REPORT_TABLE='hsk3_learning_reports';
+  var STATE_TYPE='hsk3_learning_state_v1';
+  var TAB_ID='h3-learning-assessment-tab';
+  var BTN_ID='h3-learning-assessment-tab-btn';
+  var localPrefix='h3la_attempts_v1__';
+  var localReportPrefix='h3la_report_v1__';
+  var assistPrefix='h3la_assist_v1_L';
+  var stateTimers={};
+  var refreshTimer=null;
+  var remoteTableReady=null;
+  var lastTableError='';
+
+  function isH3(){
+    return String(window.CURRENT_COURSE||'').toLowerCase()==='hsk3' ||
+      !!(document.body&&document.body.classList&&document.body.classList.contains('h3-course-active'));
+  }
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function norm(s){return String(s||'').normalize('NFKC').replace(/[\s，。！？、；：,.!?;:'"“”‘’（）()\-—_]/g,'').toLowerCase();}
+  function clamp(n,min,max){n=Number(n);if(!isFinite(n))n=0;return Math.max(min,Math.min(max,n));}
+  function uid(){return window.hskCurrentUser&&window.hskCurrentUser.id?String(window.hskCurrentUser.id):'';}
+  function scope(){return uid()||'guest';}
+  function uuid(){
+    try{if(window.crypto&&typeof window.crypto.randomUUID==='function')return window.crypto.randomUUID();}catch(e){}
+    return 'a-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)+'-'+Math.random().toString(36).slice(2);
+  }
+  function sb(){return window.hskSupabase&&window.hskSupabase.from?window.hskSupabase:null;}
+  function currentLesson(explicit){
+    var vals=[explicit];
+    try{vals.push(window.STATE&&window.STATE.currentLesson);}catch(e){}
+    try{vals.push(document.getElementById('lesson-selector')&&document.getElementById('lesson-selector').value);}catch(e){}
+    try{vals.push(document.querySelector('#lesson-detail-header .lesson-num-badge')&&document.querySelector('#lesson-detail-header .lesson-num-badge').textContent);}catch(e){}
+    for(var i=0;i<vals.length;i++){var n=Number(vals[i]);if(n>=1&&n<=20)return n;}
+    return 1;
+  }
+  function lessonInfo(id){
+    id=currentLesson(id);
+    var list=[];
+    try{if(window.HSK3_COMPLETE_DATA&&Array.isArray(window.HSK3_COMPLETE_DATA.lessons))list=window.HSK3_COMPLETE_DATA.lessons;}catch(e){}
+    if(!list.length){try{if(typeof LESSONS!=='undefined'&&Array.isArray(LESSONS))list=LESSONS;}catch(e){}}
+    var l=list.find(function(x){return Number(x.id)===id;})||{};
+    return {id:id,zh:String(l.zh||''),vi:String(l.vi||''),grammar:Array.isArray(l.grammar)?l.grammar:[]};
+  }
+  function readJson(key,fallback){try{return JSON.parse(localStorage.getItem(key)||'null')||fallback;}catch(e){return fallback;}}
+  function writeJson(key,value){try{localStorage.setItem(key,JSON.stringify(value));}catch(e){}}
+  function attemptKey(sc){return localPrefix+(sc||scope());}
+  function reportKey(id,sc){return localReportPrefix+(sc||scope())+'__L'+Number(id);}
+  function localAttempts(sc){var a=readJson(attemptKey(sc),[]);return Array.isArray(a)?a:[];}
+  function saveLocalAttempt(rec,synced,sc){
+    sc=sc||scope();
+    var rows=localAttempts(sc),found=false;
+    rows=rows.map(function(x){if(x.client_attempt_id===rec.client_attempt_id){found=true;return Object.assign({},x,rec,{_synced:!!synced});}return x;});
+    if(!found)rows.push(Object.assign({},rec,{_synced:!!synced}));
+    if(rows.length>6000)rows=rows.slice(rows.length-6000);
+    writeJson(attemptKey(sc),rows);
+  }
+  function stripLocal(rec){
+    var x=Object.assign({},rec);delete x._synced;delete x.user_scope;return x;
+  }
+  function isMissingTableError(err){
+    var t=String(err&&((err.message||'')+' '+(err.details||'')+' '+(err.code||''))||'');
+    return /42P01|does not exist|schema cache|hsk3_learning_attempts/i.test(t);
+  }
+  function stateBanner(kind,text){
+    var el=document.getElementById('h3la-cloud-status');if(!el)return;
+    el.className='h3la-status '+(kind||'');el.innerHTML=text;
+  }
+  async function recordAttempt(data){
+    if(!isH3()) return null;
+    var l=lessonInfo(data.lesson_id||data.lessonId);
+    var rec={
+      client_attempt_id:String(data.client_attempt_id||uuid()),
+      course:'hsk3',
+      lesson_id:l.id,
+      source:String(data.source||'grammar'),
+      skill:String(data.skill||'grammar'),
+      exercise_type:String(data.exercise_type||'unknown'),
+      question_id:String(data.question_id||uuid()),
+      question_text:String(data.question_text||''),
+      answer:String(data.answer==null?'':data.answer),
+      reference_answer:String(data.reference_answer==null?'':data.reference_answer),
+      is_correct:data.is_correct==null?null:!!data.is_correct,
+      score:data.score==null?null:Math.round(clamp(data.score,0,100)*100)/100,
+      error_tags:Array.isArray(data.error_tags)?data.error_tags.map(String):[],
+      result_json:data.result_json&&typeof data.result_json==='object'?data.result_json:{},
+      duration_ms:data.duration_ms==null?null:Math.max(0,Math.round(Number(data.duration_ms)||0)),
+      created_at:String(data.created_at||new Date().toISOString())
+    };
+    var sc=scope();rec.user_scope=sc;saveLocalAttempt(rec,false,sc);
+    var client=sb(),user=uid();
+    if(client&&user){
+      try{
+        var payload=stripLocal(Object.assign({},rec,{user_id:user}));
+        var out=await client.from(ATTEMPT_TABLE).upsert(payload,{onConflict:'user_id,client_attempt_id'});
+        if(out.error)throw out.error;
+        remoteTableReady=true;lastTableError='';saveLocalAttempt(rec,true,sc);
+      }catch(err){
+        remoteTableReady=false;
+        lastTableError=String(err&&err.message||err||'');
+        console.warn('HSK3 learning attempt save failed',err);
+      }
+    }
+    scheduleRefresh(rec.lesson_id);
+    return rec;
+  }
+  window.h3laRecordAttempt=recordAttempt;
+
+  async function flushPending(){
+    var client=sb(),user=uid();if(!client||!user)return;
+    migrateGuestAttempts(user);
+    var sc=user,rows=localAttempts(sc),pending=rows.filter(function(x){return !x._synced;});
+    if(!pending.length)return;
+    for(var i=0;i<pending.length;i+=100){
+      var batch=pending.slice(i,i+100).map(function(r){return stripLocal(Object.assign({},r,{user_id:user}));});
+      try{
+        var out=await client.from(ATTEMPT_TABLE).upsert(batch,{onConflict:'user_id,client_attempt_id'});
+        if(out.error)throw out.error;
+        remoteTableReady=true;lastTableError='';
+        var ids={};batch.forEach(function(x){ids[x.client_attempt_id]=1;});
+        rows=rows.map(function(x){if(ids[x.client_attempt_id])x._synced=true;return x;});writeJson(attemptKey(sc),rows);
+      }catch(err){
+        remoteTableReady=false;lastTableError=String(err&&err.message||err||'');break;
+      }
+    }
+  }
+  function migrateGuestAttempts(user){
+    if(!user)return;
+    var guest=localAttempts('guest');if(!guest.length)return;
+    var dest=localAttempts(user),seen={};dest.forEach(function(x){seen[x.client_attempt_id]=1;});
+    guest.forEach(function(x){if(!seen[x.client_attempt_id])dest.push(Object.assign({},x,{_synced:false,user_scope:user}));});
+    writeJson(attemptKey(user),dest);writeJson(attemptKey('guest'),[]);
+  }
+
+  function queueStateLocalStorageKey(lsKey,lesson,immediate){
+    if(!lsKey)return;
+    clearTimeout(stateTimers[lsKey]);
+    var run=async function(){
+      var client=sb(),user=uid();if(!client||!user)return;
+      var value='';try{value=localStorage.getItem(lsKey)||'';}catch(e){}
+      try{
+        var out=await client.from('exercise_answers').upsert({
+          user_id:user,lesson_id:Number(lesson)||0,exercise_type:STATE_TYPE,
+          question_id:'ls:'+lsKey,answer:JSON.stringify({value:value,updated_at:new Date().toISOString(),app:'HSK3 V12'}),
+          is_correct:null,updated_at:new Date().toISOString()
+        },{onConflict:'user_id,lesson_id,exercise_type,question_id'});
+        if(out.error)throw out.error;
+      }catch(e){console.warn('HSK3 state save failed',lsKey,e);}
+    };
+    if(immediate)run();else stateTimers[lsKey]=setTimeout(run,650);
+  }
+  async function loadCloudStates(){
+    var client=sb(),user=uid();if(!client||!user)return;
+    try{
+      var out=await client.from('exercise_answers').select('lesson_id,question_id,answer,updated_at').eq('user_id',user).eq('exercise_type',STATE_TYPE).limit(5000);
+      if(out.error)throw out.error;
+      (out.data||[]).forEach(function(row){
+        if(!/^ls:/.test(row.question_id||''))return;
+        var key=String(row.question_id).slice(3),parsed={};try{parsed=JSON.parse(row.answer||'{}');}catch(e){}
+        var value=Object.prototype.hasOwnProperty.call(parsed,'value')?String(parsed.value==null?'':parsed.value):String(row.answer||'');
+        try{localStorage.setItem(key,value);}catch(e){}
+      });
+      applyCurrentDomState();
+    }catch(e){console.warn('HSK3 state load failed',e);}
+  }
+  function uploadExistingStates(){
+    var keys=[];try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i)||'';if(/^hsk3_textbook_grammar_v1_|^h3f:v4:|^h3wbv3_state_|^h3la_assist_v1_L/.test(k))keys.push(k);}}catch(e){}
+    keys.forEach(function(k){var m=k.match(/(?:_state_|grammar_v1_)(\d+)/),lesson=m?Number(m[1]):currentLesson();queueStateLocalStorageKey(k,lesson,false);});
+  }
+  function applyCurrentDomState(){
+    document.querySelectorAll('[id^="h3f-"]').forEach(function(el){if(!('value'in el))return;var key='h3f:v4:'+el.id;try{var v=localStorage.getItem(key);if(v!=null&&document.activeElement!==el)el.value=v;}catch(e){}});
+    document.querySelectorAll('.h3g-input[id^="h3g-in-"]').forEach(function(el){var m=el.id.match(/^h3g-in-(\d+)-(\d+)-(\d+)-(\d+)$/);if(!m)return;var key='hsk3_textbook_grammar_v1_'+m[1]+'_'+m[2]+'_'+m[3]+'_'+m[4];try{var v=localStorage.getItem(key);if(v!=null&&document.activeElement!==el)el.value=v;}catch(e){}});
+  }
+
+  function assistStorageKey(lesson){return assistPrefix+Number(lesson);}
+  function assistMap(lesson){var x=readJson(assistStorageKey(lesson),{});return x&&typeof x==='object'?x:{};}
+  function markAssist(lesson,key){var m=assistMap(lesson);m[String(key)]=new Date().toISOString();writeJson(assistStorageKey(lesson),m);queueStateLocalStorageKey(assistStorageKey(lesson),lesson,false);}
+  function clearAssist(lesson,key){var m=assistMap(lesson);if(key==null)m={};else delete m[String(key)];writeJson(assistStorageKey(lesson),m);queueStateLocalStorageKey(assistStorageKey(lesson),lesson,false);}
+  function hasAssist(lesson,key){return !!assistMap(lesson)[String(key)];}
+  function assistedScore(score,assisted){return assisted?Math.min(60,Number(score)||0):Number(score)||0;}
+  function assistedTags(tags,assisted){tags=Array.isArray(tags)?tags.slice():[];if(assisted&&tags.indexOf('used_answer')<0)tags.push('used_answer');return tags;}
+
+  function errorTagsFor(type,score,extra){
+    if(Number(score)>=85)return [];
+    var tags=[];type=String(type||'');
+    if(/grammar|ex2|ex3|match/.test(type))tags.push('grammar');
+    if(/listening/.test(type))tags.push('listening_comprehension');
+    if(/reading/.test(type))tags.push('reading_comprehension');
+    if(/reorder/.test(type))tags.push('word_order');
+    if(/pinyin/.test(type))tags.push('pinyin_to_hanzi');
+    if(/hanzi|choose_hanzi|word_build/.test(type))tags.push('hanzi');
+    if(/review/.test(type))tags.push('lesson_memory');
+    if(/speaking|ex4|usage/.test(type))tags.push('speaking_expression');
+    if(Array.isArray(extra))extra.forEach(function(x){if(x&&tags.indexOf(x)<0)tags.push(String(x));});
+    return tags;
+  }
+  function tagsFromAI(result,fallback){
+    var tags=errorTagsFor(fallback,Number(result&&((result.score!=null?result.score:result.percent)))||0,[]);
+    var parts=(result&&Array.isArray(result.wrong_parts)?result.wrong_parts:[]).concat(result&&Array.isArray(result.errors)?result.errors:[]);
+    parts.forEach(function(p){var s=String((p&&p.why_vi)||(p&&p.problem_vi)||(p&&p.type)||'').toLowerCase();
+      if(/trật tự|thứ tự|语序/.test(s)&&tags.indexOf('word_order')<0)tags.push('word_order');
+      if(/từ vựng|dùng từ|词/.test(s)&&tags.indexOf('vocabulary')<0)tags.push('vocabulary');
+      if(/ngữ pháp|cấu trúc|语法/.test(s)&&tags.indexOf('grammar')<0)tags.push('grammar');
+      if(/thiếu|chưa đủ/.test(s)&&tags.indexOf('incomplete_answer')<0)tags.push('incomplete_answer');
+      if(/pinyin|thanh điệu/.test(s)&&tags.indexOf('pinyin_to_hanzi')<0)tags.push('pinyin_to_hanzi');
+    });return tags;
+  }
+  function aiScore(ai){var r=ai&&ai.result||{};var n=Number(r.score!=null?r.score:r.percent);return isFinite(n)?clamp(n,0,100):null;}
+
+  function installWrappers(){
+    if(window.__H3LA_WRAPPERS__)return;window.__H3LA_WRAPPERS__=true;
+    function wrap(name,after){var old=window[name];if(typeof old!=='function'||old.__h3la)return;var fn=function(){var args=Array.prototype.slice.call(arguments),ret=old.apply(this,args);try{after(args,ret);}catch(e){console.warn('H3LA wrapper',name,e);}return ret;};fn.__h3la=true;fn.__old=old;window[name]=fn;}
+    function wrapAsync(name,after){var old=window[name];if(typeof old!=='function'||old.__h3la)return;var fn=async function(){var args=Array.prototype.slice.call(arguments),ret=await old.apply(this,args);try{await after(args,ret);}catch(e){console.warn('H3LA async wrapper',name,e);}return ret;};fn.__h3la=true;fn.__old=old;window[name]=fn;}
+
+    wrap('h3gSave',function(a){var l=Number(a[0]),p=Number(a[1]),i=Number(a[2]),b=Number(a[3]);queueStateLocalStorageKey('hsk3_textbook_grammar_v1_'+l+'_'+p+'_'+i+'_'+b,l,false);});
+    wrap('h3gShowAnswers',function(a){var l=Number(a[0]),p=Number(a[1]);markAssist(l,'grammar:p'+(p+1));});
+    wrap('h3gReset',function(a){var l=Number(a[0]),p=Number(a[1]);clearAssist(l,'grammar:p'+(p+1));});
+    wrap('h3gCheck',function(a){
+      var l=Number(a[0]),p=Number(a[1]),data=window.HSK3_OFFICIAL_GRAMMAR&&window.HSK3_OFFICIAL_GRAMMAR[String(l)],point=data&&data.points&&data.points[p];if(!point)return;
+      (point.drills||[]).forEach(function(dr,i){var count=(String(dr.prompt||'').match(/\{\{\}\}/g)||[]).length||1,vals=[],ok=0;
+        for(var b=0;b<count;b++){var el=document.getElementById('h3g-in-'+l+'-'+p+'-'+i+'-'+b),v=String(el&&el.value||'');vals.push(v);var raw=dr.answers||[];var accepted;if(count===1)accepted=Array.isArray(raw)?raw:[raw];else if(Array.isArray(raw[b]))accepted=raw[b];else accepted=[Array.isArray(raw)?raw[b]:raw];if(accepted.map(norm).indexOf(norm(v))>=0)ok++;}
+        var rawScore=Math.round(ok/count*100),assisted=hasAssist(l,'grammar:p'+(p+1)),score=assistedScore(rawScore,assisted),answer=vals.join('；'),ref=(Array.isArray(dr.answers)?dr.answers:[dr.answers]).join(' / ');
+        recordAttempt({lesson_id:l,source:'grammar',skill:'grammar',exercise_type:'grammar_lian_yi_lian',question_id:'grammar:p'+(p+1)+':q'+(i+1),question_text:String(dr.prompt||''),answer:answer,reference_answer:ref,is_correct:!assisted&&rawScore===100,score:score,error_tags:assistedTags(errorTagsFor('grammar',score,[point.title||point.formula||'']),assisted),result_json:{point_index:p,point_title:point.title||'',formula:point.formula||'',open:!!dr.open,score_source:'book_exact',raw_score:rawScore,assisted:assisted}});
+      });
+    });
+    wrapAsync('h3gAskAI',async function(a,ai){var l=Number(a[0]),p=Number(a[1]);if(!ai||!ai.result)return;var data=window.HSK3_OFFICIAL_GRAMMAR&&window.HSK3_OFFICIAL_GRAMMAR[String(l)],point=data&&data.points&&data.points[p]||{},score=aiScore(ai);recordAttempt({lesson_id:l,source:'grammar',skill:'grammar',exercise_type:'grammar_ai_review',question_id:'grammar:p'+(p+1)+':ai-summary',question_text:String(point.title||point.formula||'练一练'),answer:'',reference_answer:'',is_correct:score!=null?score>=85:null,score:score,error_tags:tagsFromAI(ai.result,'grammar'),result_json:{ai:true,model:ai.model||ai.model_used||'',feedback:ai.result}});});
+
+    wrap('h3fStoreField',function(a){var el=a[0];if(el&&el.id)queueStateLocalStorageKey('h3f:v4:'+el.id,currentLesson(),false);});
+    wrap('h3fCheckEx2',function(a){var l=Number(a[0]),assisted=hasAssist(l,'textbook:ex2');for(var i=0;i<10;i++){var el=document.getElementById('h3f-e2-'+l+'-'+i);if(!el)continue;var ref=String(el.dataset.answer||''),rawScore=norm(el.value)===norm(ref)?100:0,score=assistedScore(rawScore,assisted),q=(el.closest('.h3f-item')&&el.closest('.h3f-item').innerText)||('练习2 第'+(i+1)+'题');recordAttempt({lesson_id:l,source:'textbook',skill:'grammar',exercise_type:'textbook_ex2_fill',question_id:'textbook:ex2:q'+(i+1),question_text:q,answer:el.value,reference_answer:ref,is_correct:!assisted&&rawScore===100,score:score,error_tags:assistedTags(errorTagsFor('grammar_ex2',score),assisted),result_json:{section:'练习2',raw_score:rawScore,assisted:assisted}});}});
+    wrap('h3fRevealEx2',function(a){var l=Number(a[0]);markAssist(l,'textbook:ex2');for(var i=0;i<10;i++){var el=document.getElementById('h3f-e2-'+l+'-'+i);if(!el)continue;var ref=String(el.dataset.answer||''),q=(el.closest('.h3f-item')&&el.closest('.h3f-item').innerText)||('练习2 第'+(i+1)+'题');recordAttempt({lesson_id:l,source:'textbook',skill:'grammar',exercise_type:'textbook_ex2_fill',question_id:'textbook:ex2:q'+(i+1),question_text:q,answer:ref,reference_answer:ref,is_correct:false,score:60,error_tags:['grammar','used_answer'],result_json:{section:'练习2',raw_score:100,assisted:true,score_source:'answer_reveal'}});}});
+    wrap('h3fReset',function(a){var type=String(a[0]||''),l=Number(a[1]);if(type==='e2')clearAssist(l,'textbook:ex2');});
+    wrap('h3fCheckEx3',function(a){var l=Number(a[0]),idx=Number(a[1]),els=Array.prototype.slice.call(document.querySelectorAll('[id^="h3f-e3-'+l+'-'+idx+'-"]')),ok=0;els.forEach(function(el){if(norm(el.value)===norm(el.dataset.answer||''))ok++;});var score=els.length?Math.round(ok/els.length*100):0,card=els[0]&&els[0].closest('.h3f-card'),q=card?card.innerText:'练习3 对话 '+(idx+1);recordAttempt({lesson_id:l,source:'textbook',skill:'grammar',exercise_type:'textbook_ex3_dialogue',question_id:'textbook:ex3:q'+(idx+1),question_text:q,answer:els.map(function(e){return e.value;}).join('；'),reference_answer:els.map(function(e){return e.dataset.answer||'';}).join('；'),is_correct:score===100,score:score,error_tags:errorTagsFor('grammar_ex3',score),result_json:{section:'练习3',blank_count:els.length}});});
+    wrap('h3fCheckEx4',function(a){var l=Number(a[0]),idx=Number(a[1]),row=(window.H3F_EX4&&window.H3F_EX4[l]&&window.H3F_EX4[l][idx])||{},el=document.getElementById('h3f-e4-'+l+'-'+idx),txt=String(el&&el.value||'').trim(),open=/开放题|没有固定答案|参考答案没有/.test(row.a||''),chars=(txt.match(/[\u3400-\u9fff]/g)||[]).length,ratio=overlap(txt,row.a||''),score=open?Math.min(100,45+chars*3):Math.min(100,Math.round(35+ratio*85));recordAttempt({lesson_id:l,source:'textbook',skill:'speaking',exercise_type:'textbook_ex4_answer',question_id:'textbook:ex4:q'+(idx+1),question_text:String(row.q||''),answer:txt,reference_answer:String(row.a||''),is_correct:score>=80,score:score,error_tags:errorTagsFor('speaking_ex4',score),result_json:{section:'练习4',open:open,score_source:'quick'}});});
+    wrapAsync('h3fDeepEx4',async function(a,ai){var l=Number(a[0]),idx=Number(a[1]),row=(window.H3F_EX4&&window.H3F_EX4[l]&&window.H3F_EX4[l][idx])||{},el=document.getElementById('h3f-e4-'+l+'-'+idx),score=aiScore(ai);if(!ai||!ai.result)return;recordAttempt({lesson_id:l,source:'textbook',skill:'speaking',exercise_type:'textbook_ex4_ai',question_id:'textbook:ex4:q'+(idx+1),question_text:String(row.q||''),answer:String(el&&el.value||''),reference_answer:String(row.a||''),is_correct:score!=null?score>=85:null,score:score,error_tags:tagsFromAI(ai.result,'speaking_ex4'),result_json:{ai:true,model:ai.model||'',feedback:ai.result}});});
+    wrap('h3fCheckMatch',function(a){var l=Number(a[0]),idx=Number(a[1]),act=(window.H3F_USAGE&&window.H3F_USAGE[l]&&window.H3F_USAGE[l][idx])||{},m=act.matching;if(!m)return;var ok=0,vals=[];(m.left||[]).forEach(function(x,i){var v=String((document.getElementById('h3f-match-'+l+'-'+idx+'-'+i)||{}).value||'');vals.push(x+'+'+v);var raw=m.answers[i],acc=(Array.isArray(raw)?raw:[raw]).map(function(y){return norm(x+y);});if(acc.indexOf(norm(x+v))>=0)ok++;});var score=m.left.length?Math.round(ok/m.left.length*100):0;recordAttempt({lesson_id:l,source:'textbook',skill:'grammar',exercise_type:'textbook_usage_match',question_id:'textbook:match:q'+(idx+1),question_text:String(act.zh||act.title||''),answer:vals.join('；'),reference_answer:JSON.stringify(m.answers||[]),is_correct:score===100,score:score,error_tags:errorTagsFor('grammar_match',score),result_json:{activity:act.title||''}});});
+    wrap('h3fUseQuick',function(a){var l=Number(a[0]),idx=Number(a[1]),act=(window.H3F_USAGE&&window.H3F_USAGE[l]&&window.H3F_USAGE[l][idx])||{},el=document.getElementById('h3f-u-'+l+'-'+idx),txt=String(el&&el.value||'').trim();if(!txt)return;var score=quickUsageScore(txt,act);recordAttempt({lesson_id:l,source:'textbook',skill:'speaking',exercise_type:'textbook_usage_quick',question_id:'textbook:usage:q'+(idx+1),question_text:String(act.zh||act.title||''),answer:txt,reference_answer:String(act.example||(act.responses||[])[0]||''),is_correct:score>=80,score:score,error_tags:errorTagsFor('speaking_usage',score),result_json:{activity:act.title||'',required:act.required||[],coverage:act.coverage||[],score_source:'quick'}});});
+    wrapAsync('h3fUseDeep',async function(a,ai){var l=Number(a[0]),idx=Number(a[1]),act=(window.H3F_USAGE&&window.H3F_USAGE[l]&&window.H3F_USAGE[l][idx])||{},el=document.getElementById('h3f-u-'+l+'-'+idx),score=aiScore(ai);if(!ai||!ai.result)return;recordAttempt({lesson_id:l,source:'textbook',skill:'speaking',exercise_type:'textbook_usage_ai',question_id:'textbook:usage:q'+(idx+1),question_text:String(act.zh||act.title||''),answer:String(el&&el.value||''),reference_answer:String(act.example||(act.responses||[])[0]||''),is_correct:score!=null?score>=85:null,score:score,error_tags:tagsFromAI(ai.result,'speaking_usage'),result_json:{ai:true,model:ai.model||'',feedback:ai.result,required:act.required||[],coverage:act.coverage||[]}});});
+
+    ['h3wbv2Pick','h3wbv2AddToken','h3wbv2UndoToken','h3wbv2ClearWriting','h3wbv2SaveWriting','h3wbv2SaveReview','h3wbv2SetView'].forEach(function(name){wrap(name,function(a){var l=Number(a[0])||currentLesson();queueStateLocalStorageKey('h3wbv3_state_'+l,l,false);});});
+    wrap('h3wbv2RevealPart',function(a){var l=Number(a[0]),sec=String(a[1]||''),range=workbookRange(sec);if(!range)return;markAssist(l,'workbook:'+sec);for(var q=range[0];q<=range[1];q++){var ref=workbookOfficial(l,q),item=workbookItem(l,q),skill=q<=20?'listening':'reading';recordAttempt({lesson_id:l,source:'workbook',skill:skill,exercise_type:'workbook_'+skill,question_id:'workbook:q'+q,question_text:String(item.stem||item.passage||('第'+q+'题')),answer:ref,reference_answer:ref,is_correct:false,score:60,error_tags:[skill==='listening'?'listening_comprehension':'reading_comprehension','used_answer'],result_json:{section:sec,question:q,raw_score:100,assisted:true,score_source:'answer_reveal'}});}queueStateLocalStorageKey('h3wbv3_state_'+l,l,true);});
+    wrap('h3wbv2ResetPart',function(a){var l=Number(a[0]),sec=String(a[1]||'');clearAssist(l,'workbook:'+sec);});
+    wrap('h3wbv2ResetAll',function(a){clearAssist(Number(a[0]),null);});
+    wrap('h3wbv2SubmitPart',function(a){var l=Number(a[0]),sec=String(a[1]||''),range=workbookRange(sec),state=workbookState(l),assisted=hasAssist(l,'workbook:'+sec);if(!range)return;for(var q=range[0];q<=range[1];q++){var ans=String((state.answers||{})[q]||''),ref=workbookOfficial(l,q),rawScore=ans&&ans===ref?100:0,score=assistedScore(rawScore,assisted),item=workbookItem(l,q),skill=q<=20?'listening':'reading';recordAttempt({lesson_id:l,source:'workbook',skill:skill,exercise_type:'workbook_'+skill,question_id:'workbook:q'+q,question_text:String(item.stem||item.passage||('第'+q+'题')),answer:ans,reference_answer:ref,is_correct:!assisted&&rawScore===100,score:score,error_tags:assistedTags(errorTagsFor(skill,score),assisted),result_json:{section:sec,question:q,score_source:'book_exact',raw_score:rawScore,assisted:assisted}});}queueStateLocalStorageKey('h3wbv3_state_'+l,l,true);});
+    wrap('h3wbv2RevealWriting',function(a){var l=Number(a[0]),q=Number(a[1]),data=workbookData(l),item=(data.writing||[]).find(function(x){return Number(x.q)===q;});if(!item)return;markAssist(l,'workbook:w'+q);recordAttempt({lesson_id:l,source:'workbook',skill:'writing',exercise_type:'workbook_'+String(item.type||'writing'),question_id:'workbook:q'+q,question_text:String(item.source||('第'+q+'题')),answer:String(item.answer||''),reference_answer:String(item.answer||''),is_correct:false,score:60,error_tags:assistedTags(errorTagsFor(String(item.type||'writing'),60),true),result_json:{question:q,type:item.type||'',pinyin:item.pinyin||'',raw_score:100,assisted:true,score_source:'answer_reveal'}});queueStateLocalStorageKey('h3wbv3_state_'+l,l,true);});
+    wrap('h3wbv2CheckWriting',function(a){var l=Number(a[0]),q=Number(a[1]),data=workbookData(l),item=(data.writing||[]).find(function(x){return Number(x.q)===q;});if(!item)return;var st=workbookState(l),answer,ref=String(item.answer||''),score=0,assisted=hasAssist(l,'workbook:w'+q),rawScore=0;if(item.type==='word_build'){var av=[String((st.writing||{})[q+'_1']||''),String((st.writing||{})[q+'_2']||'')],rv=ref.split(/[、,，]/),ok=0;av.forEach(function(v,i){if(norm(v)===norm(rv[i]||''))ok++;});rawScore=Math.round(ok/Math.max(1,av.length)*100);score=assistedScore(rawScore,assisted);answer=av.join('、');}else{answer=String((st.writing||{})[q]||'');rawScore=norm(answer)===norm(ref)?100:0;score=assistedScore(rawScore,assisted);}recordAttempt({lesson_id:l,source:'workbook',skill:'writing',exercise_type:'workbook_'+String(item.type||'writing'),question_id:'workbook:q'+q,question_text:String(item.source||('第'+q+'题')),answer:answer,reference_answer:ref,is_correct:!assisted&&rawScore===100,score:score,error_tags:assistedTags(errorTagsFor(String(item.type||'writing'),score),assisted),result_json:{question:q,type:item.type||'',pinyin:item.pinyin||'',score_source:'book_exact',raw_score:rawScore,assisted:assisted}});queueStateLocalStorageKey('h3wbv3_state_'+l,l,true);});
+    wrap('h3wbv2RevealReview',function(a){var l=Number(a[0]),q=Number(a[1]),data=workbookData(l),item=(data.review||[]).find(function(x){return Number(x.q)===q;});if(!item)return;markAssist(l,'workbook:rv'+q);recordAttempt({lesson_id:l,source:'workbook',skill:'review',exercise_type:'workbook_review',question_id:'workbook:review:'+q,question_text:String(item.source||('复习 '+q)),answer:(item.answers||[]).join('、'),reference_answer:(item.answers||[]).join('、'),is_correct:false,score:60,error_tags:['lesson_memory','used_answer'],result_json:{question:q,raw_score:100,assisted:true,score_source:'answer_reveal'}});queueStateLocalStorageKey('h3wbv3_state_'+l,l,true);});
+    wrap('h3wbv2CheckReview',function(a){var l=Number(a[0]),q=Number(a[1]),data=workbookData(l),item=(data.review||[]).find(function(x){return Number(x.q)===q;});if(!item)return;var vals=(workbookState(l).review||{})[q]||[],ok=0,assisted=hasAssist(l,'workbook:rv'+q);(item.answers||[]).forEach(function(x,i){if(norm(vals[i])===norm(x))ok++;});var rawScore=Math.round(ok/Math.max(1,(item.answers||[]).length)*100),score=assistedScore(rawScore,assisted);recordAttempt({lesson_id:l,source:'workbook',skill:'review',exercise_type:'workbook_review',question_id:'workbook:review:'+q,question_text:String(item.source||('复习 '+q)),answer:vals.join('、'),reference_answer:(item.answers||[]).join('、'),is_correct:!assisted&&rawScore===100,score:score,error_tags:assistedTags(errorTagsFor('review',score),assisted),result_json:{question:q,score_source:'book_exact',raw_score:rawScore,assisted:assisted}});queueStateLocalStorageKey('h3wbv3_state_'+l,l,true);});
+
+    wrapAsync('askAI',async function(a,res){if(!isH3()||!res||!res.result)return;var prompt=String(a[0]||''),m=prompt.match(/sách bài tập HSK 3,\s*Bài\s*(\d+),\s*câu\s*(\d+)/i);if(!m)return;var l=Number(m[1]),q=Number(m[2]),data=workbookData(l),item=(data.writing||[]).find(function(x){return Number(x.q)===q;});if(!item)return;var st=workbookState(l),answer=item.type==='word_build'?[String((st.writing||{})[q+'_1']||''),String((st.writing||{})[q+'_2']||'')].join('、'):String((st.writing||{})[q]||''),score=Number(res.result.score!=null?res.result.score:res.result.percent);recordAttempt({lesson_id:l,source:'workbook',skill:'writing',exercise_type:'workbook_writing_ai',question_id:'workbook:q'+q,question_text:String(item.source||('第'+q+'题')),answer:answer,reference_answer:String(item.answer||''),is_correct:isFinite(score)?score>=85:null,score:isFinite(score)?score:null,error_tags:tagsFromAI(res.result,String(item.type||'writing')),result_json:{ai:true,model:res.model_used||'',feedback:res.result,type:item.type||''}});});
+  }
+
+  function overlap(a,b){var x=Array.from(new Set((String(a||'').match(/[\u3400-\u9fff]/g)||[]))),y=Array.from(new Set((String(b||'').match(/[\u3400-\u9fff]/g)||[])));if(!y.length)return 0;var hit=0;y.forEach(function(c){if(x.indexOf(c)>=0)hit++;});return hit/y.length;}
+  function quickUsageScore(txt,a){var cn=(String(txt||'').match(/[\u3400-\u9fff]/g)||[]).length,req=a.required||[],cov=a.coverage||[],reqOk=0,covOk=0;req.forEach(function(p){if(String(p).split('|').some(function(x){return x&&txt.indexOf(x)>=0;}))reqOk++;});cov.forEach(function(p){if(String(p).split('|').some(function(x){return x&&txt.indexOf(x)>=0;}))covOk++;});var len=Math.min(35,Math.round(cn/Math.max(8,a.minChars||12)*35)),rs=req.length?Math.round(reqOk/req.length*45):45,cs=cov.length?Math.round(covOk/cov.length*20):20;return Math.min(100,len+rs+cs);}
+  function workbookData(l){return window.H3WBV2_DATA&&(window.H3WBV2_DATA[String(l)]||window.H3WBV2_DATA[l])||{};}
+  function workbookState(l){try{return JSON.parse(localStorage.getItem('h3wbv3_state_'+l)||'{}')||{};}catch(e){return {};}}
+  function workbookOfficial(l,q){var d=workbookData(l);return String(d.answers&&(d.answers[String(q)]||d.answers[q])||'');}
+  function workbookRange(sec){return sec==='lp1'?[1,5]:sec==='lp2'?[6,10]:sec==='lp3'?[11,15]:sec==='lp4'?[16,20]:sec==='rp1'?[21,25]:sec==='rp2'?[26,30]:sec==='rp3'?[31,35]:null;}
+  function workbookItem(l,q){var d=workbookData(l),all=[];try{all=all.concat(d.listening&&d.listening.p1||[],d.listening&&d.listening.p2||[],d.listening&&d.listening.p3||[],d.listening&&d.listening.p4||[],d.reading&&d.reading.p1||[],d.reading&&d.reading.p2||[],d.reading&&d.reading.p3||[]);}catch(e){}return all.find(function(x){return Number(x.q)===Number(q);})||{};}
+
+  async function fetchAttempts(lessonId,allLessons){
+    var sc=scope(),local=localAttempts(sc),rows=local.slice(),client=sb(),user=uid();
+    if(client&&user){
+      try{
+        var q=client.from(ATTEMPT_TABLE).select('client_attempt_id,course,lesson_id,source,skill,exercise_type,question_id,question_text,answer,reference_answer,is_correct,score,error_tags,result_json,duration_ms,created_at').eq('user_id',user).order('created_at',{ascending:false}).limit(allLessons?6000:1600);
+        if(!allLessons)q=q.eq('lesson_id',Number(lessonId));
+        var out=await q;if(out.error)throw out.error;
+        remoteTableReady=true;lastTableError='';rows=(out.data||[]).concat(local);
+      }catch(err){remoteTableReady=false;lastTableError=String(err&&err.message||err||'');}
+    }
+    if(!allLessons)rows=rows.filter(function(x){return Number(x.lesson_id)===Number(lessonId);});
+    var seen={},dedup=[];rows.sort(function(a,b){return String(b.created_at||'').localeCompare(String(a.created_at||''));}).forEach(function(r){var k=r.client_attempt_id||[r.lesson_id,r.question_id,r.created_at,r.score].join('|');if(!seen[k]){seen[k]=1;dedup.push(r);}});return dedup;
+  }
+  function latestByQuestion(attempts){var m={};attempts.slice().sort(function(a,b){return String(b.created_at||'').localeCompare(String(a.created_at||''));}).forEach(function(r){if(!m[r.question_id])m[r.question_id]=r;});return Object.keys(m).map(function(k){return m[k];});}
+  var SKILLS=[
+    {key:'grammar',label:'Ngữ pháp',icon:'🧩'},
+    {key:'listening',label:'Nghe',icon:'🎧'},
+    {key:'reading',label:'Đọc',icon:'📖'},
+    {key:'writing',label:'Viết',icon:'✍️'},
+    {key:'speaking',label:'Nói · Vận dụng',icon:'🗣️'},
+    {key:'review',label:'Ôn tập',icon:'🔁'}
+  ];
+  var TAG_LABELS={grammar:'Ngữ pháp',listening_comprehension:'Nghe hiểu',reading_comprehension:'Đọc hiểu',word_order:'Trật tự từ',pinyin_to_hanzi:'Pinyin → chữ Hán',hanzi:'Nhận diện/chữ Hán',lesson_memory:'Ghi nhớ bài khóa',speaking_expression:'Diễn đạt nói',vocabulary:'Từ vựng',incomplete_answer:'Thiếu ý',used_answer:'Đã xem đáp án'};
+  function expectedCounts(l){
+    var g=0;try{var d=window.HSK3_OFFICIAL_GRAMMAR&&window.HSK3_OFFICIAL_GRAMMAR[String(l)];(d.points||[]).forEach(function(p){g+=(p.drills||[]).length;});}catch(e){}
+    var usage=window.H3F_USAGE&&window.H3F_USAGE[l]||[],match=0;usage.forEach(function(a){if(a.matching&&Array.isArray(a.matching.left))match+=a.matching.left.length;});
+    var wb=workbookData(l),writing=(wb.writing||[]).length,review=(wb.review||[]).length,ex4=(window.H3F_EX4&&window.H3F_EX4[l]||[]).length;
+    return {grammar:g+10+4+match,listening:20,reading:15,writing:writing,speaking:ex4+usage.length,review:review};
+  }
+  function analyze(lessonId,attempts){
+    var latest=latestByQuestion(attempts).filter(function(r){return r.score!=null&&isFinite(Number(r.score));});
+    var coreLatest=latest.filter(function(r){return !/ai-summary/.test(String(r.question_id||''));});
+    var expected=expectedCounts(lessonId),skills={},totalWeighted=0,totalWeight=0;
+    SKILLS.forEach(function(s){
+      var arr=latest.filter(function(r){return r.skill===s.key;}),sum=0,w=0;
+      arr.forEach(function(r){
+        var isSummary=!!(r.result_json&&r.result_json.ai&&/ai-summary/.test(String(r.question_id||'')));
+        var assisted=!!(r.result_json&&r.result_json.assisted);
+        var ww=isSummary?0.5:(assisted?0.35:1);
+        var effective=assisted?Math.min(60,Number(r.score)):Number(r.score);
+        sum+=effective*ww;w+=ww;
+      });
+      var score=w?Math.round(sum/w):null;
+      var coreRows=arr.filter(function(r){return !/ai-summary/.test(String(r.question_id||''));});
+      skills[s.key]={score:score,attempted:coreRows.length,expected:expected[s.key]||0,correct:coreRows.filter(function(r){return Number(r.score)>=85&&!(r.result_json&&r.result_json.assisted);}).length,rows:arr};
+      if(score!=null){var sw=Math.max(1,coreRows.length||arr.length);totalWeighted+=score*sw;totalWeight+=sw;}
+    });
+    var overall=totalWeight?Math.round(totalWeighted/totalWeight):null,unique=coreLatest.length,exp=Object.keys(expected).reduce(function(n,k){return n+(expected[k]||0);},0),completion=exp?Math.min(100,Math.round(unique/exp*100)):0;
+    var weak=coreLatest.filter(function(r){return Number(r.score)<70||!!(r.result_json&&r.result_json.assisted);}).sort(function(a,b){return Number(a.score)-Number(b.score);}).slice(0,8),tagCount={};
+    coreLatest.filter(function(r){return Number(r.score)<80||!!(r.result_json&&r.result_json.assisted);}).forEach(function(r){(r.error_tags||[]).forEach(function(t){tagCount[t]=(tagCount[t]||0)+1;});});
+    var tags=Object.keys(tagCount).map(function(k){return {key:k,count:tagCount[k]};}).sort(function(a,b){return b.count-a.count;}).slice(0,8),last=attempts.slice().sort(function(a,b){return String(b.created_at||'').localeCompare(String(a.created_at||''));})[0];
+    return {lesson_id:lessonId,overall:overall,completion:completion,unique_questions:unique,total_attempts:attempts.length,skills:skills,weak:weak,tags:tags,last_activity:last&&last.created_at||'',expected_total:exp};
+  }
+  function statusClass(score){return score==null?'none':score>=85?'good':score>=70?'mid':'bad';}
+  function statusText(score){return score==null?'Chưa có dữ liệu':score>=85?'Nắm khá tốt':score>=70?'Cần luyện thêm':'Cần củng cố';}
+  function skillHtml(s,a){var x=a.skills[s.key],score=x.score,cl=score==null?'':score<60?'low':score<80?'mid':'';return '<div class="h3la-skill '+cl+'"><div class="h3la-skill-top"><span class="h3la-skill-name">'+s.icon+' '+esc(s.label)+'</span><span class="h3la-skill-score">'+(score==null?'—':score+'%')+'</span></div><div class="h3la-bar"><i style="width:'+(score==null?0:score)+'%"></i></div><div class="h3la-skill-meta">'+x.attempted+'/'+x.expected+' nội dung đã có kết quả · '+statusText(score)+'</div></div>';}
+  function weakHtml(a){if(!a.weak.length)return '<div class="h3la-empty">Chưa phát hiện câu yếu rõ ràng. Hãy tiếp tục làm bài để dữ liệu đánh giá chính xác hơn.</div>';return '<div class="h3la-weak-list">'+a.weak.map(function(r){return '<div class="h3la-weak-item"><b>'+esc(skillLabel(r.skill))+' · '+esc(r.question_id)+' · '+Math.round(Number(r.score))+'%</b><div>'+esc(shorten(r.question_text,180))+'</div>'+(r.answer?'<div style="margin-top:4px"><b style="display:inline">Bài làm:</b> '+esc(shorten(r.answer,150))+'</div>':'')+'</div>';}).join('')+'</div>';}
+  function skillLabel(k){var s=SKILLS.find(function(x){return x.key===k;});return s?s.label:k;}
+  function shorten(s,n){s=String(s||'').replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n-1)+'…':s;}
+  function formatDate(s){if(!s)return 'Chưa có';try{return new Date(s).toLocaleString('vi-VN');}catch(e){return s;}}
+
+  async function renderAssessment(lessonId){
+    lessonId=currentLesson(lessonId);var panel=document.getElementById(TAB_ID);if(!panel)return;
+    panel.innerHTML='<div class="h3la-wrap"><div class="h3la-hero"><div><h2>📊 Đánh giá học tập · Bài '+lessonId+'</h2><p>Đang tổng hợp bài tập ngữ pháp, bài tập giáo trình và sách bài tập theo đúng tài khoản đang đăng nhập…</p></div></div><div class="h3la-empty">Đang tải dữ liệu…</div></div>';
+    var attempts=await fetchAttempts(lessonId,false),a=analyze(lessonId,attempts),l=lessonInfo(lessonId),report=readJson(reportKey(lessonId),null);if(uid())try{var rr=await sb().from(REPORT_TABLE).select('summary_json,ai_recommendation,model_used,updated_at').eq('user_id',uid()).eq('lesson_id',lessonId).maybeSingle();if(rr&&!rr.error&&rr.data)report=rr.data;}catch(e){}
+    var cloudText,cloudKind;if(!uid()){cloudKind='warn';cloudText='<b>Chưa đăng nhập:</b> dữ liệu hiện được giữ trên máy này. Đăng nhập để đồng bộ theo từng user.';}else if(remoteTableReady===false){cloudKind='bad';cloudText='<b>Chưa thể đồng bộ bảng phân tích trên Supabase.</b> Hãy chạy file SQL V12 và kiểm tra RLS. Dữ liệu tạm thời vẫn được giữ trên máy.';}else{cloudKind='ok';cloudText='<b>Đồng bộ theo user:</b> câu trả lời và kết quả được gắn với tài khoản '+esc((window.hskCurrentUser&&window.hskCurrentUser.email)||uid())+'.';}
+    panel.innerHTML='<div class="h3la-wrap" data-lesson="'+lessonId+'">'
+      +'<div class="h3la-hero"><div><h2>📊 Đánh giá học tập · Bài '+lessonId+(l.zh?'：<span class="zh">'+esc(l.zh)+'</span>':'')+'</h2><p>Hệ thống lấy kết quả mới nhất của từng câu, phân tích điểm yếu theo kỹ năng và lưu lịch sử theo user. Ghi chép vẫn nằm ở tab ngoài cùng.</p></div><div class="h3la-actions"><button class="btn btn-outline" onclick="h3laRefresh('+lessonId+',true)">↻ Làm mới dữ liệu</button><button class="btn btn-teal" onclick="h3laAskAI('+lessonId+')">🤖 AI gợi ý ôn tập</button></div></div>'
+      +'<div id="h3la-cloud-status" class="h3la-status '+cloudKind+'">'+cloudText+(lastTableError&&remoteTableReady===false?'<br><small>'+esc(lastTableError)+'</small>':'')+'</div>'
+      +'<div class="h3la-summary-grid"><div class="h3la-summary-card"><div class="num">'+(a.overall==null?'—':a.overall+'%')+'</div><div class="label">Kết quả hiện tại</div><div class="sub">'+statusText(a.overall)+'</div></div><div class="h3la-summary-card"><div class="num">'+a.completion+'%</div><div class="label">Mức độ hoàn thành có dữ liệu</div><div class="sub">'+a.unique_questions+'/'+a.expected_total+' nội dung dự kiến</div></div><div class="h3la-summary-card"><div class="num">'+a.total_attempts+'</div><div class="label">Tổng lượt làm đã lưu</div><div class="sub">Bao gồm chấm theo sách và AI</div></div><div class="h3la-summary-card"><div class="num" style="font-size:16px">'+esc(formatDate(a.last_activity))+'</div><div class="label">Hoạt động gần nhất</div><div class="sub">Dùng để theo dõi quá trình học</div></div></div>'
+      +'<section class="h3la-section"><div class="h3la-section-head"><h3>Năng lực theo từng phần</h3><span style="font-size:11px;color:var(--muted)">Mốc gợi ý: dưới 70 cần ưu tiên ôn</span></div><div class="h3la-section-body"><div class="h3la-skill-grid">'+SKILLS.map(function(s){return skillHtml(s,a);}).join('')+'</div></div></section>'
+      +'<section class="h3la-section"><div class="h3la-section-head"><h3>Câu và nội dung đang yếu</h3><span style="font-size:11px;color:var(--muted)">'+a.weak.length+' mục ưu tiên</span></div><div class="h3la-section-body">'+weakHtml(a)+(a.tags.length?'<div class="h3la-tag-row">'+a.tags.map(function(t){return '<span class="h3la-tag">'+esc(TAG_LABELS[t.key]||t.key)+' · '+t.count+'</span>';}).join('')+'</div>':'')+'</div></section>'
+      +'<section class="h3la-section"><div class="h3la-section-head"><h3>🤖 AI gợi ý nên ôn lại phần nào</h3><span id="h3la-ai-model" style="font-size:11px;color:var(--muted)">'+(report&&report.model_used?'Model: '+esc(report.model_used):'Dùng cùng model AI với HSK 5')+'</span></div><div class="h3la-section-body"><div id="h3la-ai-box" class="h3la-ai-box">'+(report&&report.ai_recommendation?esc(report.ai_recommendation):'Bấm “AI gợi ý ôn tập”. AI sẽ dùng điểm từng kỹ năng, câu sai và lỗi lặp lại để đề xuất nội dung cần ôn.')+'</div></div></section>'
+      +'<section class="h3la-section"><div class="h3la-section-head"><h3>Tổng quan 20 bài</h3><span style="font-size:11px;color:var(--muted)">Nhấn một dòng để mở bài</span></div><div class="h3la-section-body"><div id="h3la-course-overview" class="h3la-empty">Đang tổng hợp toàn khóa…</div></div></section>'
+      +'</div>';
+    renderCourseOverview();
+    window.H3LA_LAST_ANALYSIS=a;
+  }
+  async function renderCourseOverview(){
+    var box=document.getElementById('h3la-course-overview');if(!box)return;var all=await fetchAttempts(0,true),by={};for(var i=1;i<=20;i++)by[i]=[];all.forEach(function(r){var l=Number(r.lesson_id);if(by[l])by[l].push(r);});var rows=[];for(var n=1;n<=20;n++){var a=analyze(n,by[n]),l=lessonInfo(n);rows.push('<tr onclick="h3laOpenLesson('+n+')"><td><b>'+n+'</b></td><td><span class="zh">'+esc(l.zh||'')+'</span></td><td>'+(a.overall==null?'—':a.overall+'%')+'</td><td>'+a.unique_questions+'</td><td><span class="h3la-pill '+statusClass(a.overall)+'">'+statusText(a.overall)+'</span></td></tr>');}box.className='h3la-table-wrap';box.innerHTML='<table class="h3la-course-table"><thead><tr><th>Bài</th><th>Chủ đề</th><th>Điểm</th><th>Nội dung đã chấm</th><th>Đánh giá</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';}
+
+  window.h3laRefresh=function(id,force){if(force){remoteTableReady=null;lastTableError='';flushPending();}return renderAssessment(id||currentLesson());};
+  window.h3laOpenLesson=function(id){try{if(typeof window.loadLesson==='function')window.loadLesson(Number(id));setTimeout(function(){var b=document.getElementById(BTN_ID);if(b)b.click();},120);}catch(e){}};
+  window.h3laAskAI=async function(id){
+    id=currentLesson(id);var box=document.getElementById('h3la-ai-box');if(!box)return;var attempts=await fetchAttempts(id,false),a=analyze(id,attempts),l=lessonInfo(id);if(!attempts.length){box.className='h3la-ai-box error';box.textContent='Chưa có kết quả bài tập để AI phân tích. Hãy làm và chấm ít nhất một phần ngữ pháp hoặc sách bài tập trước.';return;}
+    var weak=a.weak.map(function(r){return {skill:skillLabel(r.skill),question_id:r.question_id,score:r.score,question:shorten(r.question_text,220),answer:shorten(r.answer,180),reference:shorten(r.reference_answer,180)};}),skillSummary={};SKILLS.forEach(function(s){skillSummary[s.label]=a.skills[s.key].score;});
+    var summary={lessonId:id,lessonTitle:l.zh,lessonTitleVi:l.vi,overall:a.overall,completion:a.completion,skillScores:skillSummary,weakQuestions:weak,commonErrorTags:a.tags.map(function(t){return {tag:TAG_LABELS[t.key]||t.key,count:t.count};}),totalAttempts:a.total_attempts};
+    var prompt=[
+      'Bạn là cố vấn học tập HSK 3 cho học viên người Việt.',
+      'Chỉ dựa trên dữ liệu dưới đây, không tự bịa thêm lỗi hoặc nội dung mà dữ liệu không có.',
+      'Hãy trả lời bằng tiếng Việt, rõ ràng và thực tế, theo đúng 5 mục:',
+      '1. Kết luận ngắn về kết quả hiện tại của Bài '+id+'.',
+      '2. Ba điểm yếu ưu tiên, nêu lý do từ số liệu.',
+      '3. Chỉ rõ nên ôn lại phần nào: điểm ngữ pháp, 练习 nào hoặc câu số nào trong sách bài tập.',
+      '4. Kế hoạch ôn 5 ngày, mỗi ngày 15-25 phút, có nhiệm vụ cụ thể.',
+      '5. Tiêu chí kiểm tra lại để biết đã cải thiện.',
+      'Không dùng chuẩn HSK 5 để đánh giá. Nếu dữ liệu còn ít, phải nói rõ độ tin cậy còn hạn chế.',
+      '',
+      'DỮ LIỆU PHÂN TÍCH:',JSON.stringify(summary,null,2)
+    ].join('\n');
+    box.className='h3la-ai-box loading';box.textContent='⏳ AI đang phân tích kết quả theo từng phần…';
+    try{
+      var ai;if(window.H3V11_AI&&typeof window.H3V11_AI.invoke==='function')ai=await window.H3V11_AI.invoke({course:'hsk3',hskLevel:3,level:3,studentLevel:3,mode:'tutor',purpose:'learning_recommendation',exerciseType:'hsk3_learning_analysis',contextType:'lesson_assessment',lessonId:id,lessonTitle:l.zh,lessonTitleVi:l.vi,prompt:prompt,userQuestion:prompt,systemPrompt:'Phân tích dữ liệu học tập HSK 3 theo đúng 5 mục. Không bịa ngoài dữ liệu.',maxTokens:2200,max_tokens:2200});else if(typeof window.callAIBackend==='function'){var r=await window.callAIBackend(prompt,{forceMode:'tutor',purpose:'learning_recommendation',lessonId:id,maxTokens:2200});ai={answer:r.answer||'',model:r.model_used||''};}else throw new Error('Bộ điều phối AI V11 chưa sẵn sàng.');
+      var text=String(ai.answer||ai.text||'').trim();if(!text)throw new Error('AI không trả nội dung gợi ý.');box.className='h3la-ai-box';box.textContent=text;var model=String(ai.model||ai.model_used||'');var me=document.getElementById('h3la-ai-model');if(me)me.textContent=model?'Model: '+model:'Dùng cùng model AI với HSK 5';
+      var report={summary_json:summary,ai_recommendation:text,model_used:model,updated_at:new Date().toISOString()};writeJson(reportKey(id),report);
+      if(sb()&&uid())try{var out=await sb().from(REPORT_TABLE).upsert({user_id:uid(),lesson_id:id,summary_json:summary,ai_recommendation:text,model_used:model,updated_at:new Date().toISOString()},{onConflict:'user_id,lesson_id'});if(out.error)throw out.error;}catch(e){console.warn('HSK3 report save failed',e);}
+    }catch(err){box.className='h3la-ai-box error';box.textContent='AI chưa tạo được gợi ý. '+String(err&&err.message||err||'');}
+  };
+
+  function installTab(){
+    if(!isH3())return;var tabs=document.getElementById('lesson-tabs'),content=document.getElementById('lesson-tab-content');if(!tabs||!content)return;
+    var btn=document.getElementById(BTN_ID),panel=document.getElementById(TAB_ID),notes=Array.prototype.slice.call(tabs.querySelectorAll('.tab-btn')).find(function(b){return /Ghi chép|笔记/.test(b.textContent||'');});
+    if(!btn){btn=document.createElement('button');btn.id=BTN_ID;btn.type='button';btn.className='tab-btn';btn.dataset.h3Tab=TAB_ID;btn.textContent='📊 Đánh giá';btn.onclick=function(){var id=currentLesson();if(typeof window.switchTab==='function')try{window.switchTab(TAB_ID,btn);}catch(e){}document.querySelectorAll('#lesson-tab-content .tab-content').forEach(function(x){x.classList.remove('active');});document.querySelectorAll('#lesson-tabs .tab-btn').forEach(function(x){x.classList.remove('active');});var p=document.getElementById(TAB_ID);if(p)p.classList.add('active');btn.classList.add('active');renderAssessment(id);};if(notes)tabs.insertBefore(btn,notes);else tabs.appendChild(btn);}else if(notes&&btn.nextSibling!==notes)tabs.insertBefore(btn,notes);
+    if(!panel){panel=document.createElement('div');panel.id=TAB_ID;panel.className='tab-content';if(notes){var np=document.getElementById(notes.dataset.h3Tab||notes.getAttribute('data-h3-tab')||'notes-tab')||document.getElementById('notes-tab');if(np)content.insertBefore(panel,np);else content.appendChild(panel);}else content.appendChild(panel);}
+    panel.dataset.lesson=String(currentLesson());
+  }
+  function scheduleInstall(){[0,70,220].forEach(function(ms){setTimeout(function(){installWrappers();installTab();},ms);});}
+  function scheduleRefresh(id){if(Number(id)!==currentLesson())return;var panel=document.getElementById(TAB_ID);if(!panel||!panel.classList.contains('active'))return;clearTimeout(refreshTimer);refreshTimer=setTimeout(function(){renderAssessment(id);},500);}
+
+  var oldLoad=window.loadLesson;if(typeof oldLoad==='function'&&!oldLoad.__h3la){var wrapped=function(){var r=oldLoad.apply(this,arguments);scheduleInstall();return r;};wrapped.__h3la=true;window.loadLesson=wrapped;try{loadLesson=wrapped;}catch(e){}}
+  var oldSwitch=window.switchCourse;if(typeof oldSwitch==='function'&&!oldSwitch.__h3la){var sw=function(){var r=oldSwitch.apply(this,arguments);scheduleInstall();return r;};sw.__h3la=true;window.switchCourse=sw;try{switchCourse=sw;}catch(e){}}
+
+  async function onSignedIn(){await loadCloudStates();uploadExistingStates();await flushPending();scheduleInstall();}
+  window.addEventListener('pagehide',function(){try{uploadExistingStates();flushPending();}catch(e){}});
+  function boot(){installWrappers();installTab();if(sb()&&uid())onSignedIn();if(window.hskSupabase&&window.hskSupabase.auth&&window.hskSupabase.auth.onAuthStateChange){try{window.hskSupabase.auth.onAuthStateChange(function(event,session){if(session&&session.user){window.hskCurrentUser=session.user;setTimeout(onSignedIn,180);}});}catch(e){}}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+
+  window.H3LA_V12={version:VERSION,recordAttempt:recordAttempt,analyze:analyze,fetchAttempts:fetchAttempts,renderAssessment:renderAssessment,flushPending:flushPending,loadCloudStates:loadCloudStates,audit:function(){return{version:VERSION,course:String(window.CURRENT_COURSE||''),user:uid(),attemptTable:ATTEMPT_TABLE,reportTable:REPORT_TABLE,remoteTableReady:remoteTableReady,lastTableError:lastTableError,tabPresent:!!document.getElementById(BTN_ID),wrapped:{h3gCheck:!!(window.h3gCheck&&window.h3gCheck.__h3la),h3fCheckEx2:!!(window.h3fCheckEx2&&window.h3fCheckEx2.__h3la),workbook:!!(window.h3wbv2SubmitPart&&window.h3wbv2SubmitPart.__h3la)}};}};
+  document.documentElement.setAttribute('data-hsk3-learning-build',VERSION);
+})();
+</script>
+<!-- /HSK3 V12 -->
+
 </body>
 </html>
