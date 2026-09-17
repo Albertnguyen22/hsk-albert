@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>HSK Albert — HSK 3 V11 · Toàn bộ AI dùng cùng model HSK 5</title>
+<title>HSK Albert — HSK 3 V13 · Đánh giá trực quan và AI gợi ý cụ thể</title>
 <!-- HSK3 V8 STABLE: synchronous lesson render; no retry observers; explanation + notes preserved -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -29570,7 +29570,7 @@ window.H3V8={version:'2026.09.16-v9-ai-grade-practice-restored',diagnose:functio
 })();
 </script>
 
-<!-- HSK3 V12: per-user exercise history, lesson analytics, AI review recommendations -->
+<!-- HSK3 V13: visual weakness map, exact review targets, structured AI recommendations -->
 <style id="h3la-v12-style">
 body.h3-course-active .h3la-wrap{display:grid;gap:16px;max-width:1180px;margin:0 auto 48px}
 body.h3-course-active .h3la-hero{background:linear-gradient(135deg,#eef8ff,#eefaf5 55%,#fff8eb);border:1px solid var(--border);border-radius:18px;padding:18px 20px;display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
@@ -29620,6 +29620,60 @@ body.h3-course-active .h3la-pill.none{background:var(--paper2);color:var(--muted
 body.h3-course-active .h3la-empty{padding:28px 14px;text-align:center;color:var(--muted);line-height:1.7}
 @media(max-width:920px){body.h3-course-active .h3la-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}body.h3-course-active .h3la-skill-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){body.h3-course-active .h3la-summary-grid,body.h3-course-active .h3la-skill-grid{grid-template-columns:1fr}body.h3-course-active .h3la-section-body{padding:12px}body.h3-course-active .h3la-course-table{min-width:700px}body.h3-course-active .h3la-table-wrap{overflow-x:auto}}
+
+/* V13 — bản đồ điểm yếu trực quan + kế hoạch ôn tập cụ thể */
+body.h3-course-active .h3la-priority-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+body.h3-course-active .h3la-priority-mini{position:relative;border:1px solid var(--border);border-radius:14px;padding:14px;background:linear-gradient(145deg,#fff,#faf8f3);overflow:hidden;min-height:172px}
+body.h3-course-active .h3la-priority-mini::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--red)}
+body.h3-course-active .h3la-priority-mini.p2::before{background:var(--gold)}
+body.h3-course-active .h3la-priority-mini.p3::before{background:var(--blue)}
+body.h3-course-active .h3la-priority-rank{font-size:10px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}
+body.h3-course-active .h3la-priority-mini h4{font-size:15px;margin:5px 0 7px;line-height:1.45}
+body.h3-course-active .h3la-priority-mini p{font-size:12px;line-height:1.65;color:var(--ink2);margin:0 0 10px}
+body.h3-course-active .h3la-priority-evidence{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:7px 0}
+body.h3-course-active .h3la-qchip{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:26px;padding:0 8px;border-radius:99px;background:#fff;border:1px solid var(--border);font-size:11px;font-weight:900;color:var(--ink)}
+body.h3-course-active .h3la-qchip.bad{background:var(--red-light);border-color:#efb5ae;color:var(--red)}
+body.h3-course-active .h3la-group-list{display:grid;gap:13px}
+body.h3-course-active .h3la-group{border:1px solid var(--border);border-radius:15px;overflow:hidden;background:#fff;box-shadow:0 3px 14px rgba(26,26,46,.045)}
+body.h3-course-active .h3la-group.severe{border-color:#efb5ae}.h3la-group.severe .h3la-group-head{background:linear-gradient(90deg,#fff1ef,#fff)}
+body.h3-course-active .h3la-group.medium{border-color:#ead27b}.h3la-group.medium .h3la-group-head{background:linear-gradient(90deg,#fff9e8,#fff)}
+body.h3-course-active .h3la-group-head{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border)}
+body.h3-course-active .h3la-group-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--paper2);font-size:22px}
+body.h3-course-active .h3la-group-title{font-weight:900;font-size:15px}.h3la-group-sub{font-size:11px;color:var(--muted);margin-top:2px}
+body.h3-course-active .h3la-score-badge{min-width:68px;text-align:center;border-radius:12px;padding:7px 9px;background:var(--red-light);color:var(--red);font-weight:900;font-size:17px}
+body.h3-course-active .h3la-score-badge span{display:block;font-size:9px;letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
+body.h3-course-active .h3la-group-body{padding:14px 16px}
+body.h3-course-active .h3la-diagnosis-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:11px}
+body.h3-course-active .h3la-diagnosis{border-radius:11px;padding:11px 12px;background:var(--paper2);font-size:12px;line-height:1.65}
+body.h3-course-active .h3la-diagnosis strong{display:block;color:var(--ink);margin-bottom:3px}
+body.h3-course-active .h3la-diagnosis.improve{background:var(--teal-light);border:1px solid #b9e3d8}
+body.h3-course-active .h3la-route{display:flex;gap:8px;align-items:flex-start;background:#eef3fb;border:1px solid #c7d6ed;border-radius:11px;padding:10px 12px;font-size:12px;line-height:1.6;margin:10px 0}
+body.h3-course-active .h3la-route b{color:var(--blue)}
+body.h3-course-active .h3la-group-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+body.h3-course-active .h3la-group-actions .btn{font-size:12px;padding:7px 11px}
+body.h3-course-active .h3la-question-details{margin-top:12px;border-top:1px dashed var(--border);padding-top:10px}
+body.h3-course-active .h3la-question-details>summary{cursor:pointer;font-weight:800;font-size:12px;color:var(--blue)}
+body.h3-course-active .h3la-qrow{border:1px solid var(--border);border-radius:12px;padding:11px 12px;margin-top:9px;background:#fff}
+body.h3-course-active .h3la-qrow-top{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+body.h3-course-active .h3la-qrow-title{font-weight:900}.h3la-qrow-prompt{font-family:'Noto Serif SC',serif;font-size:14px;line-height:1.85;margin:7px 0}
+body.h3-course-active .h3la-answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+body.h3-course-active .h3la-answer-cell{border-radius:9px;padding:9px 10px;font-size:12px;line-height:1.55;background:var(--red-light);border:1px solid #efc5c0}
+body.h3-course-active .h3la-answer-cell.good{background:var(--teal-light);border-color:#b9e3d8}.h3la-answer-cell b{display:block;margin-bottom:2px}
+body.h3-course-active .h3la-option-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:8px}
+body.h3-course-active .h3la-option{font-size:11px;border-radius:8px;padding:6px 8px;background:var(--paper2);border:1px solid var(--border)}
+body.h3-course-active .h3la-option.correct{background:var(--teal-light);border-color:#b9e3d8;font-weight:800}.h3la-option.chosen{outline:2px solid #e6a69e}
+body.h3-course-active .h3la-transcript-mini{margin-top:8px}.h3la-transcript-mini summary{cursor:pointer;color:var(--teal);font-size:11px;font-weight:800}.h3la-transcript-mini pre{white-space:pre-wrap;font-family:'Noto Serif SC',serif;font-size:12px;line-height:1.75;background:#fbfaf7;border:1px solid var(--border);border-radius:9px;padding:9px;margin-top:6px;max-height:220px;overflow:auto}
+body.h3-course-active .h3la-ai-box{white-space:normal;display:grid;gap:12px}
+body.h3-course-active .h3la-ai-conclusion{background:linear-gradient(135deg,#eef3fb,#eefaf5);border:1px solid #c7d6ed;border-radius:13px;padding:13px 15px;line-height:1.7}
+body.h3-course-active .h3la-ai-priorities{display:grid;gap:10px}.h3la-ai-priority{border:1px solid var(--border);border-radius:12px;padding:12px 13px;background:#fff}
+body.h3-course-active .h3la-ai-priority h4{margin:0 0 7px;font-size:14px}.h3la-ai-priority ul{margin:6px 0 0 20px;line-height:1.7}
+body.h3-course-active .h3la-ai-priority .exact{background:var(--gold-light);border-radius:8px;padding:7px 9px;margin-top:7px;font-size:12px;font-weight:700}
+body.h3-course-active .h3la-plan-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.h3la-day{border:1px solid var(--border);border-radius:11px;padding:10px;background:#fff;font-size:11px;line-height:1.6}.h3la-day b{display:block;color:var(--teal);font-size:12px;margin-bottom:4px}
+body.h3-course-active .h3la-retest{background:var(--teal-light);border:1px solid #b9e3d8;border-radius:11px;padding:11px 13px;font-size:12px;line-height:1.7}
+body.h3-course-active .h3la-data-note{font-size:11px;color:var(--muted);line-height:1.6}
+@media(max-width:920px){body.h3-course-active .h3la-priority-strip{grid-template-columns:1fr}.h3la-plan-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){body.h3-course-active .h3la-group-head{grid-template-columns:42px 1fr}.h3la-score-badge{grid-column:1/-1;justify-self:start}.h3la-diagnosis-grid,.h3la-answer-grid,.h3la-option-list,.h3la-plan-grid{grid-template-columns:1fr}}
+
 </style>
 <script id="h3la-v12-runtime">
 (function(){
@@ -29627,7 +29681,7 @@ body.h3-course-active .h3la-empty{padding:28px 14px;text-align:center;color:var(
   if(window.__H3LA_V12__) return;
   window.__H3LA_V12__=true;
 
-  var VERSION='2026.09.16-v12-user-learning-analytics';
+  var VERSION='2026.09.17-v13-visual-diagnostics-exact-ai-plan';
   var ATTEMPT_TABLE='hsk3_learning_attempts';
   var REPORT_TABLE='hsk3_learning_reports';
   var STATE_TYPE='hsk3_learning_state_v1';
@@ -29770,7 +29824,7 @@ body.h3-course-active .h3la-empty{padding:28px 14px;text-align:center;color:var(
       try{
         var out=await client.from('exercise_answers').upsert({
           user_id:user,lesson_id:Number(lesson)||0,exercise_type:STATE_TYPE,
-          question_id:'ls:'+lsKey,answer:JSON.stringify({value:value,updated_at:new Date().toISOString(),app:'HSK3 V12'}),
+          question_id:'ls:'+lsKey,answer:JSON.stringify({value:value,updated_at:new Date().toISOString(),app:'HSK3 V13'}),
           is_correct:null,updated_at:new Date().toISOString()
         },{onConflict:'user_id,lesson_id,exercise_type,question_id'});
         if(out.error)throw out.error;
@@ -29934,15 +29988,104 @@ body.h3-course-active .h3la-empty{padding:28px 14px;text-align:center;color:var(
       if(score!=null){var sw=Math.max(1,coreRows.length||arr.length);totalWeighted+=score*sw;totalWeight+=sw;}
     });
     var overall=totalWeight?Math.round(totalWeighted/totalWeight):null,unique=coreLatest.length,exp=Object.keys(expected).reduce(function(n,k){return n+(expected[k]||0);},0),completion=exp?Math.min(100,Math.round(unique/exp*100)):0;
-    var weak=coreLatest.filter(function(r){return Number(r.score)<70||!!(r.result_json&&r.result_json.assisted);}).sort(function(a,b){return Number(a.score)-Number(b.score);}).slice(0,8),tagCount={};
+    var weakAll=coreLatest.filter(function(r){return Number(r.score)<70||!!(r.result_json&&r.result_json.assisted);}).sort(function(a,b){var d=Number(a.score)-Number(b.score);return d||String(a.created_at||'').localeCompare(String(b.created_at||''));}),weak=weakAll.slice(0,18),tagCount={};
     coreLatest.filter(function(r){return Number(r.score)<80||!!(r.result_json&&r.result_json.assisted);}).forEach(function(r){(r.error_tags||[]).forEach(function(t){tagCount[t]=(tagCount[t]||0)+1;});});
     var tags=Object.keys(tagCount).map(function(k){return {key:k,count:tagCount[k]};}).sort(function(a,b){return b.count-a.count;}).slice(0,8),last=attempts.slice().sort(function(a,b){return String(b.created_at||'').localeCompare(String(a.created_at||''));})[0];
-    return {lesson_id:lessonId,overall:overall,completion:completion,unique_questions:unique,total_attempts:attempts.length,skills:skills,weak:weak,tags:tags,last_activity:last&&last.created_at||'',expected_total:exp};
+    return {lesson_id:lessonId,overall:overall,completion:completion,unique_questions:unique,total_attempts:attempts.length,skills:skills,weak:weak,weak_all:weakAll,tags:tags,last_activity:last&&last.created_at||'',expected_total:exp};
   }
   function statusClass(score){return score==null?'none':score>=85?'good':score>=70?'mid':'bad';}
   function statusText(score){return score==null?'Chưa có dữ liệu':score>=85?'Nắm khá tốt':score>=70?'Cần luyện thêm':'Cần củng cố';}
   function skillHtml(s,a){var x=a.skills[s.key],score=x.score,cl=score==null?'':score<60?'low':score<80?'mid':'';return '<div class="h3la-skill '+cl+'"><div class="h3la-skill-top"><span class="h3la-skill-name">'+s.icon+' '+esc(s.label)+'</span><span class="h3la-skill-score">'+(score==null?'—':score+'%')+'</span></div><div class="h3la-bar"><i style="width:'+(score==null?0:score)+'%"></i></div><div class="h3la-skill-meta">'+x.attempted+'/'+x.expected+' nội dung đã có kết quả · '+statusText(score)+'</div></div>';}
-  function weakHtml(a){if(!a.weak.length)return '<div class="h3la-empty">Chưa phát hiện câu yếu rõ ràng. Hãy tiếp tục làm bài để dữ liệu đánh giá chính xác hơn.</div>';return '<div class="h3la-weak-list">'+a.weak.map(function(r){return '<div class="h3la-weak-item"><b>'+esc(skillLabel(r.skill))+' · '+esc(r.question_id)+' · '+Math.round(Number(r.score))+'%</b><div>'+esc(shorten(r.question_text,180))+'</div>'+(r.answer?'<div style="margin-top:4px"><b style="display:inline">Bài làm:</b> '+esc(shorten(r.answer,150))+'</div>':'')+'</div>';}).join('')+'</div>';}
+  function questionNumber(r){
+    var m=String(r&&r.question_id||'').match(/workbook:q(\d+)/i);if(m)return Number(m[1]);
+    m=String(r&&r.question_id||'').match(/:q(\d+)/i);return m?Number(m[1]):0;
+  }
+  function transcriptBlock(lessonId,q){
+    if(!(q>=1&&q<=20))return '';
+    var d=workbookData(lessonId),k=q<=5?'p1':q<=10?'p2':q<=15?'p3':'p4',txt=String((d.transcriptSections||{})[k]||'');
+    if(!txt)return '';
+    function positionFor(n,from){
+      var marks=['\n'+n+'.','\n'+n+'、','\n'+n+'．',String(n)+'.',String(n)+'、',String(n)+'．'],best=-1;
+      marks.forEach(function(mark){var p=txt.indexOf(mark,from||0);if(p>=0&&(best<0||p<best))best=p+(mark.charAt(0)==='\n'?1:0);});
+      return best;
+    }
+    var start=positionFor(q,0);if(start<0)return '';
+    var end=positionFor(q+1,start+2),answerPos=txt.indexOf('\n参考答案',start);
+    if(answerPos>=0&&(end<0||answerPos<end))end=answerPos;
+    if(end<0)end=txt.length;
+    return txt.slice(start,end).trim();
+  }
+  function listeningQuestion(block){
+    var lines=String(block||'').split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean);
+    var line=lines.filter(function(x){return /^问\s*[:：,，]?/.test(x);}).pop()||'';
+    return line.replace(/^问\s*[:：,，]?\s*/,'').trim();
+  }
+  function workbookPartMeta(q){
+    if(q<=5)return {key:'wb-lp1',icon:'🎧',title:'Nghe · Phần 1',subtitle:'Câu 1–5 · Nghe và chọn tranh',focus:'Khó nhận ra từ khóa chỉ người, đồ vật hoặc hành động trong hội thoại ngắn.',improve:'Nghe danh từ và động từ chính trước; loại các tranh không khớp hành động.',route:'Bài tập → 一、听力 → Phần 1 → câu ',view:'listening',sec:'lp1'};
+    if(q<=10)return {key:'wb-lp2',icon:'🎧',title:'Nghe · Phần 2',subtitle:'Câu 6–10 · Phán đoán Đúng/Sai',focus:'Khó đối chiếu câu nghe với mệnh đề, đặc biệt khi có phủ định, số lượng hoặc thời gian.',improve:'Gạch từ phủ định và số liệu; so sánh đúng ý, không chỉ bắt một từ giống nhau.',route:'Bài tập → 一、听力 → Phần 2 → câu ',view:'listening',sec:'lp2'};
+    if(q<=15)return {key:'wb-lp3',icon:'🎧',title:'Nghe · Phần 3',subtitle:'Câu 11–15 · Đối thoại ngắn',focus:'Khó xác định ai, ở đâu, làm gì hoặc nguyên nhân từ một đoạn đối thoại ngắn.',improve:'Đọc lựa chọn trước; khi nghe ghi 3 từ khóa: người – việc – lý do.',route:'Bài tập → 一、听力 → Phần 3 → câu ',view:'listening',sec:'lp3'};
+    if(q<=20)return {key:'wb-lp4',icon:'🎧',title:'Nghe · Phần 4',subtitle:'Câu 16–20 · Đối thoại dài',focus:'Khó giữ mạch thông tin qua nhiều lượt nói và chọn đúng kết luận ở câu hỏi cuối.',improve:'Ghi nhanh ai – ở đâu – vì sao – kết quả; chỉ chọn sau khi nghe câu hỏi cuối.',route:'Bài tập → 一、听力 → Phần 4 → câu ',view:'listening',sec:'lp4'};
+    if(q<=25)return {key:'wb-rp1',icon:'📖',title:'Đọc · Phần 1',subtitle:'Câu 21–25 · Nối câu hỏi với câu trả lời',focus:'Khó nhận diện quan hệ hỏi–đáp và mục đích giao tiếp.',improve:'Xác định từ để hỏi và chủ đề trước, sau đó loại câu trả lời sai ngữ cảnh.',route:'Bài tập → 二、阅读 → Phần 1 → câu ',view:'reading',sec:'rp1'};
+    if(q<=30)return {key:'wb-rp2',icon:'📖',title:'Đọc · Phần 2',subtitle:'Câu 26–30 · Chọn từ điền chỗ trống',focus:'Khó chọn từ theo kết hợp từ và logic trước–sau của câu.',improve:'Xác định từ loại cần điền, rồi kiểm tra cụm từ cố định và nghĩa toàn câu.',route:'Bài tập → 二、阅读 → Phần 2 → câu ',view:'reading',sec:'rp2'};
+    if(q<=35)return {key:'wb-rp3',icon:'📖',title:'Đọc · Phần 3',subtitle:'Câu 31–35 · Đọc hiểu',focus:'Khó tìm ý chính hoặc chi tiết tương đương trong đoạn đọc.',improve:'Đọc câu hỏi trước, khoanh từ khóa rồi tìm câu chứa ý tương đương trong đoạn.',route:'Bài tập → 二、阅读 → Phần 3 → câu ',view:'reading',sec:'rp3'};
+    if(q<=40)return {key:'wb-writing-reorder',icon:'✍️',title:'Viết · Phần 1',subtitle:'Câu 36–40 · Sắp xếp câu',focus:'Trật tự từ trong câu chưa chắc, dễ đặt sai vị trí thời gian, trạng ngữ hoặc bổ ngữ.',improve:'Xếp theo khung Chủ ngữ → thời gian/nơi chốn → động từ → tân ngữ → bổ ngữ.',route:'Bài tập → 三、书写 → Sắp xếp câu → câu ',view:'writing',sec:'writing'};
+    if(q<=45)return {key:'wb-writing-pinyin',icon:'✍️',title:'Viết · Phần 2',subtitle:'Câu 41–45 · Pinyin → chữ Hán',focus:'Chưa nhớ chắc chữ Hán tương ứng với pinyin trong ngữ cảnh.',improve:'Đọc cả câu, xác định nghĩa rồi mới viết chữ; luyện lại chữ sai 3 lần theo cụm.',route:'Bài tập → 三、书写 → Pinyin → chữ Hán → câu ',view:'writing',sec:'writing'};
+    if(q<=50)return {key:'wb-writing-hanzi',icon:'✍️',title:'Viết · Phần 3',subtitle:'Câu 46–50 · Chọn chữ Hán đúng',focus:'Dễ nhầm chữ đồng âm hoặc chữ gần hình khi đặt vào câu.',improve:'So sánh nghĩa của hai chữ trong ngoặc và đọc lại cả cụm sau khi điền.',route:'Bài tập → 三、书写 → Chọn chữ Hán → câu ',view:'writing',sec:'writing'};
+    return {key:'wb-writing-word',icon:'✍️',title:'Viết · Phần 4',subtitle:'Câu 51–54 · Ghép từ',focus:'Chưa chắc khả năng ghép chữ thành từ đúng.',improve:'Ôn theo cụm hai chữ và đặt mỗi từ vào một câu ngắn.',route:'Bài tập → 三、书写 → Ghép từ → câu ',view:'writing',sec:'writing'};
+  }
+  function recordMeta(r,lessonId){
+    var id=String(r.question_id||''),q=questionNumber(r),m;
+    if(/^workbook:q\d+/i.test(id))return Object.assign({q:q},workbookPartMeta(q));
+    if(/^workbook:review:/i.test(id))return {key:'wb-review',icon:'🔁',title:'Ôn tập cuối bài',subtitle:'四、复习 · Điền theo nội dung bài khóa',focus:'Từ vựng và nội dung bài khóa chưa được ghi nhớ chắc.',improve:'Đọc lại đoạn liên quan, che đáp án và điền lại đủ các ô.',route:'Bài tập → 四、复习 → bài ',view:'review',sec:'review',q:q};
+    m=id.match(/^grammar:p(\d+)/i);if(m){var t=(r.result_json&&((r.result_json.point_title)||(r.result_json.formula)))||'';return {key:'grammar-p'+m[1],icon:'🧩',title:'Ngữ pháp · 练一练',subtitle:'Điểm '+m[1]+(t?' · '+t:''),focus:'Chưa vận dụng ổn định mẫu ngữ pháp này trong câu.',improve:'Đọc lại cấu trúc và ví dụ, sau đó làm lại toàn bộ 练一练 của đúng điểm ngữ pháp.',route:'Ngữ pháp → Điểm '+m[1]+' → 练一练 → câu ',view:'grammar',sec:'grammar',point:Number(m[1]),q:q};}
+    if(/^textbook:ex2/i.test(id))return {key:'textbook-ex2',icon:'🧩',title:'Giáo trình · 练习2',subtitle:'Chọn từ điền chỗ trống',focus:'Dùng từ hoặc cấu trúc theo ngữ cảnh chưa chính xác.',improve:'Ôn lại nghĩa và kết hợp từ; làm lại 练习2 không nhìn gợi ý.',route:'Ngữ pháp → Bài tập giáo trình → 练习2 → câu ',view:'grammar',sec:'ex2',q:q};
+    if(/^textbook:ex3/i.test(id))return {key:'textbook-ex3',icon:'💬',title:'Giáo trình · 练习3',subtitle:'Hoàn thành hội thoại',focus:'Phản xạ chọn câu phù hợp với ngữ cảnh hội thoại còn yếu.',improve:'Đọc cả lượt trước và sau, xác định ý định giao tiếp rồi điền câu.',route:'Ngữ pháp → Bài tập giáo trình → 练习3 → câu ',view:'grammar',sec:'ex3',q:q};
+    if(/^textbook:ex4/i.test(id))return {key:'textbook-ex4',icon:'🗣️',title:'Giáo trình · 练习4',subtitle:'Trả lời câu hỏi',focus:'Câu trả lời còn thiếu ý, thiếu cấu trúc mục tiêu hoặc chưa tự nhiên.',improve:'Trả lời đủ chủ ngữ + động từ + thông tin chính; dùng đúng mẫu của bài.',route:'Ngữ pháp → Bài tập giáo trình → 练习4 → câu ',view:'grammar',sec:'ex4',q:q};
+    if(/^textbook:usage/i.test(id))return {key:'textbook-usage',icon:'🗣️',title:'Giáo trình · 运用',subtitle:'Vận dụng nói/viết theo tình huống',focus:'Khả năng vận dụng từ và ngữ pháp vào tình huống thực tế chưa đầy đủ.',improve:'Làm lại đúng hoạt động, đủ các ý bắt buộc và nói/viết tối thiểu 3 câu.',route:'Ngữ pháp → Bài tập giáo trình → 运用 → hoạt động ',view:'grammar',sec:'usage',q:q};
+    if(/^textbook:match/i.test(id))return {key:'textbook-match',icon:'🔗',title:'Giáo trình · Ghép cụm',subtitle:'Ghép từ/cụm đúng',focus:'Kết hợp từ chưa chắc.',improve:'Ôn theo cụm cố định, không học từng chữ rời.',route:'Ngữ pháp → Bài tập giáo trình → Ghép cụm → câu ',view:'grammar',sec:'match',q:q};
+    return {key:'skill-'+String(r.skill||'other'),icon:(SKILLS.find(function(x){return x.key===r.skill;})||{}).icon||'📌',title:skillLabel(r.skill),subtitle:'Nội dung cần củng cố',focus:'Kết quả hiện tại dưới mức đạt.',improve:'Làm lại nội dung này không nhìn đáp án và kiểm tra lại.',route:'Mở đúng tab '+skillLabel(r.skill)+' → mục ',view:String(r.skill||''),sec:'',q:q};
+  }
+  function weakGroups(a,lessonId){
+    var rows=(a.weak_all||a.weak||[]),map={};rows.forEach(function(r){var meta=recordMeta(r,lessonId),g=map[meta.key];if(!g)g=map[meta.key]={key:meta.key,meta:meta,rows:[],sum:0,assisted:0};g.rows.push(r);g.sum+=Number(r.score)||0;if(r.result_json&&r.result_json.assisted)g.assisted++;});
+    return Object.keys(map).map(function(k){var g=map[k];g.score=Math.round(g.sum/Math.max(1,g.rows.length));g.rows.sort(function(a,b){return questionNumber(a)-questionNumber(b);});g.questions=g.rows.map(questionNumber).filter(Boolean);return g;}).sort(function(a,b){return (a.score-b.score)||(b.rows.length-a.rows.length);});
+  }
+  function optionMapHtml(item,answer,reference){var opts=item&&item.options||{},keys=Object.keys(opts);if(!keys.length)return '';return '<div class="h3la-option-list">'+keys.map(function(k){var c=(k===String(reference)?' correct':'')+(k===String(answer)?' chosen':'');return '<div class="h3la-option'+c+'"><b>'+esc(k)+'.</b> '+esc(opts[k])+'</div>';}).join('')+'</div>';}
+  function weakQuestionHtml(r,lessonId){
+    var q=questionNumber(r),meta=recordMeta(r,lessonId),item=q?workbookItem(lessonId,q):{},block=q<=20?transcriptBlock(lessonId,q):'',asked=listeningQuestion(block),prompt=asked||item.stem||item.passage||r.question_text||'',answer=String(r.answer||'—'),ref=String(r.reference_answer||'—'),ansText=item.options&&item.options[answer]?item.options[answer]:'',refText=item.options&&item.options[ref]?item.options[ref]:'',score=Math.round(Number(r.score)||0);
+    return '<div class="h3la-qrow"><div class="h3la-qrow-top"><div class="h3la-qrow-title">'+(q?'Câu '+q:esc(r.question_id))+'</div><span class="h3la-pill '+statusClass(score)+'">'+score+'%</span></div>'
+      +'<div class="h3la-qrow-prompt">'+esc(shorten(prompt,420)).replace(/\n/g,'<br>')+'</div>'
+      +'<div class="h3la-answer-grid"><div class="h3la-answer-cell"><b>✕ Bài làm của bạn</b>'+esc(answer)+(ansText?' · '+esc(ansText):'')+'</div><div class="h3la-answer-cell good"><b>✓ Đáp án cần đạt</b>'+esc(ref)+(refText?' · '+esc(refText):'')+'</div></div>'
+      +optionMapHtml(item,answer,ref)
+      +(block?'<details class="h3la-transcript-mini"><summary>🎧 Xem đúng đoạn transcript của câu '+q+'</summary><pre>'+esc(block)+'</pre></details>':'')
+      +'</div>';
+  }
+  function groupActionHtml(g,lessonId){var qs=g.questions.join(',');return '<div class="h3la-group-actions"><button class="btn btn-primary" onclick="h3laOpenTarget('+lessonId+',\''+g.key+'\',\''+qs+'\')">Mở đúng bài tập cần ôn →</button>'+(g.meta.view==='listening'?'<button class="btn btn-outline" onclick="h3laOpenListeningExplain('+lessonId+',\''+qs+'\')">Mở transcript từng câu</button>':'')+'</div>';}
+  function weaknessOverviewHtml(groups,lessonId){
+    if(!groups.length)return '<div class="h3la-empty">Chưa phát hiện nhóm yếu rõ ràng. Hãy tiếp tục làm và nộp bài để hệ thống có đủ dữ liệu.</div>';
+    var top=groups.slice(0,3),mini='<div class="h3la-priority-strip">'+top.map(function(g,i){var qs=g.questions.length?g.questions.map(function(q){return '<span class="h3la-qchip bad">Q'+q+'</span>';}).join(''):'<span class="h3la-qchip bad">'+g.rows.length+' mục</span>';return '<div class="h3la-priority-mini p'+(i+1)+'"><div class="h3la-priority-rank">Ưu tiên '+(i+1)+'</div><h4>'+g.meta.icon+' '+esc(g.meta.title)+'</h4><div class="h3la-priority-evidence"><b>'+g.score+'%</b>'+qs+'</div><p>'+esc(g.meta.focus)+'</p><button class="btn btn-outline" onclick="h3laOpenTarget('+lessonId+',\''+g.key+'\',\''+g.questions.join(',')+'\')">Ôn đúng phần này</button></div>';}).join('')+'</div>';
+    var cards='<div class="h3la-group-list">'+groups.map(function(g,i){var sev=g.score<50?'severe':'medium',qs=g.questions.length?g.questions.map(function(q){return '<span class="h3la-qchip bad">Q'+q+'</span>';}).join(''):'<span class="h3la-qchip bad">'+g.rows.length+' mục</span>',route=g.meta.route+(g.questions.length?g.questions.join(', '):(g.meta.q||''));return '<article class="h3la-group '+sev+'"><div class="h3la-group-head"><div class="h3la-group-icon">'+g.meta.icon+'</div><div><div class="h3la-group-title">Ưu tiên '+(i+1)+' · '+esc(g.meta.title)+'</div><div class="h3la-group-sub">'+esc(g.meta.subtitle)+' · '+g.rows.length+' nội dung cần ôn'+(g.assisted?' · '+g.assisted+' nội dung đã xem đáp án':'')+'</div></div><div class="h3la-score-badge">'+g.score+'%<span>'+(g.score<50?'Rất yếu':'Cần củng cố')+'</span></div></div><div class="h3la-group-body"><div class="h3la-priority-evidence">'+qs+'</div><div class="h3la-diagnosis-grid"><div class="h3la-diagnosis"><strong>Điểm yếu thể hiện</strong>'+esc(g.meta.focus)+'</div><div class="h3la-diagnosis improve"><strong>Cần cải thiện như thế nào</strong>'+esc(g.meta.improve)+'</div></div><div class="h3la-route"><span>📍</span><div><b>Ôn chính xác tại:</b> '+esc(route)+'</div></div>'+groupActionHtml(g,lessonId)+'<details class="h3la-question-details" '+(i===0?'open':'')+'><summary>Xem từng câu sai, bài làm và đáp án đúng</summary>'+g.rows.map(function(r){return weakQuestionHtml(r,lessonId);}).join('')+'</details></div></article>';}).join('')+'</div>';
+    return mini+cards;
+  }
+  function localPlan(groups,a,lessonId){
+    var top=groups.slice(0,3),pri=top.map(function(g,i){return {rank:i+1,area:g.meta.title,score:g.score,questions:g.questions,diagnosis:g.meta.focus,improve:g.meta.improve,exercise:g.meta.route+(g.questions.length?g.questions.join(', '):''),method:[g.meta.improve,'Làm lại không nhìn đáp án; sau đó kiểm tra lại ngay.'],target:g.meta.view==='listening'?'Đạt ít nhất 4/5 câu đúng trong cùng phần ở lần làm lại.':'Đạt ít nhất 85% và không dùng nút hiện đáp án.'};});
+    var p1=pri[0],p2=pri[1]||p1,p3=pri[2]||p2||p1;
+    if(!p1){
+      return {conclusion:'Chưa đủ kết quả đã chấm để xác định phần yếu. Hãy hoàn thành ít nhất một phần Nghe, Đọc, Viết hoặc 练一练 rồi quay lại.',priorities:[],plan:[{day:1,minutes:20,task:'Làm và nộp một phần bài tập chưa có kết quả.'},{day:2,minutes:20,task:'Làm thêm một phần khác để tạo dữ liệu so sánh.'},{day:3,minutes:20,task:'Mở lại tab Đánh giá để xem nhóm yếu đầu tiên.'},{day:4,minutes:20,task:'Làm lại nhóm yếu vừa được xác định.'},{day:5,minutes:20,task:'Kiểm tra lại mà không xem đáp án.'}],retest:['Có ít nhất 10 câu đã được chấm.','Có dữ liệu ở ít nhất hai kỹ năng.','Sau đó dùng nút AI tinh chỉnh kế hoạch.']};
+    }
+    var allQuestions=top.reduce(function(z,g){return z.concat(g.questions);},[]);
+    return {conclusion:'Điểm yếu rõ nhất của Bài '+lessonId+' là '+p1.area+' ('+p1.score+'%). Cần ưu tiên làm lại đúng nhóm câu này trước, chưa cần ôn dàn trải toàn bài.',priorities:pri,plan:[{day:1,minutes:20,task:'Đọc lại cách làm '+p1.area+'; làm lại '+p1.exercise+'.'},{day:2,minutes:20,task:'Làm lại lần 2 đúng nhóm '+p1.questions.join(', ')+' mà không xem đáp án; ghi lý do từng câu sai.'},{day:3,minutes:20,task:p2?'Ôn '+p2.area+' và làm '+p2.exercise+'.':'Làm lại nhóm yếu nhất.'},{day:4,minutes:20,task:p3?'Ôn '+p3.area+' và làm '+p3.exercise+'.':'Trộn lại các câu sai.'},{day:5,minutes:20,task:'Kiểm tra lại toàn bộ câu yếu của ba ưu tiên; chỉ đạt khi mỗi nhóm ≥85% và không xem đáp án.'}],retest:['Làm lại đúng các câu: '+allQuestions.join(', ')+'.','Mỗi nhóm đạt ít nhất 85%.','Không dùng “Hiện đáp án” trước khi nộp.']};
+  }
+  function normalizeAiPlan(raw,local){
+    var out={conclusion:String(raw&&raw.conclusion||local.conclusion),priorities:[],plan:Array.isArray(raw&&raw.plan)?raw.plan:local.plan,retest:Array.isArray(raw&&raw.retest)?raw.retest:local.retest};
+    local.priorities.forEach(function(lp,i){var ap=raw&&Array.isArray(raw.priorities)?raw.priorities[i]||{}:{};out.priorities.push(Object.assign({},lp,{diagnosis:String(ap.diagnosis||ap.weakness||lp.diagnosis),improve:String(ap.improve||lp.improve),method:Array.isArray(ap.method)?ap.method:lp.method,target:String(ap.target||lp.target)}));});
+    if(!out.plan.length)out.plan=local.plan;if(!out.retest.length)out.retest=local.retest;return out;
+  }
+  function parseJsonLoose(text){var t=String(text||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');try{return JSON.parse(t);}catch(e){}var a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a)try{return JSON.parse(t.slice(a,b+1));}catch(e){}return null;}
+  function recommendationHtml(plan,groups,lessonId,source){
+    plan=plan||localPlan(groups,{},{lesson_id:lessonId});var priorities=(plan.priorities||[]).slice(0,3),days=(plan.plan||[]).slice(0,5),retest=plan.retest||[];
+    return '<div class="h3la-ai-conclusion"><b>🎯 Kết luận tập trung</b><br>'+esc(plan.conclusion||'')+'</div><div class="h3la-ai-priorities">'+priorities.map(function(p,i){return '<div class="h3la-ai-priority"><h4>Ưu tiên '+(i+1)+' · '+esc(p.area||'')+' · '+Math.round(Number(p.score)||0)+'%</h4><div><b>Yếu ở đâu:</b> '+esc(p.diagnosis||'')+'</div><div><b>Cần cải thiện:</b> '+esc(p.improve||'')+'</div><div class="exact">Ôn đúng bài tập: '+esc(p.exercise||'')+'</div><ul>'+((p.method||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join(''))+'</ul><div style="margin-top:7px"><b>Tiêu chí đạt:</b> '+esc(p.target||'')+'</div></div>';}).join('')+'</div><div><b>📅 Kế hoạch 5 ngày</b><div class="h3la-plan-grid">'+days.map(function(d){return '<div class="h3la-day"><b>Ngày '+esc(d.day)+' · '+esc(d.minutes||20)+' phút</b>'+esc(d.task||((d.tasks||[]).join('; ')))+'</div>';}).join('')+'</div></div><div class="h3la-retest"><b>✅ Kiểm tra lại</b><ul style="margin:6px 0 0 18px">'+retest.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div><div class="h3la-data-note">Nguồn kế hoạch: '+esc(source||'Phân tích tự động từ kết quả đã lưu')+'. Hệ thống chỉ dùng những phần và câu đã có dữ liệu.</div>';
+  }
+  function weakHtml(a,lessonId){return weaknessOverviewHtml(weakGroups(a,lessonId),lessonId);}
   function skillLabel(k){var s=SKILLS.find(function(x){return x.key===k;});return s?s.label:k;}
   function shorten(s,n){s=String(s||'').replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n-1)+'…':s;}
   function formatDate(s){if(!s)return 'Chưa có';try{return new Date(s).toLocaleString('vi-VN');}catch(e){return s;}}
@@ -29953,12 +30096,12 @@ body.h3-course-active .h3la-empty{padding:28px 14px;text-align:center;color:var(
     var attempts=await fetchAttempts(lessonId,false),a=analyze(lessonId,attempts),l=lessonInfo(lessonId),report=readJson(reportKey(lessonId),null);if(uid())try{var rr=await sb().from(REPORT_TABLE).select('summary_json,ai_recommendation,model_used,updated_at').eq('user_id',uid()).eq('lesson_id',lessonId).maybeSingle();if(rr&&!rr.error&&rr.data)report=rr.data;}catch(e){}
     var cloudText,cloudKind;if(!uid()){cloudKind='warn';cloudText='<b>Chưa đăng nhập:</b> dữ liệu hiện được giữ trên máy này. Đăng nhập để đồng bộ theo từng user.';}else if(remoteTableReady===false){cloudKind='bad';cloudText='<b>Chưa thể đồng bộ bảng phân tích trên Supabase.</b> Hãy chạy file SQL V12 và kiểm tra RLS. Dữ liệu tạm thời vẫn được giữ trên máy.';}else{cloudKind='ok';cloudText='<b>Đồng bộ theo user:</b> câu trả lời và kết quả được gắn với tài khoản '+esc((window.hskCurrentUser&&window.hskCurrentUser.email)||uid())+'.';}
     panel.innerHTML='<div class="h3la-wrap" data-lesson="'+lessonId+'">'
-      +'<div class="h3la-hero"><div><h2>📊 Đánh giá học tập · Bài '+lessonId+(l.zh?'：<span class="zh">'+esc(l.zh)+'</span>':'')+'</h2><p>Hệ thống lấy kết quả mới nhất của từng câu, phân tích điểm yếu theo kỹ năng và lưu lịch sử theo user. Ghi chép vẫn nằm ở tab ngoài cùng.</p></div><div class="h3la-actions"><button class="btn btn-outline" onclick="h3laRefresh('+lessonId+',true)">↻ Làm mới dữ liệu</button><button class="btn btn-teal" onclick="h3laAskAI('+lessonId+')">🤖 AI gợi ý ôn tập</button></div></div>'
+      +'<div class="h3la-hero"><div><h2>📊 Đánh giá học tập · Bài '+lessonId+(l.zh?'：<span class="zh">'+esc(l.zh)+'</span>':'')+'</h2><p>Hệ thống gom câu sai theo đúng phần, chỉ rõ vì sao yếu, cần cải thiện gì và mở thẳng đến bài tập phải ôn. Lịch sử vẫn được lưu theo user.</p></div><div class="h3la-actions"><button class="btn btn-outline" onclick="h3laRefresh('+lessonId+',true)">↻ Làm mới dữ liệu</button><button class="btn btn-teal" onclick="h3laAskAI('+lessonId+')">🤖 AI tinh chỉnh kế hoạch</button></div></div>'
       +'<div id="h3la-cloud-status" class="h3la-status '+cloudKind+'">'+cloudText+(lastTableError&&remoteTableReady===false?'<br><small>'+esc(lastTableError)+'</small>':'')+'</div>'
       +'<div class="h3la-summary-grid"><div class="h3la-summary-card"><div class="num">'+(a.overall==null?'—':a.overall+'%')+'</div><div class="label">Kết quả hiện tại</div><div class="sub">'+statusText(a.overall)+'</div></div><div class="h3la-summary-card"><div class="num">'+a.completion+'%</div><div class="label">Mức độ hoàn thành có dữ liệu</div><div class="sub">'+a.unique_questions+'/'+a.expected_total+' nội dung dự kiến</div></div><div class="h3la-summary-card"><div class="num">'+a.total_attempts+'</div><div class="label">Tổng lượt làm đã lưu</div><div class="sub">Bao gồm chấm theo sách và AI</div></div><div class="h3la-summary-card"><div class="num" style="font-size:16px">'+esc(formatDate(a.last_activity))+'</div><div class="label">Hoạt động gần nhất</div><div class="sub">Dùng để theo dõi quá trình học</div></div></div>'
       +'<section class="h3la-section"><div class="h3la-section-head"><h3>Năng lực theo từng phần</h3><span style="font-size:11px;color:var(--muted)">Mốc gợi ý: dưới 70 cần ưu tiên ôn</span></div><div class="h3la-section-body"><div class="h3la-skill-grid">'+SKILLS.map(function(s){return skillHtml(s,a);}).join('')+'</div></div></section>'
-      +'<section class="h3la-section"><div class="h3la-section-head"><h3>Câu và nội dung đang yếu</h3><span style="font-size:11px;color:var(--muted)">'+a.weak.length+' mục ưu tiên</span></div><div class="h3la-section-body">'+weakHtml(a)+(a.tags.length?'<div class="h3la-tag-row">'+a.tags.map(function(t){return '<span class="h3la-tag">'+esc(TAG_LABELS[t.key]||t.key)+' · '+t.count+'</span>';}).join('')+'</div>':'')+'</div></section>'
-      +'<section class="h3la-section"><div class="h3la-section-head"><h3>🤖 AI gợi ý nên ôn lại phần nào</h3><span id="h3la-ai-model" style="font-size:11px;color:var(--muted)">'+(report&&report.model_used?'Model: '+esc(report.model_used):'Dùng cùng model AI với HSK 5')+'</span></div><div class="h3la-section-body"><div id="h3la-ai-box" class="h3la-ai-box">'+(report&&report.ai_recommendation?esc(report.ai_recommendation):'Bấm “AI gợi ý ôn tập”. AI sẽ dùng điểm từng kỹ năng, câu sai và lỗi lặp lại để đề xuất nội dung cần ôn.')+'</div></div></section>'
+      +'<section class="h3la-section"><div class="h3la-section-head"><h3>🎯 Bản đồ điểm yếu và bài tập cần ôn</h3><span style="font-size:11px;color:var(--muted)">Đã gom theo đúng phần, không liệt kê rời rạc</span></div><div class="h3la-section-body">'+weakHtml(a,lessonId)+(a.tags.length?'<div class="h3la-tag-row">'+a.tags.map(function(t){return '<span class="h3la-tag">'+esc(TAG_LABELS[t.key]||t.key)+' · '+t.count+'</span>';}).join('')+'</div>':'')+'</div></section>'
+      +'<section class="h3la-section"><div class="h3la-section-head"><h3>🤖 Kế hoạch ôn tập tập trung</h3><span id="h3la-ai-model" style="font-size:11px;color:var(--muted)">'+(report&&report.model_used?'Model: '+esc(report.model_used):'Kế hoạch cụ thể được tạo ngay từ dữ liệu')+'</span></div><div class="h3la-section-body"><div id="h3la-ai-box" class="h3la-ai-box">'+recommendationHtml((function(){var g=weakGroups(a,lessonId),local=localPlan(g,a,lessonId),saved=report&&report.ai_recommendation?parseJsonLoose(report.ai_recommendation):null;return saved?normalizeAiPlan(saved,local):local;})(),weakGroups(a,lessonId),lessonId,report&&report.ai_recommendation?'AI + dữ liệu kết quả':'Phân tích dữ liệu tại chỗ')+'</div></div></section>'
       +'<section class="h3la-section"><div class="h3la-section-head"><h3>Tổng quan 20 bài</h3><span style="font-size:11px;color:var(--muted)">Nhấn một dòng để mở bài</span></div><div class="h3la-section-body"><div id="h3la-course-overview" class="h3la-empty">Đang tổng hợp toàn khóa…</div></div></section>'
       +'</div>';
     renderCourseOverview();
@@ -29969,30 +30112,41 @@ body.h3-course-active .h3la-empty{padding:28px 14px;text-align:center;color:var(
 
   window.h3laRefresh=function(id,force){if(force){remoteTableReady=null;lastTableError='';flushPending();}return renderAssessment(id||currentLesson());};
   window.h3laOpenLesson=function(id){try{if(typeof window.loadLesson==='function')window.loadLesson(Number(id));setTimeout(function(){var b=document.getElementById(BTN_ID);if(b)b.click();},120);}catch(e){}};
+  window.h3laOpenTarget=function(id,key,qCsv){
+    id=currentLesson(id);var qs=String(qCsv||'').split(',').map(Number).filter(Boolean),first=qs[0]||0;
+    if(/^wb-/.test(key)){
+      var wb=document.getElementById('h3-workbook-text-btn');if(wb)wb.click();var view=/lp/.test(key)?'listening':/rp/.test(key)?'reading':/review/.test(key)?'review':'writing';
+      setTimeout(function(){if(typeof window.h3wbv2SetView==='function')window.h3wbv2SetView(id,view);setTimeout(function(){var target=first?(document.getElementById('h3wbv2-q-'+id+'-'+first)||document.getElementById('h3wbv2-w-'+id+'-'+first)||document.getElementById('h3wbv2-rv-'+id+'-'+first)):null;if(target)target.scrollIntoView({behavior:'smooth',block:'center'});},90);},70);return;
+    }
+    var gb=document.querySelector('#lesson-tabs [data-h3-tab="grammar-tab"]')||Array.prototype.slice.call(document.querySelectorAll('#lesson-tabs .tab-btn')).find(function(b){return /Ngữ pháp|语法/.test(b.textContent||'');});if(gb)gb.click();
+    setTimeout(function(){var el=null,m;if((m=key.match(/^grammar-p(\d+)/)))el=document.getElementById('h3g-in-'+id+'-'+(Number(m[1])-1)+'-0-0');else if(key==='textbook-ex2')el=document.getElementById('h3f-e2-'+id+'-'+Math.max(0,first-1));else if(key==='textbook-ex3')el=document.querySelector('[id^="h3f-e3-'+id+'-'+Math.max(0,first-1)+'-"]');else if(key==='textbook-ex4')el=document.getElementById('h3f-e4-'+id+'-'+Math.max(0,first-1));else if(key==='textbook-usage')el=document.getElementById('h3f-u-'+id+'-'+Math.max(0,first-1));if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},100);
+  };
+  window.h3laOpenListeningExplain=function(id,qCsv){
+    id=currentLesson(id);var first=Number(String(qCsv||'').split(',')[0])||0,btn=document.getElementById('h3v7-listening-explain-btn');if(btn)btn.click();setTimeout(function(){var rows=Array.prototype.slice.call(document.querySelectorAll('#h3v7-listening-explain-tab .h3v7-q'));var row=rows.find(function(x){var n=x.querySelector('.h3v7-q-no');return n&&Number(n.textContent)===first;});if(row){row.open=true;row.scrollIntoView({behavior:'smooth',block:'center'});}},100);
+  };
   window.h3laAskAI=async function(id){
-    id=currentLesson(id);var box=document.getElementById('h3la-ai-box');if(!box)return;var attempts=await fetchAttempts(id,false),a=analyze(id,attempts),l=lessonInfo(id);if(!attempts.length){box.className='h3la-ai-box error';box.textContent='Chưa có kết quả bài tập để AI phân tích. Hãy làm và chấm ít nhất một phần ngữ pháp hoặc sách bài tập trước.';return;}
-    var weak=a.weak.map(function(r){return {skill:skillLabel(r.skill),question_id:r.question_id,score:r.score,question:shorten(r.question_text,220),answer:shorten(r.answer,180),reference:shorten(r.reference_answer,180)};}),skillSummary={};SKILLS.forEach(function(s){skillSummary[s.label]=a.skills[s.key].score;});
-    var summary={lessonId:id,lessonTitle:l.zh,lessonTitleVi:l.vi,overall:a.overall,completion:a.completion,skillScores:skillSummary,weakQuestions:weak,commonErrorTags:a.tags.map(function(t){return {tag:TAG_LABELS[t.key]||t.key,count:t.count};}),totalAttempts:a.total_attempts};
+    id=currentLesson(id);var box=document.getElementById('h3la-ai-box');if(!box)return;var attempts=await fetchAttempts(id,false),a=analyze(id,attempts),l=lessonInfo(id);if(!attempts.length){box.className='h3la-ai-box error';box.textContent='Chưa có kết quả bài tập để AI phân tích. Hãy làm và chấm ít nhất một phần trước.';return;}
+    var groups=weakGroups(a,id),local=localPlan(groups,a,id);if(!groups.length){box.className='h3la-ai-box';box.innerHTML=recommendationHtml(local,groups,id,'Phân tích dữ liệu tại chỗ');return;}
+    var priorities=groups.slice(0,3).map(function(g,i){return {rank:i+1,area:g.meta.title,section:g.meta.subtitle,averageScore:g.score,questions:g.questions,exactExercise:g.meta.route+(g.questions.length?g.questions.join(', '):''),diagnosticFocus:g.meta.focus,studentResults:g.rows.map(function(r){return {questionId:r.question_id,questionNumber:questionNumber(r),score:r.score,answer:shorten(r.answer,120),correct:shorten(r.reference_answer,120)};})};}),skillSummary={};SKILLS.forEach(function(s){skillSummary[s.label]=a.skills[s.key].score;});
+    var summary={lessonId:id,lessonTitle:l.zh,lessonTitleVi:l.vi,overall:a.overall,completion:a.completion,skillScores:skillSummary,priorityGroups:priorities,commonErrorTags:a.tags.map(function(t){return {tag:TAG_LABELS[t.key]||t.key,count:t.count};}),totalAttempts:a.total_attempts};
     var prompt=[
-      'Bạn là cố vấn học tập HSK 3 cho học viên người Việt.',
-      'Chỉ dựa trên dữ liệu dưới đây, không tự bịa thêm lỗi hoặc nội dung mà dữ liệu không có.',
-      'Hãy trả lời bằng tiếng Việt, rõ ràng và thực tế, theo đúng 5 mục:',
-      '1. Kết luận ngắn về kết quả hiện tại của Bài '+id+'.',
-      '2. Ba điểm yếu ưu tiên, nêu lý do từ số liệu.',
-      '3. Chỉ rõ nên ôn lại phần nào: điểm ngữ pháp, 练习 nào hoặc câu số nào trong sách bài tập.',
-      '4. Kế hoạch ôn 5 ngày, mỗi ngày 15-25 phút, có nhiệm vụ cụ thể.',
-      '5. Tiêu chí kiểm tra lại để biết đã cải thiện.',
-      'Không dùng chuẩn HSK 5 để đánh giá. Nếu dữ liệu còn ít, phải nói rõ độ tin cậy còn hạn chế.',
+      'Bạn là cố vấn học tập HSK 3. Mục tiêu là chỉ đúng PHẦN YẾU và ĐÚNG BÀI TẬP cần ôn, không nói chung chung.',
+      'Chỉ dùng dữ liệu đã cung cấp. Không bịa thêm bài, câu, điểm ngữ pháp hoặc nguyên nhân không có bằng chứng.',
+      'Chỉ phân tích tối đa 3 ưu tiên theo thứ tự priorityGroups. Không được đổi tên phần, số câu hoặc đường dẫn exactExercise.',
+      'Mỗi ưu tiên phải trả lời ngắn và cụ thể: yếu ở đâu; cần cải thiện gì; cách làm; tiêu chí đạt.',
+      'Kế hoạch 5 ngày phải dùng chính các câu/bài tập trong exactExercise; mỗi ngày 15–25 phút.',
+      'TRẢ VỀ DUY NHẤT JSON HỢP LỆ, KHÔNG markdown, theo schema:',
+      '{"conclusion":"1-2 câu","priorities":[{"rank":1,"diagnosis":"...","improve":"...","method":["...","..."],"target":"..."}],"plan":[{"day":1,"minutes":20,"task":"..."}],"retest":["...","..."]}',
+      'Không lặp lại dữ liệu dài dòng. Không khuyên ôn toàn bộ bài nếu chỉ một phần yếu.',
       '',
-      'DỮ LIỆU PHÂN TÍCH:',JSON.stringify(summary,null,2)
+      'DỮ LIỆU:',JSON.stringify(summary,null,2)
     ].join('\n');
-    box.className='h3la-ai-box loading';box.textContent='⏳ AI đang phân tích kết quả theo từng phần…';
+    box.className='h3la-ai-box loading';box.textContent='⏳ AI đang tinh chỉnh 3 ưu tiên và đúng bài tập cần ôn…';
     try{
-      var ai;if(window.H3V11_AI&&typeof window.H3V11_AI.invoke==='function')ai=await window.H3V11_AI.invoke({course:'hsk3',hskLevel:3,level:3,studentLevel:3,mode:'tutor',purpose:'learning_recommendation',exerciseType:'hsk3_learning_analysis',contextType:'lesson_assessment',lessonId:id,lessonTitle:l.zh,lessonTitleVi:l.vi,prompt:prompt,userQuestion:prompt,systemPrompt:'Phân tích dữ liệu học tập HSK 3 theo đúng 5 mục. Không bịa ngoài dữ liệu.',maxTokens:2200,max_tokens:2200});else if(typeof window.callAIBackend==='function'){var r=await window.callAIBackend(prompt,{forceMode:'tutor',purpose:'learning_recommendation',lessonId:id,maxTokens:2200});ai={answer:r.answer||'',model:r.model_used||''};}else throw new Error('Bộ điều phối AI V11 chưa sẵn sàng.');
-      var text=String(ai.answer||ai.text||'').trim();if(!text)throw new Error('AI không trả nội dung gợi ý.');box.className='h3la-ai-box';box.textContent=text;var model=String(ai.model||ai.model_used||'');var me=document.getElementById('h3la-ai-model');if(me)me.textContent=model?'Model: '+model:'Dùng cùng model AI với HSK 5';
-      var report={summary_json:summary,ai_recommendation:text,model_used:model,updated_at:new Date().toISOString()};writeJson(reportKey(id),report);
-      if(sb()&&uid())try{var out=await sb().from(REPORT_TABLE).upsert({user_id:uid(),lesson_id:id,summary_json:summary,ai_recommendation:text,model_used:model,updated_at:new Date().toISOString()},{onConflict:'user_id,lesson_id'});if(out.error)throw out.error;}catch(e){console.warn('HSK3 report save failed',e);}
-    }catch(err){box.className='h3la-ai-box error';box.textContent='AI chưa tạo được gợi ý. '+String(err&&err.message||err||'');}
+      var ai;if(window.H3V11_AI&&typeof window.H3V11_AI.invoke==='function')ai=await window.H3V11_AI.invoke({course:'hsk3',hskLevel:3,level:3,studentLevel:3,mode:'tutor',purpose:'learning_recommendation_v13',exerciseType:'hsk3_learning_analysis',contextType:'lesson_assessment_exact',lessonId:id,lessonTitle:l.zh,lessonTitleVi:l.vi,prompt:prompt,userQuestion:prompt,systemPrompt:'Chỉ trả JSON. Tối đa 3 ưu tiên. Phải giữ nguyên exactExercise và số câu từ dữ liệu.',maxTokens:1700,max_tokens:1700});else if(typeof window.callAIBackend==='function'){var r=await window.callAIBackend(prompt,{forceMode:'tutor',purpose:'learning_recommendation_v13',lessonId:id,maxTokens:1700});ai={answer:r.answer||'',model:r.model_used||''};}else throw new Error('Bộ điều phối AI chưa sẵn sàng.');
+      var text=String(ai.answer||ai.text||'').trim(),parsed=parseJsonLoose(text);if(!parsed)throw new Error('AI không trả JSON có cấu trúc.');var plan=normalizeAiPlan(parsed,local);box.className='h3la-ai-box';box.innerHTML=recommendationHtml(plan,groups,id,'AI tinh chỉnh từ dữ liệu kết quả');var model=String(ai.model||ai.model_used||''),me=document.getElementById('h3la-ai-model');if(me)me.textContent=model?'Model: '+model:'Dùng cùng model AI với HSK 5';
+      var saved=JSON.stringify(plan),report={summary_json:summary,ai_recommendation:saved,model_used:model,updated_at:new Date().toISOString()};writeJson(reportKey(id),report);if(sb()&&uid())try{var out=await sb().from(REPORT_TABLE).upsert({user_id:uid(),lesson_id:id,summary_json:summary,ai_recommendation:saved,model_used:model,updated_at:new Date().toISOString()},{onConflict:'user_id,lesson_id'});if(out.error)throw out.error;}catch(e){console.warn('HSK3 report save failed',e);}
+    }catch(err){box.className='h3la-ai-box';box.innerHTML=recommendationHtml(local,groups,id,'Kế hoạch cụ thể dự phòng')+'<div class="h3la-status warn"><b>AI chưa tinh chỉnh được:</b> '+esc(String(err&&err.message||err||''))+'. Kế hoạch phía trên vẫn được tạo trực tiếp từ câu sai và đúng phần cần ôn.</div>';}
   };
 
   function installTab(){
@@ -30017,7 +30171,7 @@ body.h3-course-active .h3la-empty{padding:28px 14px;text-align:center;color:var(
   document.documentElement.setAttribute('data-hsk3-learning-build',VERSION);
 })();
 </script>
-<!-- /HSK3 V12 -->
+<!-- /HSK3 V13 -->
 
 </body>
 </html>
