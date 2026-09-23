@@ -28467,7 +28467,7 @@ window.H3V8={version:'2026.09.16-v9-ai-grade-practice-restored',diagnose:functio
   if(typeof serverCall==='function'){
     window.callAIBackend=callAIBackend=async function(prompt,meta){
       try{
-        return await Promise.race([serverCall.call(this,prompt,meta),timeoutPromise(60000)]);
+        return await Promise.race([serverCall.call(this,prompt,meta),timeoutPromise(20000)]);
       }catch(err){
         if(!isGradeRequest(prompt,meta)) throw err;
         var activeTarget=(typeof CURRENT_GPT_INLINE_TARGET!=='undefined'&&CURRENT_GPT_INLINE_TARGET)?CURRENT_GPT_INLINE_TARGET:window.CURRENT_GPT_INLINE_TARGET;
@@ -31692,429 +31692,615 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
 </script>
 <!-- HSK4 NOTES LIKE HSK5 END -->
 
-<!-- =========================================================
-     HSK Albert · vá phía frontend cho AI (v3)
-     Dán khối này vào index.html, ở CUỐI TRANG, ngay trước thẻ đóng body
-     (sau tất cả các khối <script> AI khác).
-
-     Khối này KHÔNG thay logic sẵn có. Nó làm 5 việc:
-
-     1) GẮN ĐÚNG CẤP ĐỘ (course/hskLevel/level) cho mọi request tới
-        hsk-ai-grade — cần nhất cho HSK 1, vì các nút AI của HSK 1 đi qua
-        callAIBackend và không gửi cấp độ. Chỉ thêm khi payload chưa có.
-
-     2) BÁO CHO BACKEND BIẾT APP CHỜ ĐƯỢC BAO LÂU (clientTimeoutMs).
-        Trong index.html, callAIBackend bị bọc trong
-            Promise.race([ ... , timeoutPromise(20000) ])   <-- con số này
-        → app chỉ chờ AI 20 giây rồi âm thầm chuyển sang "chấm dự phòng theo
-        đáp án sách". Patch tự đọc con số đó trong trang và gửi kèm, để Edge
-        Function thu gọn ngân sách thời gian cho vừa và kịp trả lời.
-
-     3) CỨU HỘ KHI APP ĐÃ BỎ CUỘC: nếu app rơi vào chấm dự phòng, patch tự gọi
-        lại Edge Function một lần nữa với thời gian chờ 60 giây và thay bằng
-        kết quả AI thật. (Tắt bằng window.HSK_AI_NO_RESCUE = true)
-
-     4) LỌC "CẤU TRÚC BẮT BUỘC" BỊ ĐOÁN BỪA — nguyên nhân AI chấm câu này bằng
-        yêu cầu của câu khác.
-
-     5) GỬI KÈM LỊCH SỬ KHUNG CHAT cho ô "AI — hỏi đáp tiếng Trung".
-
-     Công cụ trong Console:
-        HSK_AI_WHY()          -> vì sao AI không chạy / đang chờ bao lâu
-        HSK_AI_TAG()          -> app đang nhận diện khoá nào
-        await HSK_AI_TEST()   -> bắn thử 1 lần chấm + 1 lần gia sư
-        HSK_AI_LAST           -> payload/response của lần gọi AI gần nhất
-========================================================= -->
-<script id="hsk-ai-course-tag">
+<!-- HSK AI V5 FINAL CONTROLLER START -->
+<style id="hsk-ai-v5-final-style">
+  .ai-v5-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;background:var(--teal-light);color:var(--teal);border:1px solid #b8ded5;font-size:11px;font-weight:800}
+  .ai-v5-inline-error{background:var(--red-light)!important;border-color:#efb5ae!important}
+  .ai-v5-inline-error .gpt-inline-title,.ai-v5-inline-error .gpt-inline-text{color:var(--red)!important}
+  .ai-chat-body{max-height:min(62vh,720px)!important}
+  .msg-bubble,.gpt-inline-text,.gpt-answer{overflow-wrap:anywhere;word-break:break-word}
+  .gpt-inline-text{white-space:pre-wrap}
+</style>
+<script id="hsk-ai-v5-final-controller">
 (function(){
   'use strict';
-  if (window.__HSK_AI_COURSE_TAG__) return;
-  window.__HSK_AI_COURSE_TAG__ = 'v3';
+  if(window.__HSK_AI_V5_FINAL_CONTROLLER__) return;
+  window.__HSK_AI_V5_FINAL_CONTROLLER__ = true;
 
-  var FN_PATH = /\/functions\/v1\/hsk-ai-grade\b/;
-  var RESCUE_TIMEOUT_MS = 60000;
+  var VERSION = '2026.09.23-v5-ai-only-complete';
+  var FUNCTION_NAME = 'hsk-ai-grade';
+  var requestSequence = 0;
+  var currentState = {context:'', raw:'', title:'AI HSK Albert', target:null};
 
-  window.HSK_AI_LAST = { request: null, response: null, at: null, httpStatus: null };
-
-  // ---------- thông tin khoá học ----------
-  function currentCourse(){
-    var c = '';
-    try { c = String(window.CURRENT_COURSE || ''); } catch(e) {}
-    if (!c) { try { c = String(localStorage.getItem('hsk_albert_course') || ''); } catch(e) {} }
-    if (!c && document.body && document.body.className) {
-      var m = document.body.className.match(/h([1-6])-course-active/);
-      if (m) c = 'hsk' + m[1];
-    }
-    return c.toLowerCase();
+  function text(value){ return value == null ? '' : String(value); }
+  function esc(value){
+    return text(value).replace(/[&<>"']/g,function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
   }
-
-  function levelOf(course){
-    var m = String(course || '').match(/([1-6])/);
+  function asArray(value){
+    if(Array.isArray(value)) return value.map(text).map(function(x){return x.trim();}).filter(Boolean);
+    var s=text(value).trim();
+    return s ? s.split(/[,，、;；\n]+/).map(function(x){return x.trim();}).filter(Boolean) : [];
+  }
+  function parseLevel(value){
+    var m=text(value).match(/(?:HSK\s*)?([1-6])/i);
     return m ? Number(m[1]) : 0;
   }
+  function readLexical(name, fallback){
+    try{
+      if(name==='context' && typeof CURRENT_GPT_CONTEXT!=='undefined') return CURRENT_GPT_CONTEXT;
+      if(name==='raw' && typeof CURRENT_GPT_RAW_PROMPT!=='undefined') return CURRENT_GPT_RAW_PROMPT;
+      if(name==='title' && typeof CURRENT_GPT_TITLE!=='undefined') return CURRENT_GPT_TITLE;
+      if(name==='target' && typeof CURRENT_GPT_INLINE_TARGET!=='undefined') return CURRENT_GPT_INLINE_TARGET;
+    }catch(_e){}
+    var key={context:'CURRENT_GPT_CONTEXT',raw:'CURRENT_GPT_RAW_PROMPT',title:'CURRENT_GPT_TITLE',target:'CURRENT_GPT_INLINE_TARGET'}[name];
+    return key && window[key] != null ? window[key] : fallback;
+  }
+  function syncCurrent(context,title,target,raw){
+    currentState.context=text(context);
+    currentState.raw=text(raw || context);
+    currentState.title=text(title || 'AI HSK Albert');
+    currentState.target=target || null;
+    try{ CURRENT_GPT_CONTEXT=currentState.context; }catch(_e){}
+    try{ CURRENT_GPT_RAW_PROMPT=currentState.raw; }catch(_e){}
+    try{ CURRENT_GPT_TITLE=currentState.title; }catch(_e){}
+    try{ CURRENT_GPT_INLINE_TARGET=currentState.target; }catch(_e){}
+    window.CURRENT_GPT_CONTEXT=currentState.context;
+    window.CURRENT_GPT_RAW_PROMPT=currentState.raw;
+    window.CURRENT_GPT_TITLE=currentState.title;
+    window.CURRENT_GPT_INLINE_TARGET=currentState.target;
+  }
 
-  // ---------- app chờ AI được bao lâu ----------
-  var cachedTimeout = null;
-  function detectClientTimeout(){
-    if (window.HSK_AI_CLIENT_TIMEOUT) return Number(window.HSK_AI_CLIENT_TIMEOUT);
-    if (cachedTimeout !== null) return cachedTimeout;
-    var found = 0;
-    try {
-      var scripts = document.querySelectorAll('script:not([src])');
-      for (var i = 0; i < scripts.length; i++) {
-        if (scripts[i].id === 'hsk-ai-course-tag') continue;   // bỏ qua chính patch này
-        var m = String(scripts[i].textContent || '').match(/timeoutPromise\((\d{4,6})\)/);
-        if (m) { var v = Number(m[1]); if (!found || v < found) found = v; }
+  function lessonList(){
+    try{ if(typeof LESSONS!=='undefined' && Array.isArray(LESSONS)) return LESSONS; }catch(_e){}
+    return Array.isArray(window.LESSONS) ? window.LESSONS : [];
+  }
+  function detectCourse(meta){
+    meta=meta||{};
+    var raw=text(meta.course || window.CURRENT_COURSE).toLowerCase().trim();
+    if(!/^hsk[1-6]$/.test(raw)){
+      var body=document.body;
+      for(var n=1;n<=6;n++){
+        if(body && body.classList && body.classList.contains('h'+n+'-course-active')){raw='hsk'+n;break;}
       }
-    } catch(e) {}
-    cachedTimeout = found;
-    return found;
-  }
-
-  function tag(body){
-    if (!body || typeof body !== 'object') return body;
-    var course = currentCourse();
-    var level = levelOf(course);
-    if (level) {
-      if (!body.course) body.course = course;
-      if (body.hskLevel == null) body.hskLevel = level;
-      if (body.level == null) body.level = level;
-      if (body.studentLevel == null) body.studentLevel = 'HSK' + level;
-      body.clientCourseTag = course;
     }
-    if (body.clientTimeoutMs == null) {
-      var t = detectClientTimeout();
-      if (t) body.clientTimeoutMs = t;
+    var level=Number(meta.hskLevel || meta.level || meta.studentLevel) || parseLevel(raw) || 5;
+    level=Math.max(1,Math.min(6,Math.round(level)));
+    var course=/^hsk[1-6]$/.test(raw)?raw:'hsk'+level;
+    var candidates=[meta.lessonId];
+    try{candidates.push(window.STATE && window.STATE.currentLesson);}catch(_e){}
+    try{candidates.push(typeof STATE!=='undefined' && STATE.currentLesson);}catch(_e){}
+    var selector=document.getElementById('lesson-selector');
+    if(selector) candidates.push(selector.value);
+    var lessonId=null;
+    for(var i=0;i<candidates.length;i++){
+      var id=Number(candidates[i]);
+      if(Number.isFinite(id) && id>0){lessonId=id;break;}
     }
-    return body;
+    var lesson=lessonList().find(function(item){return Number(item && item.id)===Number(lessonId);}) || {};
+    var vocab=[];
+    if(Array.isArray(lesson.vocab)) vocab=lesson.vocab.map(function(v){return text(v && (v.zh || v.word || v));}).filter(Boolean);
+    else if(Array.isArray(lesson.vocabulary)) vocab=lesson.vocabulary.map(function(v){return text(v && (v.zh || v.word || v));}).filter(Boolean);
+    var grammar=[];
+    if(Array.isArray(lesson.grammar)) grammar=lesson.grammar.map(function(g){return text(g && (g.pattern || g.title || g));}).filter(Boolean);
+    else if(Array.isArray(lesson.grammarDetail)) grammar=lesson.grammarDetail.map(function(g){return text(g && (g.pattern || g.full || g));}).filter(Boolean);
+    return {
+      course:course,
+      level:level,
+      lessonId:lessonId,
+      lessonTitle:text(meta.lessonTitle || lesson.zh || lesson.titleZh || lesson.title || ''),
+      lessonTitleVi:text(meta.lessonTitleVi || lesson.vi || lesson.titleVi || ''),
+      vocabulary:vocab,
+      grammar:grammar
+    };
   }
 
-  // ---------- lọc "cấu trúc bắt buộc" do client đoán bừa ----------
-  // extractTargetInfo() trong app, khi không tìm được gợi ý, lấy ĐẠI cụm chữ
-  // Hán đầu tiên trong prompt làm "cấu trúc bắt buộc" → AI chấm câu này nhưng
-  // đòi cấu trúc của câu khác. Ở đây nhận diện đúng trường hợp đó.
-  function knownGrammarList(){
-    try { if (window.HSK_KNOWN_GRAMMAR) return window.HSK_KNOWN_GRAMMAR; } catch(e) {}
-    try { if (typeof HSK_KNOWN_GRAMMAR !== 'undefined') return HSK_KNOWN_GRAMMAR; } catch(e) {}
-    return [];
+  function explicitMode(meta){
+    meta=meta||{};
+    var value=text(meta.forceMode || meta.aiMode || meta.mode).toLowerCase().trim();
+    if(!value) return '';
+    if(/child-plan|coach|plan|recommendation|tutor|chat|teacher|partner|explain|translate|translation|generate|quiz/.test(value)) return 'tutor';
+    if(/grade|grading|score|check|chấm|cham|writing|external-openai|external-grade|sentence-grading|hsk1-child$|hsk1-stable$|^hsk1$/.test(value)) return 'grade';
+    return '';
+  }
+  function isTranslationRequest(prompt,meta){
+    var joined=text(prompt)+' '+text(meta && meta.purpose)+' '+text(meta && meta.exerciseType);
+    return /\bdịch\b|translate|translation|翻译/i.test(joined);
+  }
+  function isExplicitGradeRequest(prompt,meta){
+    var forced=explicitMode(meta);
+    if(forced) return forced==='grade';
+    if(isTranslationRequest(prompt,meta)) return false;
+    var s=text(prompt);
+    var asksToGenerate=/(?:hãy\s+)?(?:tạo|ra|soạn|cho)(?:.{0,35})(?:quiz|đề|bài\s+tập|câu\s+hỏi|câu\s+luyện)/i.test(s);
+    var containsSubmittedAnswer=/đáp\s+án\s+của|câu\s+trả\s+lời\s+của|bài\s+làm\s*[:：]|bài\s+viết\s+của|<student_answer>/i.test(s);
+    if(asksToGenerate && !containsSubmittedAnswer) return false;
+    if(/\bchấm\b|\bcham\b|批改|改错|cho\s+điểm|đúng\s*(?:hay|\/)?\s*sai|sai\s+ở\s+đâu|grade|score|bài\s+làm|bài\s+viết\s+của|đáp\s+án\s+của|câu\s+trả\s+lời\s+của|练一练/i.test(s)) return true;
+    var hasAnswer=meta && ['studentAnswer','userAnswer','answer','sentence','content'].some(function(k){return text(meta[k]).trim();});
+    var hasContext=meta && ['questionText','referenceAnswer','teacherRubric','targetWord','grammarPoint','requiredUsage'].some(function(k){return text(meta[k]).trim();});
+    return !!(hasAnswer && hasContext);
+  }
+  function detectMode(prompt,meta){
+    var forced=explicitMode(meta);
+    if(forced) return forced;
+    if(isTranslationRequest(prompt,meta)) return 'tutor';
+    return isExplicitGradeRequest(prompt,meta)?'grade':'tutor';
   }
 
-  function sanitizeTarget(body){
-    if (!body || typeof body !== 'object') return body;
-    if (String(body.mode || '') === 'tutor') return body;
-
-    var tw = String(body.targetWord || '').trim();
-    if (!tw) return body;
-    if (String(body.requiredUsage || '').trim()) return body;
-
-    var bare = tw.replace(/……/g, '').replace(/\.\.\./g, '').trim();
-    var known = knownGrammarList() || [];
-    for (var i = 0; i < known.length; i++) {
-      var k = String(known[i] || '');
-      if (!k) continue;
-      if (k === tw || k.replace(/……/g, '') === bare) return body;
-    }
-
-    var gp = String(body.grammarPoint || '').trim();
-    var autoGp = 'Bắt buộc dùng đúng từ/cấu trúc 「' + tw + '」';
-    if (gp && gp !== autoGp) return body;
-
-    body.targetWordUnreliable = true;
-    return body;
+  function findMarker(textValue, markers, useLast){
+    var source=text(textValue), lower=source.toLowerCase(), best=-1, marker='';
+    markers.forEach(function(item){
+      var m=text(item), index=useLast===false?lower.indexOf(m.toLowerCase()):lower.lastIndexOf(m.toLowerCase());
+      if(index>=0 && (best<0 || (useLast===false?index<best:index>=best))){best=index;marker=m;}
+    });
+    return best<0?null:{index:best, marker:marker, start:best+marker.length};
   }
-
-  // ---------- lịch sử khung chat ----------
-  function chatHistory(){
-    var panel = document.getElementById('chat-body');
-    if (!panel) return null;
-    var nodes = panel.querySelectorAll('.msg');
-    var out = [];
-    for (var i = Math.max(0, nodes.length - 8); i < nodes.length; i++) {
-      var node = nodes[i];
-      var bubble = node.querySelector('.msg-bubble');
-      if (!bubble) continue;
-      var text = String(bubble.innerText || bubble.textContent || '').trim();
-      if (!text || text.charAt(0) === '\u23F3') continue;
-      out.push({ role: node.classList.contains('user') ? 'user' : 'ai', text: text.slice(0, 1200) });
-    }
-    if (out.length && out[out.length - 1].role === 'user') out.pop();
-    return out.length ? out.slice(-6) : null;
+  function extractSection(source, markers, stopMarkers, useLast){
+    var s=text(source), found=findMarker(s,markers,useLast);
+    if(!found) return '';
+    var rest=s.slice(found.start);
+    var lower=rest.toLowerCase(), stop=rest.length;
+    (stopMarkers||[]).forEach(function(item){
+      var i=lower.indexOf(text(item).toLowerCase());
+      if(i>=0 && i<stop) stop=i;
+    });
+    return rest.slice(0,stop).replace(/^\s*[:：=-]?\s*/,'').trim();
   }
+  var ANSWER_MARKERS=['Đáp án của tôi:','Đáp án của con:','Câu trả lời của tôi:','Câu trả lời của con:','Bài viết của tôi:','Bài của tôi:','Bài làm:','Bản chép lời người học:','Câu của tôi:','Học viên trả lời:','Student answer:','我的答案：','我的回答：'];
+  var REFERENCE_MARKERS=['Đáp án sách tham khảo:','Đáp án tham khảo:','Đáp án sách:','Đáp án mẫu:','Dap an mau:','参考答案：','参考答案:','Model answer:'];
+  var QUESTION_MARKERS=['Đề bài:','Đề gốc:','Câu hỏi:','Question:','题目：','题目:','Yêu cầu:'];
+  var TARGET_MARKERS=['Cấu trúc cần dùng:','Cấu trúc bắt buộc:','Ngữ pháp trọng tâm:','Ngữ pháp:','Công thức:','Từ bắt buộc:','必须使用的语法结构：','必须使用：'];
 
-  function attachHistory(body){
-    if (!body || typeof body !== 'object') return body;
-    var isChat = String(body.exerciseType || '') === 'tutor_chat' ||
-      (String(body.mode || '') === 'tutor' && !body.exerciseType);
-    if (!isChat) return body;
-    if (body.conversationHistory && body.conversationHistory.length) return body;
-    var h = chatHistory();
-    if (h) body.conversationHistory = h;
-    return body;
+  function extractStudentAnswer(prompt,meta){
+    meta=meta||{};
+    var direct=text(meta.studentAnswer || meta.userAnswer || meta.answer || meta.sentence || meta.content).trim();
+    if(direct) return direct;
+    var s=text(prompt);
+    var xml=s.match(/<student_answer>([\s\S]*?)<\/student_answer>/i);
+    if(xml) return xml[1].trim();
+    var answer=extractSection(s,ANSWER_MARKERS,REFERENCE_MARKERS.concat(TARGET_MARKERS).concat(['Rubric:','Yêu cầu chấm:','Teacher rubric:']),true);
+    if(answer) return answer;
+    var command=s.match(/(?:hãy\s+)?(?:chấm|cham|kiểm\s+tra|sửa)[^:：\n]{0,180}[:：]\s*([\s\S]+)/i);
+    if(command && command[1]) return command[1].trim();
+    return s.trim();
   }
-
-  // ---------- chặn fetch để bổ sung payload ----------
-  var originalFetch = window.fetch;
-  window.fetch = function(input, init){
-    var isAI = false;
-    try {
-      var url = (typeof input === 'string') ? input : (input && input.url) || '';
-      if (FN_PATH.test(url) && init && typeof init.body === 'string') {
-        var parsed = JSON.parse(init.body);
-        var fixed = attachHistory(sanitizeTarget(tag(parsed)));
-        isAI = true;
-        window.HSK_AI_LAST = { request: fixed, response: null, at: new Date().toISOString(), httpStatus: null };
-        init = Object.assign({}, init, { body: JSON.stringify(fixed) });
+  function extractReference(prompt,meta){
+    var direct=text(meta && (meta.referenceAnswer || meta.reference || meta.sampleAnswer || meta.correctAnswer || meta.modelAnswer)).trim();
+    if(direct) return direct;
+    return extractSection(prompt,REFERENCE_MARKERS,ANSWER_MARKERS.concat(TARGET_MARKERS).concat(['Rubric:','Yêu cầu chấm:']),false);
+  }
+  function extractQuestion(prompt,meta){
+    var direct=text(meta && (meta.questionText || meta.question || meta.instruction)).trim();
+    if(direct) return direct;
+    return extractSection(prompt,QUESTION_MARKERS,ANSWER_MARKERS.concat(REFERENCE_MARKERS),false) || text(prompt).trim();
+  }
+  function cleanTarget(value){
+    return text(value).replace(/^[\s「『【\[(]+|[\s」』】\])]+$/g,'').trim();
+  }
+  function extractTarget(prompt,meta){
+    meta=meta||{};
+    var direct=cleanTarget(meta.targetWord || meta.keyword || meta.requiredWord || meta.requiredGrammar);
+    if(direct) return direct;
+    try{
+      if(typeof window.hskAlbertExtractTargetInfo==='function'){
+        var old=window.hskAlbertExtractTargetInfo(text(prompt));
+        if(old && old.targetWord) return cleanTarget(old.targetWord);
       }
-    } catch(e) {}
+    }catch(_e){}
+    var source=text(prompt);
+    var m=source.match(/(?:Công\s+thức|Cấu\s+trúc(?:\s+cần\s+dùng|\s+bắt\s+buộc)?|Ngữ\s+pháp(?:\s+trọng\s+tâm)?|Từ\s+bắt\s+buộc|必须使用(?:的语法结构)?)\s*[:：]\s*([^\n]+)/i);
+    if(m) return cleanTarget(m[1]);
+    var natural=source.match(/(?:dùng|sử\s+dụng)\s+(?:(?:cấu\s+trúc|từ|ngữ\s+pháp)\s+)?[「『【\[]?([\u3400-\u9fff]{1,12}|[A-Za-z][A-Za-z+\-…]{0,20})[」』】\]]?/i);
+    return natural?cleanTarget(natural[1]):'';
+  }
+  function extractRequiredWords(prompt,meta){
+    var direct=asArray(meta && meta.requiredWords);
+    if(direct.length) return direct;
+    var s=text(prompt), m=s.match(/(?:Năm|5|五个)?\s*(?:từ|词语)\s+bắt\s+buộc\s*[:：]\s*([^\n]+)/i) || s.match(/必须使用(?:以下)?(?:五个)?词语\s*[:：]\s*([^\n]+)/i);
+    if(!m) return [];
+    return asArray(m[1].replace(/[。.!?].*$/,''));
+  }
+  function extractTranslationSource(prompt){
+    var source=text(prompt).replace(/\r\n/g,'\n').trim();
+    if(!source) return '';
+    var lines=source.split('\n');
+    if(lines.length>1 && /\bdịch\b|translate|翻译/i.test(lines[0])){
+      var rest=lines.slice(1).join('\n').trim();
+      if(rest) source=rest;
+    }else{
+      var colon=source.match(/^(?:.{0,100}?)(?:dịch|translate|翻译)[^:：\n]{0,100}[:：]\s*([\s\S]+)$/i);
+      if(colon && colon[1]) source=colon[1].trim();
+    }
+    source=source.replace(/\n?\s*(?:hãy\s+)?(?:dịch|translate)(?:\s+(?:toàn bộ|đầy đủ|giúp\s+(?:mình|tôi)|sang\s+tiếng\s+(?:việt|trung)))?[.!?]*\s*$/i,'').trim();
+    var first=source.search(/[\u3400-\u9fff]/);
+    if(first>0 && /\bdịch\b|translate|翻译/i.test(source.slice(0,first))) source=source.slice(first).trim();
+    if(first<0) source=source.replace(/^\s*(?:hãy\s+)?dịch(?:\s+giúp\s+(?:mình|tôi))?(?:\s+đoạn\s+(?:sau|này))?(?:\s+sang\s+tiếng\s+(?:trung|việt))?\s*[:：-]?\s*/i,'').trim();
+    return source;
+  }
 
-    var p = originalFetch.call(this, input, init);
-    if (!isAI) return p;
+  function buildTutorSystem(info,meta){
+    var lines=[
+      'Bạn là gia sư tiếng Trung cho học viên Việt Nam trong app HSK Albert.',
+      'Cấp hiện tại: HSK '+info.level+'.',
+      info.lessonId?'Bài đang mở: '+info.lessonId+' '+info.lessonTitle+(info.lessonTitleVi?' ('+info.lessonTitleVi+')':'')+'.':'',
+      'Trả lời đúng câu hỏi hiện tại, đầy đủ và không dừng giữa chừng.',
+      'Khi dịch, phải dịch toàn bộ từ đầu đến cuối; ưu tiên hoàn tất bản dịch trước mọi chú thích.',
+      'Khi giải thích, dùng tiếng Việt dễ hiểu; ví dụ tiếng Trung giữ chữ Hán và kèm pinyin khi hữu ích.',
+      'Không tự đổi sang cấp độ, bài học hoặc câu hỏi khác.'
+    ].filter(Boolean);
+    if(meta && meta.systemPrompt) lines.push('Chỉ dẫn bổ sung:\n'+text(meta.systemPrompt));
+    return lines.join('\n');
+  }
+  function buildRubric(info,target,requiredWords,meta){
+    var rules=[
+      'Chỉ chấm đúng câu hỏi và bài làm hiện tại ở cấp HSK '+info.level+'.',
+      'Đọc cả ngữ cảnh; không chấm bằng so khớp ký tự đơn thuần.',
+      'Kiểm tra ngữ pháp, trật tự từ, dùng từ, logic và độ tự nhiên.',
+      'Nếu đề bắt buộc cấu trúc/từ, phải kiểm tra nó được dùng đúng chức năng và đúng nghĩa; chỉ xuất hiện mặt chữ chưa đủ.',
+      'Nếu là câu mở, chấp nhận cách diễn đạt khác đáp án mẫu khi vẫn đúng yêu cầu.',
+      'Không cho 100% khi còn bất kỳ lỗi ngữ pháp, dùng từ, logic hoặc yêu cầu nào.'
+    ];
+    if(target) rules.push('Cấu trúc/từ bắt buộc: '+target+'. Câu sửa vẫn phải giữ và dùng đúng cấu trúc này.');
+    if(requiredWords.length) rules.push('Phải dùng đủ và đúng các từ: '+requiredWords.join('、')+'.');
+    if(meta && meta.teacherRubric) rules.push(text(meta.teacherRubric));
+    return rules.join('\n');
+  }
 
-    return p.then(function(res){
-      try {
-        window.HSK_AI_LAST.httpStatus = res.status;
-        res.clone().json().then(function(data){ window.HSK_AI_LAST.response = data; }).catch(function(){});
-      } catch(e) {}
-      return res;
+  function buildPayload(prompt,meta){
+    meta=meta||{};
+    var raw=text(meta.userQuestion || meta.rawPrompt || prompt).trim();
+    var combinedParts=[text(meta.contextPrompt || meta.fullContext),text(prompt),raw].filter(Boolean);
+    var combined=combinedParts.filter(function(item,index,list){return list.indexOf(item)===index;}).join('\n');
+    var info=detectCourse(meta);
+    var mode=detectMode(raw || prompt,meta);
+    var base={
+      course:info.course,
+      hskLevel:info.level,
+      level:info.level,
+      studentLevel:info.level,
+      lessonId:info.lessonId,
+      lessonTitle:info.lessonTitle,
+      lessonTitleVi:info.lessonTitleVi,
+      vocabularyList:meta.vocabularyList || info.vocabulary,
+      grammarPoints:meta.grammarPoints || info.grammar,
+      clientBuild:VERSION,
+      strictAIOnly:true
+    };
+    if(mode==='tutor'){
+      var translating=isTranslationRequest(raw,meta);
+      return Object.assign(base,{
+        mode:'tutor',
+        purpose:text(meta.purpose || (translating?'full_translation':'tutor_chat')),
+        exerciseType:text(meta.exerciseType || (translating?'full_translation':'tutor_chat')),
+        contextType:text(meta.contextType || 'free_tutor'),
+        prompt:raw || text(prompt),
+        question:raw || text(prompt),
+        userQuestion:raw || text(prompt),
+        sourceText:translating?extractTranslationSource(raw || prompt):'',
+        systemPrompt:buildTutorSystem(info,meta),
+        allowChunking:true,
+        maxTokens:Number(meta.maxTokens || meta.max_tokens || (translating?8192:4200)),
+        max_tokens:Number(meta.maxTokens || meta.max_tokens || (translating?8192:4200))
+      });
+    }
+    var target=extractTarget(combined,meta);
+    var requiredWords=extractRequiredWords(combined,meta);
+    var answer=extractStudentAnswer(raw || combined,meta);
+    var question=extractQuestion(combined,meta);
+    var reference=extractReference(combined,meta);
+    return Object.assign(base,{
+      mode:'grade',
+      purpose:text(meta.purpose || meta.mode || 'exact_ai_grade'),
+      exerciseType:text(meta.exerciseType || 'contextual_sentence_grade'),
+      exerciseId:text(meta.exerciseId || readLexical('target','') || ('ai-'+Date.now())),
+      contextType:text(meta.contextType || 'exact_task_grade'),
+      instruction:text(meta.instruction || 'Chấm đúng câu/bài theo ngữ cảnh, cấu trúc và yêu cầu được gửi.'),
+      questionText:question,
+      fullSentenceBefore:text(meta.fullSentenceBefore || meta.contextSentence || combined || question),
+      studentAnswer:answer,
+      targetWord:target,
+      requiredUsage:text(meta.requiredUsage || meta.usage || target),
+      grammarPoint:text(meta.grammarPoint || meta.grammar || target),
+      requiredWords:requiredWords,
+      referenceAnswer:reference,
+      teacherRubric:buildRubric(info,target,requiredWords,meta),
+      coverage:meta.coverage || [],
+      targetLength:meta.targetLength || null,
+      actualLength:meta.actualLength || null,
+      maxTokens:Number(meta.maxTokens || meta.max_tokens || 4200),
+      max_tokens:Number(meta.maxTokens || meta.max_tokens || 4200)
+    });
+  }
+
+  function timeout(promise,ms){
+    var timer;
+    return Promise.race([
+      promise,
+      new Promise(function(_,reject){timer=setTimeout(function(){reject(new Error('AI phản hồi quá lâu. Hãy thử lại.'));},ms||180000);})
+    ]).finally(function(){if(timer)clearTimeout(timer);});
+  }
+  async function invoke(payload){
+    var sb=window.hskSupabase;
+    if(!sb || !sb.auth || !sb.functions || typeof sb.functions.invoke!=='function'){
+      throw new Error('Chưa kết nối Supabase/Edge Function hsk-ai-grade.');
+    }
+    var auth=await sb.auth.getSession();
+    if(auth && auth.error) throw new Error(auth.error.message || 'Không đọc được phiên đăng nhập.');
+    var session=auth && auth.data && auth.data.session;
+    if(!session || !session.access_token) throw new Error('Bạn cần đăng nhập trước khi dùng AI.');
+    window.HSK_AI_V5_LAST_PAYLOAD=payload;
+    var response=await timeout(sb.functions.invoke(FUNCTION_NAME,{
+      body:payload,
+      headers:{Authorization:'Bearer '+session.access_token}
+    }),Number(payload.mode==='tutor' && payload.sourceText?240000:160000));
+    window.HSK_AI_V5_LAST_RESPONSE=response;
+    if(response && response.error){
+      throw new Error(response.error.message || response.error.context || text(response.error));
+    }
+    var data=response && response.data;
+    if(!data) throw new Error('Edge Function không trả dữ liệu.');
+    if(data.ok!==true) throw new Error(data.error || data.detail || 'AI trả về lỗi.');
+    if(data.ai_verified!==true){
+      throw new Error('Edge Function hiện tại chưa phải bản AI-only v5. Hãy deploy file hsk-ai-grade-v5.ts rồi thử lại.');
+    }
+    if(payload.mode==='grade' && (!data.result || data.result.ai_verified!==true)){
+      throw new Error('Kết quả chấm không có xác nhận AI thật nên app đã từ chối hiển thị điểm.');
+    }
+    if(payload.mode==='tutor' && payload.sourceText && data.complete!==true){
+      throw new Error('AI chưa hoàn tất toàn bộ bản dịch nên app không hiển thị bản dịch bị cắt.');
+    }
+    return data;
+  }
+
+  function normalizeGrade(raw){
+    raw=raw||{};
+    var percent=Number(raw.percent);
+    if(!Number.isFinite(percent)) percent=Number(raw.score);
+    if(Number.isFinite(percent) && percent>0 && percent<=10) percent*=10;
+    if(!Number.isFinite(percent)) percent=0;
+    percent=Math.max(0,Math.min(100,Math.round(percent)));
+    var wrong=Array.isArray(raw.wrong_parts)?raw.wrong_parts:(Array.isArray(raw.errors)?raw.errors:[]);
+    wrong=wrong.map(function(item){return {
+      wrong:text(item.wrong || item.text || item.problem_vi || item.problem),
+      should_be:text(item.should_be || item.fix || item.suggestion_vi),
+      why_vi:text(item.why_vi || item.problem_vi || item.type)
+    };});
+    return {
+      ai_verified:raw.ai_verified===true,
+      percent:percent,
+      verdict:text(raw.verdict || (percent>=90?'đúng':percent>=50?'gần đúng':'sai')),
+      wrong:wrong,
+      corrected:text(raw.corrected_zh || raw.full_corrected_sentence_zh || raw.corrected_answer_zh || raw.corrected),
+      pinyin:text(raw.corrected_pinyin || raw.pinyin),
+      comment:text(raw.comment_vi || raw.short_feedback_vi || raw.summary || raw.teacher_comment),
+      detail:text(raw.detailed_feedback_vi || raw.explanation_vi || raw.explanation),
+      target:text(raw.target_check_vi),
+      checks:raw.checks || {},
+      validations:Array.isArray(raw.server_validations)?raw.server_validations:[]
+    };
+  }
+  function gradeText(data){
+    var g=normalizeGrade(data.result), lines=[];
+    lines.push('AI chấm: '+g.percent+'% — '+g.verdict+(data.model_used?' · '+data.model_used:''));
+    if(g.comment) lines.push('Nhận xét: '+g.comment);
+    if(g.target) lines.push('Kiểm tra yêu cầu: '+g.target);
+    if(g.detail) lines.push('Phân tích: '+g.detail);
+    if(g.wrong.length){
+      lines.push('Lỗi cần sửa:\n'+g.wrong.map(function(item,index){
+        var line=(index+1)+'. '+(item.wrong||'Phần cần sửa');
+        if(item.should_be) line+=' → '+item.should_be;
+        if(item.why_vi) line+='\n   '+item.why_vi;
+        return line;
+      }).join('\n'));
+    }else{
+      lines.push('Lỗi cần sửa: Không phát hiện lỗi đáng kể.');
+    }
+    if(g.corrected) lines.push('Câu/bài sửa:\n'+g.corrected+(g.pinyin?'\nPinyin: '+g.pinyin:''));
+    return lines.join('\n\n');
+  }
+  function gradeHTML(data){
+    var g=normalizeGrade(data.result), color=g.percent>=90?'var(--teal)':g.percent>=70?'#2e8b57':g.percent>=50?'var(--gold)':'var(--red)', out=[];
+    out.push('<div class="grade-box"><div class="grade-head"><span class="grade-verdict">'+esc(g.verdict)+'</span><span class="ai-v5-badge">AI thật'+(data.model_used?' · '+esc(data.model_used):'')+'</span></div>');
+    out.push('<div class="grade-pct-row"><div class="grade-pct-num" style="color:'+color+'">'+g.percent+'%</div><div class="grade-bar"><div class="grade-bar-fill" style="width:'+g.percent+'%;background:'+color+'"></div></div></div>');
+    if(g.comment) out.push('<div><b>Nhận xét:</b> '+esc(g.comment)+'</div>');
+    if(g.target) out.push('<div class="grade-section-title">Kiểm tra yêu cầu</div><div>'+esc(g.target).replace(/\n/g,'<br>')+'</div>');
+    if(g.detail) out.push('<div class="grade-section-title">Phân tích</div><div>'+esc(g.detail).replace(/\n/g,'<br>')+'</div>');
+    if(g.wrong.length){
+      out.push('<div class="grade-section-title">Lỗi cần sửa</div>');
+      g.wrong.forEach(function(item){out.push('<div class="grade-wrong-item"><div class="grade-wrong-line"><span class="grade-x">✕</span> <span class="grade-bad">'+esc(item.wrong||'Phần cần sửa')+'</span></div>'+(item.should_be?'<div class="grade-wrong-line"><span class="grade-check">✓</span> <span class="grade-fix">'+esc(item.should_be)+'</span></div>':'')+(item.why_vi?'<div class="grade-why">'+esc(item.why_vi)+'</div>':'')+'</div>');});
+    }else out.push('<div class="grade-good">✓ Không phát hiện lỗi đáng kể.</div>');
+    if(g.corrected) out.push('<div class="grade-section-title">Câu/bài sửa</div><div class="grade-corrected zh">'+esc(g.corrected).replace(/\n/g,'<br>')+'</div>'+(g.pinyin?'<div class="grade-why">'+esc(g.pinyin)+'</div>':''));
+    out.push('</div>');
+    return out.join('');
+  }
+
+  function setModalStatus(value){
+    try{ if(typeof window.setGPTModalStatus==='function') return window.setGPTModalStatus(value); }catch(_e){}
+    var el=document.getElementById('gpt-modal-status'); if(el) el.textContent=text(value);
+  }
+  function setModalAnswer(value,mode){
+    try{ if(typeof window.setGPTModalAnswer==='function') return window.setGPTModalAnswer(value,mode||''); }catch(_e){}
+    var el=document.getElementById('gpt-modal-answer');
+    if(el){el.textContent=text(value);el.className='gpt-answer'+(mode?' '+mode:'');}
+  }
+  function showModal(title){
+    var modal=document.getElementById('gpt-modal');if(modal)modal.style.display='flex';
+    var t=document.getElementById('gpt-modal-title');if(t)t.textContent=text(title||'AI HSK Albert');
+  }
+  function setInline(target,value,mode,isHtml){
+    if(!target) return;
+    var box=document.getElementById(target);if(!box)return;
+    box.className='gpt-inline-result show'+(mode==='error'?' ai-v5-inline-error':'');
+    if(isHtml){box.innerHTML=value;return;}
+    box.innerHTML='<div class="gpt-inline-title">'+(mode==='error'?'⚠️ AI chưa hoạt động':'🤖 AI thật')+'</div><div class="gpt-inline-text">'+esc(value).replace(/\n/g,'<br>')+'</div>';
+  }
+  function appendChat(role,value){
+    if(typeof window.appendChatMessage==='function') window.appendChatMessage(role,text(value));
+  }
+  function addChatLoading(){
+    var body=document.getElementById('chat-body');if(!body)return null;
+    var node=document.createElement('div');node.className='msg ai ai-v5-loading';node.innerHTML='<div class="msg-avatar">AI</div><div class="msg-bubble"><span class="loading-dots"><span></span><span></span><span></span></span> AI đang xử lý đầy đủ...</div>';
+    body.appendChild(node);body.scrollTop=body.scrollHeight;return node;
+  }
+  function removeNode(node){if(node && node.parentNode)node.parentNode.removeChild(node);}
+  function errorText(err){
+    return 'AI chưa xử lý được: '+text(err && err.message ? err.message : err)+'\n\nApp không tạo điểm hoặc câu trả lời cục bộ thay thế. Hãy kiểm tra đăng nhập, Edge Function v5 và quota/model OpenRouter.';
+  }
+
+  async function dispatch(prompt,meta){
+    var payload=buildPayload(prompt,meta||{});
+    var data=await invoke(payload);
+    var answer=payload.mode==='grade'?gradeText(data):text(data.answer || data.reply || data.text || data.message);
+    if(!answer.trim()) throw new Error('AI trả về nội dung rỗng.');
+    return {answer:answer,result:data.result||null,source:'supabase-ai-v5',model_used:text(data.model_used||data.model),ai_verified:true,tutor:payload.mode==='tutor',mode:payload.mode,data:data,payload:payload,html:payload.mode==='grade'?gradeHTML(data):''};
+  }
+
+  async function runPrompt(prompt,opts){
+    opts=opts||{};
+    var raw=text(opts.rawPrompt || opts.userQuestion || prompt).trim();
+    var context=text(opts.contextPrompt || prompt);
+    var target=opts.inlineTarget || opts.inlineTargetId || null;
+    var title=text(opts.title || (detectMode(raw,opts)==='grade'?'AI chấm câu':'AI hỏi đáp tiếng Trung'));
+    syncCurrent(context,title,target,raw);
+    var show=opts.showModal!==false;
+    if(show){showModal(title);setModalStatus('Đang gọi AI thật qua Supabase…');setModalAnswer('⏳ AI đang xử lý…','loading');}
+    if(target)setInline(target,'Đang gọi AI thật qua Supabase…','loading',false);
+    try{
+      var response=await dispatch(raw,Object.assign({},opts,{contextPrompt:context,rawPrompt:raw}));
+      if(show){setModalStatus('Đã hoàn thành bằng '+(response.model_used||'model AI đang cấu hình')+'.');setModalAnswer(response.answer,'');}
+      if(target){if(response.mode==='grade')setInline(target,response.html,'',true);else setInline(target,response.answer,'',false);}
+      if(opts.appendChat)appendChat('ai',response.answer);
+      return response;
+    }catch(err){
+      var message=errorText(err);
+      if(show){setModalStatus('AI lỗi — không có kết quả dự phòng.');setModalAnswer(message,'error');}
+      if(target)setInline(target,message,'error',false);
+      if(opts.appendChat)appendChat('ai',message);
+      throw err;
+    }
+  }
+
+  window.callAIBackend=async function(prompt,meta){
+    meta=Object.assign({},meta||{});
+    var raw=text(meta.userQuestion || meta.rawPrompt || prompt);
+    return dispatch(raw,Object.assign(meta,{contextPrompt:text(meta.contextPrompt || prompt),rawPrompt:raw}));
+  };
+  window.askChineseTutorAI=async function(prompt,opts){
+    opts=Object.assign({},opts||{});
+    var raw=text(prompt).trim();if(!raw)return null;
+    appendChat('user',raw);
+    var loading=addChatLoading();
+    try{
+      var response=await dispatch(raw,Object.assign(opts,{rawPrompt:raw,purpose:opts.purpose||'main_chat'}));
+      removeNode(loading);appendChat('ai',response.answer);return response;
+    }catch(err){removeNode(loading);appendChat('ai',errorText(err));return null;}
+  };
+  window.sendMessage=async function(){
+    var input=document.getElementById('ai-input');
+    var raw=text(input && input.value).trim();if(!raw)return null;
+    if(input)input.value='';
+    return window.askChineseTutorAI(raw,{purpose:'main_chat',showModal:false});
+  };
+  window.askAI=function(prompt,opts){
+    opts=Object.assign({},opts||{});
+    return runPrompt(text(prompt),opts);
+  };
+  window.openGPTModal=function(context,title,inlineTargetId,rawPrompt){
+    return runPrompt(text(rawPrompt || context),{
+      forceMode:'grade',
+      title:title||'AI chấm câu',
+      inlineTarget:inlineTargetId||null,
+      contextPrompt:text(context),
+      rawPrompt:text(rawPrompt || context),
+      showModal:true
     });
   };
-
-  // ---------- gọi thẳng Edge Function (dùng cho cứu hộ + tự kiểm tra) ----------
-  function supabaseInfo(){
-    var url = '', key = '';
-    try { if (typeof HSK_SUPABASE_URL !== 'undefined') url = HSK_SUPABASE_URL; } catch(e) {}
-    try { if (typeof HSK_SUPABASE_KEY !== 'undefined') key = HSK_SUPABASE_KEY; } catch(e) {}
-    url = url || window.HSK_SUPABASE_URL || '';
-    key = key || window.HSK_SUPABASE_KEY || '';
-    return { url: String(url).replace(/\/$/, ''), key: String(key) };
-  }
-
-  async function callRaw(payload, timeoutMs){
-    var cfg = supabaseInfo();
-    if (!cfg.url || !cfg.key) throw new Error('Chưa có HSK_SUPABASE_URL / HSK_SUPABASE_KEY.');
-    if (!window.hskSupabase) throw new Error('Chưa khởi tạo hskSupabase.');
-    var sess = await window.hskSupabase.auth.getSession();
-    var token = sess && sess.data && sess.data.session && sess.data.session.access_token;
-    if (!token) throw new Error('Bạn cần đăng nhập trước khi gọi AI.');
-
-    var ctrl = new AbortController();
-    var timer = setTimeout(function(){ ctrl.abort(); }, timeoutMs || RESCUE_TIMEOUT_MS);
-    try {
-      var res = await originalFetch.call(window, cfg.url + '/functions/v1/hsk-ai-grade', {
-        method: 'POST',
-        signal: ctrl.signal,
-        headers: { 'Authorization': 'Bearer ' + token, 'apikey': cfg.key, 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      var text = await res.text();
-      var data;
-      try { data = JSON.parse(text); } catch(e) { data = { ok: false, raw: text }; }
-      window.HSK_AI_LAST = { request: payload, response: data, at: new Date().toISOString(), httpStatus: res.status };
-      return { status: res.status, data: data };
-    } finally { clearTimeout(timer); }
-  }
-
-  // ---------- cứu hộ khi app đã rơi vào chấm dự phòng ----------
-  function answerFromPrompt(raw){
-    var text = String(raw || '');
-    var marks = ['Đáp án của tôi:', 'Đáp án của con:', 'Câu trả lời của tôi:', 'Bài làm:', 'Tôi viết:', '学生答案：', '答案：'];
-    for (var i = 0; i < marks.length; i++) {
-      var idx = text.lastIndexOf(marks[i]);
-      if (idx >= 0) return text.slice(idx + marks[i].length).trim();
-    }
-    var lines = text.split('\n').map(function(x){ return x.trim(); }).filter(Boolean);
-    return lines.length ? lines[lines.length - 1] : '';
-  }
-
-  function gradeText(r){
-    var out = 'Điểm: ' + (r.score != null ? r.score : r.percent) + '%\n' + (r.comment_vi || r.short_feedback_vi || '');
-    if (r.wrong_parts && r.wrong_parts.length) {
-      out += '\nLỗi cần sửa:\n' + r.wrong_parts.map(function(w, i){
-        return (i + 1) + '. ' + w.wrong + (w.should_be ? ' → ' + w.should_be : '') + (w.why_vi ? ' (' + w.why_vi + ')' : '');
-      }).join('\n');
-    }
-    if (r.corrected_zh) out += '\nCâu sửa mẫu:\n' + r.corrected_zh + (r.corrected_pinyin ? '\n' + r.corrected_pinyin : '');
-    return out;
-  }
-
-  async function directCall(prompt, meta, mode){
-    var course = currentCourse();
-    var level = levelOf(course) || 5;
-    if (level === 3 || level === 4) return null;   // HSK 3/4 có đường gọi riêng, không đụng vào
-
-    var raw = String((meta && meta.rawPrompt) || prompt || '');
-    if (!raw.trim()) return null;
-
-    var lessonId = null, lessonTitle = '';
-    try { lessonId = (window.STATE && window.STATE.currentLesson) || null; } catch(e) {}
-    try {
-      var list = window.LESSONS || [];
-      for (var i = 0; i < list.length; i++) {
-        if (list[i] && list[i].id === lessonId) { lessonTitle = list[i].zh || list[i].title || ''; break; }
-      }
-    } catch(e) {}
-
-    var payload = {
-      course: course || ('hsk' + level), hskLevel: level, level: level, studentLevel: 'HSK' + level,
-      mode: mode, lessonId: lessonId, lessonTitle: lessonTitle,
-      exerciseType: mode === 'tutor' ? 'tutor_chat' : 'ai_rescue_grade',
-      clientTimeoutMs: RESCUE_TIMEOUT_MS,
-      maxTokens: mode === 'tutor' ? 4000 : 2200
-    };
-    if (mode === 'tutor') {
-      payload.prompt = String(prompt || raw);
-      payload.userQuestion = raw;
-      var h = chatHistory(); if (h) payload.conversationHistory = h;
-    } else {
-      payload.instruction = raw;
-      payload.questionText = raw;
-      payload.studentAnswer = answerFromPrompt(raw);
-    }
-
-    try {
-      var out = await callRaw(payload, RESCUE_TIMEOUT_MS + 3000);
-      var data = out.data;
-      if (!data || data.ok === false) return null;
-      if (mode === 'tutor') {
-        if (!data.answer) return null;
-        console.info('[HSK AI] Cứu hộ thành công (gia sư) sau khi app đã bỏ cuộc.');
-        return { answer: data.answer, tutor: true, source: 'ai-rescue', model_used: data.model_used };
-      }
-      if (!data.result) return null;
-      console.info('[HSK AI] Cứu hộ thành công (chấm bài) sau khi app đã bỏ cuộc.');
-      return { result: data.result, answer: gradeText(data.result), source: 'ai-rescue', model_used: data.model_used };
-    } catch(e) {
-      console.warn('[HSK AI] Cứu hộ thất bại:', e && e.message ? e.message : e);
-      return null;
-    }
-  }
-
-  function looksTutor(prompt, meta){
-    var mode = String((meta && meta.mode) || '').toLowerCase();
-    if (/grade|cham|chấm/.test(mode)) return false;
-    if (/tutor|chat|teacher|coach/.test(mode)) return true;
-    try { if (typeof window.isTutorPrompt === 'function') return !!window.isTutorPrompt(String(prompt || '')); } catch(e) {}
-    return false;
-  }
-
-  if (typeof window.callAIBackend === 'function') {
-    var chain = window.callAIBackend;
-    window.callAIBackend = async function(prompt, meta){
-      if (window.HSK_AI_NO_RESCUE) return chain.apply(this, arguments);
-      try {
-        var res = await chain.apply(this, arguments);
-        if (res && res.fallback) {
-          var rescued = await directCall(prompt, meta, 'grade');
-          if (rescued) return rescued;
-        }
-        return res;
-      } catch (err) {
-        var r2 = await directCall(prompt, meta, looksTutor(prompt, meta) ? 'tutor' : 'grade');
-        if (r2) return r2;
-        throw err;
-      }
-    };
-    try { callAIBackend = window.callAIBackend; } catch(e) {}
-  }
-
-  // ---------- công cụ kiểm tra ----------
-  window.HSK_AI_TAG = function(){
-    var c = currentCourse();
-    return { course: c, level: levelOf(c), clientTimeoutMs: detectClientTimeout() };
+  window.runCurrentGPTPrompt=function(){
+    var raw=text(readLexical('raw',currentState.raw) || readLexical('context',currentState.context));
+    var context=text(readLexical('context',currentState.context) || raw);
+    return runPrompt(raw,{forceMode:'grade',title:readLexical('title',currentState.title),inlineTarget:readLexical('target',currentState.target),contextPrompt:context,showModal:true});
   };
-
-  window.HSK_AI_WHY = async function(){
-    var cfg = supabaseInfo();
-    var out = {
-      patch: window.__HSK_AI_COURSE_TAG__,
-      course: currentCourse(),
-      appChoAIToiDa_ms: detectClientTimeout() || '(không tìm thấy timeoutPromise trong trang)',
-      supabaseUrl: cfg.url ? 'có' : 'THIẾU',
-      supabaseKey: cfg.key ? 'có' : 'THIẾU',
-      dangNhap: 'chưa kiểm tra'
-    };
-    try {
-      var s = await window.hskSupabase.auth.getSession();
-      out.dangNhap = (s && s.data && s.data.session) ? 'có' : 'CHƯA ĐĂNG NHẬP';
-    } catch(e) { out.dangNhap = 'lỗi: ' + (e && e.message); }
-
-    var last = window.HSK_AI_LAST || {};
-    out.lanGoiGanNhat = last.at || '(chưa có)';
-    out.httpStatus = last.httpStatus;
-    if (last.response) {
-      out.backendVersion = last.response.version;
-      out.ok = last.response.ok;
-      out.model_used = last.response.model_used;
-      out.budget_ms = last.response.budget_ms;
-      out.elapsed_ms = last.response.elapsed_ms;
-      out.loi = last.response.error;
-      out.attempts = last.response.attempts;
-    }
-    console.log(out);
-    if (out.elapsed_ms && detectClientTimeout() && out.elapsed_ms > detectClientTimeout() - 1500) {
-      console.warn('[HSK AI] Backend trả lời chậm hơn thời gian app chịu chờ → app chấm dự phòng. Hãy tăng con số trong timeoutPromise(...) ở index.html lên 60000.');
-    }
-    return out;
+  window.runExternalAIGrading=function(){return window.runCurrentGPTPrompt();};
+  window.runInternalAIGrading=function(){return window.runCurrentGPTPrompt();};
+  window.runAIInlineChoice=function(prompt,opts,mode){
+    if(typeof opts==='string')opts={inlineTarget:opts};
+    opts=Object.assign({},opts||{});
+    opts.forceMode=explicitMode({mode:mode}) || opts.forceMode || 'grade';
+    opts.title=opts.title||'AI chấm câu';
+    opts.showModal=opts.showModal!==false;
+    return runPrompt(text(prompt),opts);
   };
+  window.showGradeResult=function(result,source){
+    if(!result || result.ai_verified!==true){
+      var message='Kết quả không có xác nhận từ AI thật nên app đã từ chối hiển thị điểm.';
+      setInline(readLexical('target',currentState.target),message,'error',false);setModalAnswer(message,'error');return false;
+    }
+    var data={result:result,model_used:text(source && source.model_used || source || result.model_used),ai_verified:true};
+    var rendered=gradeHTML(data), plain=gradeText(data), target=readLexical('target',currentState.target);
+    if(target)setInline(target,rendered,'',true);
+    setModalAnswer(plain,'');
+    return true;
+  };
+  window.setInlineGPTAnswer=function(targetId,value,mode){setInline(targetId,value,mode||'',false);};
 
-  window.HSK_AI_TEST = async function(levelOverride){
-    var level = Number(levelOverride) || levelOf(currentCourse()) || 5;
-    var samples = {
-      1: { answer: '我叫小明。', question: 'Giới thiệu tên của con bằng tiếng Trung.' },
-      2: { answer: '昨天我去商店买东西了。', question: 'Kể một việc con đã làm hôm qua.' },
-      3: { answer: '我一边听音乐一边写作业。', question: 'Dùng 一边……一边…… đặt một câu.' },
-      4: { answer: '他把我的书拿走了。', question: 'Dùng câu chữ 把 đặt một câu.' },
-      5: { answer: '作为公司的经理，他必须对员工负责。', question: 'Dùng 作为 hoàn thành câu.' },
-      6: { answer: '这项政策的实施对经济产生了深远的影响。', question: 'Viết một câu trang trọng về chính sách.' }
-    };
-    var s = samples[level] || samples[5];
-    var base = { course: 'hsk' + level, hskLevel: level, level: level, lessonId: 1, clientTimeoutMs: RESCUE_TIMEOUT_MS };
-
-    var g = await callRaw(Object.assign({}, base, {
-      mode: 'grade', exerciseType: 'hsk' + level + '_selftest',
-      instruction: s.question, questionText: s.question, studentAnswer: s.answer
-    }), RESCUE_TIMEOUT_MS);
-
-    var t = await callRaw(Object.assign({}, base, {
-      mode: 'tutor', exerciseType: 'tutor_chat',
-      prompt: 'Giải thích ngắn gọn cách dùng của từ 很 ở trình độ HSK ' + level + '.',
-      userQuestion: '很 dùng thế nào?', maxTokens: 800
-    }), RESCUE_TIMEOUT_MS);
-
-    var out = {
-      grade: {
-        http: g.status, ok: g.data.ok, version: g.data.version,
-        cap: g.data.context_used && g.data.context_used.hskLevel,
-        model: g.data.model_used, elapsed_ms: g.data.elapsed_ms,
-        score: g.data.result && g.data.result.score,
-        verdict: g.data.result && g.data.result.verdict,
-        question_used: g.data.question_used,
-        error: g.data.error, attempts: g.data.attempts
-      },
-      tutor: {
-        http: t.status, ok: t.data.ok, model: t.data.model_used,
-        elapsed_ms: t.data.elapsed_ms, continuations: t.data.continuations,
-        answer: String(t.data.answer || '').slice(0, 160),
-        error: t.data.error, attempts: t.data.attempts
+  function patchButtons(){
+    Array.prototype.forEach.call(document.querySelectorAll('button'),function(button){
+      var oc=text(button.getAttribute('onclick'));
+      if(/runInternalAIGrading/.test(oc)){
+        button.setAttribute('onclick',oc.replace(/runInternalAIGrading/g,'runExternalAIGrading'));
       }
-    };
-    console.table([
-      { luong: 'grade', ok: out.grade.ok, cap: out.grade.cap, model: out.grade.model, ms: out.grade.elapsed_ms, diem: out.grade.score },
-      { luong: 'tutor', ok: out.tutor.ok, cap: '-', model: out.tutor.model, ms: out.tutor.elapsed_ms, diem: '-' }
-    ]);
-    return out;
-  };
+      if(/(['"])internal\1/.test(oc)){
+        button.setAttribute('onclick',text(button.getAttribute('onclick')).replace(/(['"])internal\1/g,'$1external$1'));
+      }
+      var label=text(button.textContent);
+      if(/AI\s+trong\s+app/i.test(label)) button.textContent=label.replace(/AI\s+trong\s+app(?:\s+chấm)?/i,'AI chấm');
+    });
+  }
+  var observer=new MutationObserver(function(){patchButtons();});
+  function boot(){
+    patchButtons();
+    try{observer.observe(document.body,{childList:true,subtree:true});}catch(_e){}
+    document.documentElement.setAttribute('data-hsk-ai-version',VERSION);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 
-  window.HSK_AI_TEST_ALL = async function(){
-    var res = {}, arr = [1, 3, 4, 5];
-    for (var i = 0; i < arr.length; i++) {
-      try { res['hsk' + arr[i]] = await window.HSK_AI_TEST(arr[i]); }
-      catch(e) { res['hsk' + arr[i]] = { error: e.message || String(e) }; }
+  try{callAIBackend=window.callAIBackend;}catch(_e){}
+  try{askChineseTutorAI=window.askChineseTutorAI;}catch(_e){}
+  try{sendMessage=window.sendMessage;}catch(_e){}
+  try{askAI=window.askAI;}catch(_e){}
+  try{openGPTModal=window.openGPTModal;}catch(_e){}
+  try{runCurrentGPTPrompt=window.runCurrentGPTPrompt;}catch(_e){}
+  try{runExternalAIGrading=window.runExternalAIGrading;}catch(_e){}
+  try{runInternalAIGrading=window.runInternalAIGrading;}catch(_e){}
+  try{runAIInlineChoice=window.runAIInlineChoice;}catch(_e){}
+  try{showGradeResult=window.showGradeResult;}catch(_e){}
+  try{setInlineGPTAnswer=window.setInlineGPTAnswer;}catch(_e){}
+
+  window.HSK_AI_V5={
+    version:VERSION,
+    functionName:FUNCTION_NAME,
+    buildPayload:buildPayload,
+    dispatch:dispatch,
+    invoke:invoke,
+    normalizeGrade:normalizeGrade,
+    patchButtons:patchButtons,
+    audit:function(){
+      return {
+        version:VERSION,
+        course:detectCourse({}).course,
+        lesson:detectCourse({}).lessonId,
+        supabase:!!(window.hskSupabase && window.hskSupabase.auth && window.hskSupabase.functions),
+        callAIBackend:window.callAIBackend===callAIBackend,
+        sendMessage:window.sendMessage===sendMessage,
+        aiOnly:true,
+        lastPayload:window.HSK_AI_V5_LAST_PAYLOAD||null
+      };
     }
-    return res;
   };
 })();
-</script>
 
+</script>
+<!-- HSK AI V5 FINAL CONTROLLER END -->
 </body>
 </html>
