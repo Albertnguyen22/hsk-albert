@@ -31699,7 +31699,7 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
   if(window.__HSK_AI_V6_FINAL_CONTROLLER__) return;
   window.__HSK_AI_V6_FINAL_CONTROLLER__ = true;
 
-  var VERSION = '2026.09.23-v6.1-stable-model-fallback';
+  var VERSION = '2026.09.23-v6.2-dynamic-free-routing';
   var FUNCTION_NAME = 'hsk-ai-grade';
   var requestSequence = 0;
   var responseCache = Object.create(null);
@@ -32166,35 +32166,38 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
     var session=auth&&auth.data&&auth.data.session;
     if(!session||!session.access_token)throw new Error('Bạn cần đăng nhập trước khi dùng AI.');
     window.HSK_AI_V6_LAST_PAYLOAD=payload;
-    var maxWait=payload.mode==='tutor'&&payload.sourceText?240000:(payload.mode==='grade'?70000:90000);
+    var maxWait=payload.mode==='tutor'&&payload.sourceText?260000:(payload.mode==='grade'?130000:120000);
     var response=await timeout(sb.functions.invoke(FUNCTION_NAME,{body:payload,headers:{Authorization:'Bearer '+session.access_token}}),maxWait);
     window.HSK_AI_V6_LAST_RESPONSE=response;
     if(response&&response.error)throw new Error(response.error.message||response.error.context||text(response.error));
     var data=response&&response.data;
     if(!data)throw new Error('Edge Function không trả dữ liệu.');
     if(data.ok!==true){
-      var message=text(data.error||data.detail||'AI trả về lỗi.');
-      if(data.hint) message+='\n'+text(data.hint);
-      var firstAttempt=data.attempts&&data.attempts[0];
-      if(firstAttempt){
-        if(firstAttempt.status!=null) message+='\nMã lỗi OpenRouter: '+text(firstAttempt.status);
-        var detail=text(firstAttempt.detail||'').trim();
-        if(detail){
-          try{
-            var parsedDetail=JSON.parse(detail), arr=parsedDetail&&parsedDetail.attempts;
-            if(Array.isArray(arr)&&arr.length){
-              var last=arr[arr.length-1]||{};
-              message+='\nModel cuối: '+text(last.model||'không xác định');
-              message+='\nChi tiết: '+text(last.detail||'').slice(0,500);
-            }else message+='\nChi tiết: '+detail.slice(0,500);
-          }catch(_e){ message+='\nChi tiết: '+detail.slice(0,500); }
+      console.error('HSK AI v6.2 provider diagnostics:',data);
+      var backendVersion=text(data.version||'');
+      var message='';
+      if(backendVersion && !/^v6\.2/i.test(backendVersion)){
+        message='Supabase vẫn đang chạy '+backendVersion+'. Hãy deploy file hsk-ai-grade-v6.2-dynamic-routing.ts rồi thử lại.';
+      }else{
+        message=text(data.error||data.detail||'AI trả về lỗi.');
+        if(data.hint) message+='\n'+text(data.hint);
+        if(data.error_code) message+='\nMã: '+text(data.error_code);
+        var quota=data.quota||{};
+        if(quota.free_daily_remaining!=null){
+          message+='\nLượt miễn phí còn lại: '+text(quota.free_daily_remaining);
+          if(quota.free_daily_limit!=null) message+='/'+text(quota.free_daily_limit);
         }
+        if(data.retryable===true && data.retry_after_seconds){
+          message+='\nCó thể thử lại sau khoảng '+text(data.retry_after_seconds)+' giây.';
+        }
+        var tried=Array.isArray(data.models_tried)?data.models_tried:[];
+        if(tried.length) message+='\nĐã tự thử '+tried.length+' model khác nhau.';
       }
       if(data.request_id) message+='\nRequest ID: '+text(data.request_id);
       throw new Error(message);
     }
     if(data.ai_verified!==true)throw new Error('Edge Function chưa trả xác nhận AI thật.');
-    if(!/v6/i.test(text(data.version)))throw new Error('Supabase vẫn đang chạy function cũ. Hãy deploy hsk-ai-grade-v6-fast-context.ts rồi thử lại.');
+    if(!/^v6\.2/i.test(text(data.version)))throw new Error('Supabase vẫn đang chạy function cũ. Hãy deploy hsk-ai-grade-v6.2-dynamic-routing.ts rồi thử lại.');
     if(payload.mode==='grade'&&(!data.result||data.result.ai_verified!==true))throw new Error('Kết quả chấm không có xác nhận AI thật nên app đã từ chối hiển thị điểm.');
     if(payload.mode==='tutor'&&payload.sourceText&&data.complete!==true)throw new Error('AI chưa hoàn tất toàn bộ bản dịch nên app không hiển thị bản dịch bị cắt.');
     return data;
