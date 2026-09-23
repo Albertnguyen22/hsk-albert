@@ -32862,5 +32862,147 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
 </script>
 <!-- /HSK Albert: per-user/per-lesson storage, strict completion, dated assessment history -->
 
+
+
+<!-- HSK5 inline grammar AI grading fix: 2026-09-23 -->
+<style id="hsk5-inline-example-grade-fix-style">
+  .hsk5-example-ai-result{
+    margin-top:12px!important;
+    width:100%!important;
+  }
+</style>
+<script id="hsk5-inline-example-grade-fix-runtime">
+(function(){
+  'use strict';
+  if(window.__HSK5_INLINE_EXAMPLE_GRADE_FIX__) return;
+  window.__HSK5_INLINE_EXAMPLE_GRADE_FIX__ = true;
+
+  function text(v){ return String(v == null ? '' : v); }
+  function esc(v){
+    return text(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function currentLessonId(){
+    var n = 0;
+    try { n = Number(window.STATE && window.STATE.currentLesson); } catch(e) {}
+    if(!n){
+      try { n = Number(document.getElementById('lesson-selector') && document.getElementById('lesson-selector').value); } catch(e) {}
+    }
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  }
+  function lessonInfo(n){
+    try {
+      var list = (typeof LESSONS !== 'undefined' && Array.isArray(LESSONS)) ? LESSONS : (Array.isArray(window.LESSONS) ? window.LESSONS : []);
+      return list.find(function(x){ return Number(x && x.id) === Number(n); }) || {};
+    } catch(e) { return {}; }
+  }
+  function ensureResultBox(idx){
+    var input = document.getElementById('ex-input-' + idx) || document.getElementById('ex-' + idx);
+    if(!input) return null;
+    var lessonId = currentLessonId();
+    var id = 'gpt-example-' + lessonId + '-' + idx;
+    var box = document.getElementById(id);
+    if(!box){
+      box = document.createElement('div');
+      box.id = id;
+      box.className = 'gpt-inline-result ai-inline-grade-result hsk5-example-ai-result';
+      box.setAttribute('aria-live','polite');
+      var host = input.parentElement || input.closest('.grammar-card-body') || input.closest('.grammar-card');
+      if(host) host.appendChild(box);
+    }
+    return box;
+  }
+  function showLocalError(box,err){
+    if(!box) return;
+    box.className = 'gpt-inline-result show ai-inline-grade-result hsk5-example-ai-result';
+    box.innerHTML = '<div class="aigr-fail">AI chưa chấm được: ' + esc(err && err.message ? err.message : err) + '</div>';
+    try { box.scrollIntoView({behavior:'smooth',block:'nearest'}); } catch(e) {}
+  }
+
+  async function gradeExample(idx,pattern){
+    var input = document.getElementById('ex-input-' + idx) || document.getElementById('ex-' + idx);
+    if(!input || !text(input.value).trim()){
+      alert('Hãy viết câu trước khi bấm AI chấm.');
+      if(input) input.focus();
+      return null;
+    }
+
+    var answer = text(input.value).trim();
+    var lessonId = currentLessonId();
+    var lesson = lessonInfo(lessonId);
+    var box = ensureResultBox(idx);
+    if(!box){
+      alert('Không tạo được vùng hiển thị kết quả AI. Hãy tải lại trang rồi thử lại.');
+      return null;
+    }
+
+    box.className = 'gpt-inline-result show ai-inline-grade-result hsk5-example-ai-result';
+    box.innerHTML = '<div class="aigr-loading">⏳ AI đang chấm câu này…</div>';
+
+    var prompt = [
+      'Bạn là giáo viên HSK 5. Hãy chấm đúng câu tự đặt dưới đây theo cấu trúc bắt buộc.',
+      'Bài: ' + lessonId + (lesson.zh ? ' · ' + lesson.zh : ''),
+      'Yêu cầu: Tự đặt một câu ví dụ đúng và tự nhiên với cấu trúc/từ "' + pattern + '".',
+      'Cấu trúc/từ bắt buộc: ' + pattern,
+      'Câu trả lời của tôi: ' + answer,
+      '',
+      'Chấm ngắn gọn và rõ ràng: sai ở đâu, vì sao sai, sửa thành câu nào; sau cùng đưa câu hoàn chỉnh tự nhiên. Không chỉ kiểm tra việc có xuất hiện mặt chữ "' + pattern + '", mà phải kiểm tra cách dùng, vị trí, ý nghĩa và logic của cả câu.'
+    ].join('\n');
+
+    var options = {
+      title: 'AI chấm câu · HSK 5 · ' + pattern,
+      inlineTarget: box.id,
+      showModal: false,
+      course: 'hsk5',
+      hskLevel: 5,
+      level: 5,
+      lessonId: lessonId,
+      lessonTitle: text(lesson.zh),
+      lessonTitleVi: text(lesson.vi),
+      purpose: 'exact_ai_grade',
+      exerciseType: 'grammar_ai_sentence',
+      contextType: 'hsk5_grammar_example',
+      questionText: 'Tự đặt một câu ví dụ với ' + pattern,
+      fullSentenceBefore: 'Tự đặt một câu ví dụ với cấu trúc/từ bắt buộc: ' + pattern,
+      studentAnswer: answer,
+      targetWord: pattern,
+      requiredUsage: 'Dùng đúng chức năng ngữ pháp, vị trí, ý nghĩa và ngữ cảnh của ' + pattern,
+      grammarPoint: pattern,
+      teacherRubric: 'Phải giải thích cụ thể từng lỗi. Nếu sai, nêu rõ đoạn sai, nguyên nhân và câu thay thế. Không được cho 100% chỉ vì câu có chứa từ/cấu trúc bắt buộc.'
+    };
+
+    try {
+      if(typeof window.runAIInlineChoice === 'function'){
+        return await window.runAIInlineChoice(prompt,options,'grade');
+      }
+      if(typeof window.askAI === 'function'){
+        return await window.askAI(prompt,options);
+      }
+      throw new Error('Không tìm thấy bộ điều khiển AI của app.');
+    } catch(err){
+      showLocalError(box,err);
+      console.error('HSK5 inline example grading failed',err);
+      return null;
+    }
+  }
+
+  window.checkMyExampleDirect = function(idx,pattern){
+    return gradeExample(Number(idx),text(pattern));
+  };
+  window.checkMyExample = function(idx,pattern){
+    return gradeExample(Number(idx),text(pattern));
+  };
+
+  try { checkMyExampleDirect = window.checkMyExampleDirect; } catch(e) {}
+  try { checkMyExample = window.checkMyExample; } catch(e) {}
+
+  window.HSK5_INLINE_EXAMPLE_GRADE_FIX = {
+    version: '2026.09.23-hsk5-inline-example-fix',
+    grade: gradeExample,
+    ensureResultBox: ensureResultBox
+  };
+})();
+</script>
+<!-- /HSK5 inline grammar AI grading fix -->
+
 </body>
 </html>
