@@ -32471,5 +32471,404 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
 </script>
 <!-- /HSK Albert patch: inline AI grading + strict per-lesson isolation -->
 
+<!-- HSK Albert: per-user/per-lesson storage, strict completion, dated assessment history -->
+<style id="hsk-learning-storage-v2-style">
+  .hsk-result-lock-note{
+    margin:0 0 14px;padding:14px 16px;border:1px solid #e3c66c;border-radius:13px;
+    background:var(--gold-light);color:#5f4b0c;font-size:12.5px;line-height:1.7;
+  }
+  .hsk-result-lock-note strong{display:block;font-size:14px;color:#4c3b06;margin-bottom:3px}
+  .hsk-result-lock-progress{height:8px;background:rgba(184,134,11,.14);border-radius:99px;overflow:hidden;margin:9px 0 5px}
+  .hsk-result-lock-progress i{display:block;height:100%;background:var(--gold);border-radius:99px}
+
+  #h3-learning-assessment-tab.hsk-learning-v2-locked .h3la-summary-grid,
+  #h3-learning-assessment-tab.hsk-learning-v2-locked .h3la-section:not(.hsk-learning-v2-section),
+  #h4-learning-assessment-tab.hsk-learning-v2-locked .h4la-summary,
+  #h4-learning-assessment-tab.hsk-learning-v2-locked .h4la-section:not(.hsk-learning-v2-section){display:none!important}
+
+  .hsk-learning-v2-section{background:#fff;border:1px solid var(--border);border-radius:15px;overflow:hidden;margin-top:14px}
+  .hsk-learning-v2-head{padding:13px 16px;background:var(--paper2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+  .hsk-learning-v2-title{font-size:15px;font-weight:850;color:var(--ink)}
+  .hsk-learning-v2-sub{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.55}
+  .hsk-learning-v2-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+  .hsk-learning-v2-actions button{border:1px solid var(--border);background:#fff;color:var(--ink);border-radius:8px;padding:7px 10px;font:700 11.5px inherit;cursor:pointer}
+  .hsk-learning-v2-actions button:hover{border-color:var(--ink);background:var(--paper)}
+  .hsk-learning-v2-body{padding:14px 16px}
+  .hsk-learning-v2-empty{padding:22px 12px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.7}
+  .hsk-learning-day{border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;background:#fff}
+  .hsk-learning-day:last-child{margin-bottom:0}
+  .hsk-learning-day>summary{list-style:none;cursor:pointer;padding:11px 13px;display:grid;grid-template-columns:minmax(130px,1fr) auto auto;gap:10px;align-items:center;background:#fcfbf7}
+  .hsk-learning-day>summary::-webkit-details-marker{display:none}
+  .hsk-learning-day-date{font-weight:850;font-size:13px;color:var(--ink)}
+  .hsk-learning-day-meta{font-size:11px;color:var(--muted);margin-top:2px}
+  .hsk-learning-day-score{font-size:18px;font-weight:900;color:var(--teal);white-space:nowrap}
+  .hsk-learning-day-toggle{font-size:11px;color:var(--blue);font-weight:750;white-space:nowrap}
+  .hsk-learning-day-content{padding:10px 12px;border-top:1px solid var(--border);background:#fff}
+  .hsk-learning-session{border:1px solid var(--border);border-radius:10px;margin:8px 0;overflow:hidden}
+  .hsk-learning-session:first-child{margin-top:0}.hsk-learning-session:last-child{margin-bottom:0}
+  .hsk-learning-session>summary{list-style:none;cursor:pointer;padding:9px 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--paper)}
+  .hsk-learning-session>summary::-webkit-details-marker{display:none}
+  .hsk-learning-time{font-size:10.5px;color:var(--muted);min-width:42px}
+  .hsk-learning-session-title{font-size:12.5px;font-weight:800;flex:1;min-width:180px}
+  .hsk-learning-pill{display:inline-flex;align-items:center;border-radius:99px;padding:3px 8px;font-size:10.5px;font-weight:850;background:var(--paper2);color:var(--muted);white-space:nowrap}
+  .hsk-learning-pill.good{background:var(--teal-light);color:var(--teal)}
+  .hsk-learning-pill.mid{background:var(--gold-light);color:#795c08}
+  .hsk-learning-pill.bad{background:var(--red-light);color:var(--red)}
+  .hsk-learning-pill.info{background:var(--blue-light);color:var(--blue)}
+  .hsk-learning-session-body{padding:10px 11px;border-top:1px solid var(--border)}
+  .hsk-learning-item{padding:10px 0;border-bottom:1px dashed var(--border)}
+  .hsk-learning-item:last-child{border-bottom:none;padding-bottom:0}.hsk-learning-item:first-child{padding-top:0}
+  .hsk-learning-item-top{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .hsk-learning-item-q{font-size:11px;font-weight:900;color:var(--teal);min-width:46px}
+  .hsk-learning-item-prompt{font-family:'Noto Serif SC',serif;font-size:13px;line-height:1.65;flex:1;min-width:180px;white-space:pre-wrap}
+  .hsk-learning-kv{display:grid;grid-template-columns:82px minmax(0,1fr);gap:7px;margin:4px 0;font-size:12px;line-height:1.65}
+  .hsk-learning-kv b{font-size:11px;color:var(--muted)}
+  .hsk-learning-answer{font-family:'Noto Serif SC',serif;white-space:pre-wrap;overflow-wrap:anywhere}
+  .hsk-learning-answer.bad{color:var(--red)}.hsk-learning-answer.good{color:var(--teal);font-weight:700}
+  .hsk-learning-ai-errors{margin-top:7px}
+  .hsk-learning-ai-error{border-left:3px solid var(--red);background:#fff8f6;border-radius:0 8px 8px 0;padding:7px 9px;margin:6px 0;font-size:11.5px;line-height:1.65}
+  .hsk-learning-source-note{margin-top:9px;font-size:10.5px;color:var(--muted);line-height:1.6}
+
+  .h3wbv2-subtab.hsk-answers-locked,.h4wb-subtab.hsk-answers-locked{opacity:.55;cursor:not-allowed!important;position:relative}
+  .h3wbv2-subtab.hsk-answers-locked::after,.h4wb-subtab.hsk-answers-locked::after{content:' 🔒';font-size:10px}
+
+  #gpt-modal.hsk-learning-grade-modal-blocked{display:none!important}
+  @media(max-width:700px){
+    .hsk-learning-day>summary{grid-template-columns:1fr auto}.hsk-learning-day-toggle{grid-column:1/-1}
+    .hsk-learning-kv{grid-template-columns:68px minmax(0,1fr)}
+  }
+</style>
+<script id="hsk-learning-storage-v2-runtime">
+(function(){
+  'use strict';
+  if(window.__HSK_LEARNING_STORAGE_V2__) return;
+  window.__HSK_LEARNING_STORAGE_V2__=true;
+
+  var VERSION='2026.09.23-learning-storage-history-v2';
+  var STATE_TYPE='learning_state_v2';
+  var HISTORY_TYPE='learning_history_v2';
+  var H3_PARTS={lp1:[1,5,'Nghe · Phần 1'],lp2:[6,10,'Nghe · Phần 2'],lp3:[11,15,'Nghe · Phần 3'],lp4:[16,20,'Nghe · Phần 4'],rp1:[21,25,'Đọc · Phần 1'],rp2:[26,30,'Đọc · Phần 2'],rp3:[31,35,'Đọc · Phần 3']};
+  var H4_PARTS={lp1:[1,5,'Nghe · Phần 1'],lp2:[6,12,'Nghe · Phần 2'],lp3:[13,22,'Nghe · Phần 3'],rp1:[23,26,'Đọc · Phần 1'],rp2:[27,30,'Đọc · Phần 2'],rp3:[31,34,'Đọc · Phần 3'],rp4:[35,43,'Đọc · Phần 4']};
+  var cloudTimers={};
+  var historyRenderTimers={};
+  var lessonForceTimers=[];
+
+  function text(v){return String(v==null?'':v);}
+  function esc(v){return text(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+  function clone(v){try{return JSON.parse(JSON.stringify(v));}catch(e){return v;}}
+  function readJson(k,fallback){try{var v=JSON.parse(localStorage.getItem(k)||'null');return v==null?fallback:v;}catch(e){return fallback;}}
+  function writeJson(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}}
+  function norm(v){return text(v).replace(/[\s，,。！？!?；;：:"“”‘’'、（）()·\-—_]+/g,'');}
+  function iso(){return new Date().toISOString();}
+  function uid(){return text(window.hskCurrentUser&&window.hskCurrentUser.id||'');}
+  function scope(){return uid()||'guest';}
+  function sb(){return window.hskSupabase&&typeof window.hskSupabase.from==='function'?window.hskSupabase:null;}
+  function currentCourse(){var c=text(window.CURRENT_COURSE||'').toLowerCase();return c==='hsk3'||c==='hsk4'?c:'';}
+  function validLesson(n){n=Number(n);return n>=1&&n<=20?n:0;}
+  function legacyKey(course,n){return course==='hsk3'?'h3wbv3_state_'+n:'h4wb_state_v1_'+n;}
+  function stateKey(course,n,sc){return 'hsk_course_state_v2__'+(sc||scope())+'__'+course+'__lesson_'+n;}
+  function journalKey(sc){return 'hsk_learning_journal_v2__'+(sc||scope());}
+  function emptyState(){return{answers:{},writing:{},sort:{},review:{},submitted:{},view:'overview',audio:{}};}
+  function readLegacy(course,n){var x=readJson(legacyKey(course,n),null);return Object.assign(emptyState(),x||{});}
+  function recordState(course,n,state,updatedAt){return{version:VERSION,course:course,lesson_id:Number(n),updated_at:updatedAt||iso(),state:clone(state||emptyState())};}
+
+  function saveIsolated(course,n,state,doCloud){
+    n=validLesson(n);if(!n||!course)return null;
+    var rec=recordState(course,n,state||readLegacy(course,n));
+    writeJson(stateKey(course,n),rec);
+    if(doCloud!==false)queueStateCloud(rec);
+    scheduleAssessmentEnhance(course,n,true);
+    return rec;
+  }
+
+  function migrateState(course,n){
+    n=validLesson(n);if(!n)return null;
+    var k=stateKey(course,n),own=readJson(k,null);
+    if(own&&Number(own.lesson_id)===n&&own.course===course)return own;
+    var guest=scope()!=='guest'?readJson(stateKey(course,n,'guest'),null):null;
+    if(guest&&Number(guest.lesson_id)===n&&guest.course===course){
+      own=recordState(course,n,guest.state,guest.updated_at||iso());writeJson(k,own);return own;
+    }
+    var legacy=readLegacy(course,n);if(course==='hsk3'){var mirror=readJson('h3wbv6_isolated_state_'+n,null);if(mirror&&typeof mirror==='object')legacy=Object.assign(emptyState(),mirror);}own=recordState(course,n,legacy);writeJson(k,own);return own;
+  }
+
+  function restoreIsolated(course,n){
+    n=validLesson(n);if(!n)return null;
+    var rec=migrateState(course,n);
+    if(rec&&Number(rec.lesson_id)===n&&rec.course===course){writeJson(legacyKey(course,n),rec.state||emptyState());return rec.state||emptyState();}
+    return readLegacy(course,n);
+  }
+
+  function queueStateCloud(rec){
+    var user=uid(),client=sb();if(!user||!client||!rec)return;
+    var k=rec.course+':'+rec.lesson_id;clearTimeout(cloudTimers[k]);
+    cloudTimers[k]=setTimeout(async function(){
+      try{
+        var row={user_id:user,lesson_id:rec.lesson_id,exercise_type:STATE_TYPE,question_id:rec.course+':lesson:'+rec.lesson_id+':workbook',answer:JSON.stringify(rec),is_correct:null,updated_at:rec.updated_at};
+        var out=await client.from('exercise_answers').upsert(row,{onConflict:'user_id,lesson_id,exercise_type,question_id'});
+        if(out&&out.error)throw out.error;
+      }catch(e){console.warn('HSK state cloud sync',e);}
+    },900);
+  }
+
+  function readJournal(sc){var a=readJson(journalKey(sc),[]);return Array.isArray(a)?a:[];}
+  function saveJournal(a,sc){if(a.length>4000)a=a.slice(a.length-4000);writeJson(journalKey(sc),a);}
+  function simpleHash(v){var s=text(v),h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=(h*16777619)>>>0;}return h.toString(36);}
+  function addJournal(entry){
+    entry=Object.assign({version:VERSION,id:'',created_at:iso(),course:currentCourse()||'hsk3',lesson_id:1,kind:'submission',title:'Kết quả học tập',score:null,total:0,correct:0,assisted:false,items:[]},entry||{});
+    entry.lesson_id=validLesson(entry.lesson_id)||1;
+    if(!entry.id)entry.id=[entry.course,entry.lesson_id,entry.kind,entry.section_id||'',simpleHash(JSON.stringify(entry.items||[])),Date.now(),Math.random().toString(36).slice(2,6)].join('-');
+    var a=readJournal(),idx=a.findIndex(function(x){return x&&x.id===entry.id;});if(idx>=0)a[idx]=entry;else a.push(entry);saveJournal(a);
+    syncHistoryCloud(entry);scheduleAssessmentEnhance(entry.course,entry.lesson_id,true);return entry;
+  }
+  function syncHistoryCloud(entry){
+    var user=uid(),client=sb();if(!user||!client||!entry)return;
+    setTimeout(async function(){try{var row={user_id:user,lesson_id:entry.lesson_id,exercise_type:HISTORY_TYPE,question_id:entry.course+':'+entry.lesson_id+':'+entry.id,answer:JSON.stringify(entry),score:entry.score==null?null:Number(entry.score),is_correct:entry.score==null?null:Number(entry.score)>=90,updated_at:entry.created_at||iso()};var out=await client.from('exercise_answers').upsert(row,{onConflict:'user_id,lesson_id,exercise_type,question_id'});if(out&&out.error)throw out.error;}catch(e){console.warn('HSK history cloud sync',e);}},80);
+  }
+
+  async function loadCloud(){
+    var user=uid(),client=sb();if(!user||!client)return;
+    try{
+      var st=await client.from('exercise_answers').select('lesson_id,exercise_type,question_id,answer,updated_at').eq('user_id',user).eq('exercise_type',STATE_TYPE).limit(200);
+      if(st&&st.data){st.data.forEach(function(row){var rec;try{rec=JSON.parse(row.answer||'null');}catch(e){}if(!rec||!rec.course||!validLesson(rec.lesson_id))return;var k=stateKey(rec.course,rec.lesson_id),local=readJson(k,null);if(!local||String(rec.updated_at||row.updated_at||'')>String(local.updated_at||''))writeJson(k,rec);});}
+      var hi=await client.from('exercise_answers').select('lesson_id,exercise_type,question_id,answer,updated_at,score').eq('user_id',user).eq('exercise_type',HISTORY_TYPE).limit(4000);
+      if(hi&&hi.data){var all=readJournal(),map={};all.forEach(function(x){if(x&&x.id)map[x.id]=x;});hi.data.forEach(function(row){var e;try{e=JSON.parse(row.answer||'null');}catch(err){}if(e&&e.id){var old=map[e.id];if(!old||String(e.created_at||row.updated_at||'')>=String(old.created_at||''))map[e.id]=e;}});saveJournal(Object.keys(map).map(function(k){return map[k];}));}
+      var c=currentCourse(),n=currentLessonId();if(c&&n){restoreIsolated(c,n);forceLessonRender(c,n);scheduleAssessmentEnhance(c,n,true);}
+    }catch(e){console.warn('HSK cloud load',e);}
+  }
+
+  function migrateGuestToUser(){
+    if(!uid())return;
+    ['hsk3','hsk4'].forEach(function(c){for(var n=1;n<=20;n++){var uk=stateKey(c,n),g=readJson(stateKey(c,n,'guest'),null);if(!readJson(uk,null)&&g)writeJson(uk,g);}});
+    var userRows=readJournal(),guestRows=readJournal('guest'),map={};userRows.concat(guestRows).forEach(function(x){if(x&&x.id)map[x.id]=x;});saveJournal(Object.keys(map).map(function(k){return map[k];}));
+  }
+
+  function h3Data(n){return window.H3WBV2_DATA&&(window.H3WBV2_DATA[String(n)]||window.H3WBV2_DATA[n])||{};}
+  function h4Data(n){var d=window.HSK4_WORKBOOK&&window.HSK4_WORKBOOK.data;return d&&(d[String(n)]||d[n])||window.H4WB_DATA&&(window.H4WB_DATA[String(n)]||window.H4WB_DATA[n])||{};}
+  function official(course,n,q){var d=course==='hsk3'?h3Data(n):h4Data(n),a=d.answers||{};return text(a[String(q)]||a[q]||'');}
+
+  function h3WritingValue(state,it){if(it&&it.type==='word_build')return[text((state.writing||{})[it.q+'_1']).trim(),text((state.writing||{})[it.q+'_2']).trim()].join('、');return text((state.writing||{})[it&&it.q]).trim();}
+  function h3WritingComplete(state,it){if(it&&it.type==='word_build')return!!(text((state.writing||{})[it.q+'_1']).trim()&&text((state.writing||{})[it.q+'_2']).trim());return!!text((state.writing||{})[it&&it.q]).trim();}
+  function h3ReviewComplete(state,it){var vals=(state.review||{})[it.q]||[];return(it.answers||[]).every(function(_,i){return!!text(vals[i]).trim();});}
+
+  function h3Completion(n){
+    var d=h3Data(n),s=readLegacy('hsk3',n),done=0,total=35,submitted=0,required=Object.keys(H3_PARTS).length,missing=[];
+    for(var q=1;q<=35;q++){if(text((s.answers||{})[q]).trim())done++;else missing.push(q);}
+    (d.writing||[]).forEach(function(it){total++;required++;if(h3WritingComplete(s,it))done++;else missing.push(it.q);if((s.submitted||{})['w'+it.q])submitted++;});
+    (d.review||[]).forEach(function(it){(it.answers||[]).forEach(function(_,i){total++;if(text(((s.review||{})[it.q]||[])[i]).trim())done++;else missing.push(it.q+'.'+(i+1));});required++;if((s.submitted||{})['rv'+it.q])submitted++;});
+    Object.keys(H3_PARTS).forEach(function(k){if((s.submitted||{})[k])submitted++;});
+    return{course:'hsk3',lesson:n,done:done,total:total,submitted:submitted,required:required,complete:done===total&&submitted===required,missing:missing};
+  }
+  function h4Completion(n){
+    var d=h4Data(n),s=readLegacy('hsk4',n),done=0,total=43,submitted=0,required=Object.keys(H4_PARTS).length,missing=[];
+    for(var q=1;q<=43;q++){if(text((s.answers||{})[q]).trim())done++;else missing.push(q);}
+    (d.writing||[]).forEach(function(it){total++;required++;if(text((s.writing||{})[it.q]).trim())done++;else missing.push(it.q);if((s.submitted||{})['w'+it.q])submitted++;});
+    Object.keys(H4_PARTS).forEach(function(k){if((s.submitted||{})[k])submitted++;});
+    return{course:'hsk4',lesson:n,done:done,total:total,submitted:submitted,required:required,complete:done===total&&submitted===required,missing:missing};
+  }
+  function completion(course,n){return course==='hsk3'?h3Completion(n):h4Completion(n);}
+
+  function firstMissingPart(course,n,k){var p=(course==='hsk3'?H3_PARTS:H4_PARTS)[k],s=readLegacy(course,n),m=[];if(!p)return m;for(var q=p[0];q<=p[1];q++)if(!text((s.answers||{})[q]).trim())m.push(q);return m;}
+  function scrollQuestion(course,n,q){setTimeout(function(){var id=course==='hsk3'?'h3wbv2-q-'+n+'-'+q:'h4wb-q-'+n+'-'+q;var el=document.getElementById(id)||document.getElementById((course==='hsk3'?'h3wbv2-w-':'h4wb-w-')+n+'-'+q);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},70);}
+  function missingAlert(label,missing){alert('Bạn chưa làm hết '+label+'.\nCòn thiếu: '+missing.join(', ')+'.\nHãy hoàn thành toàn bộ rồi mới xem kết quả.');}
+
+  function h3QuestionInfo(n,q){
+    var d=h3Data(n),it=null,groups=[];
+    if(d.listening)groups=groups.concat(d.listening.p2||[],d.listening.p3||[],d.listening.p4||[]);
+    if(d.reading)groups=groups.concat(d.reading.p1||[],d.reading.p2||[],d.reading.p3||[]);
+    it=groups.find(function(x){return Number(x.q)===Number(q);});
+    return{prompt:text(it&&(it.stem||it.prompt)||('Câu '+q)),options:it&&it.options||{}};
+  }
+  function h4QuestionInfo(n,q){
+    var d=h4Data(n),it=null;
+    if(d.listeningItems)it=d.listeningItems[q]||d.listeningItems[String(q)];
+    if(!it&&d.readingItems)it=d.readingItems[q]||d.readingItems[String(q)];
+    if(!it&&d.orderItems)it=d.orderItems[q]||d.orderItems[String(q)];
+    if(!it)(d.longReading||[]).some(function(g){var z=(g.questions||[]).find(function(x){return Number(x.q)===Number(q);});if(z){it=Object.assign({passage:g.passage},z);return true;}return false;});
+    if(!it)it=(d.writing||[]).find(function(x){return Number(x.q)===Number(q);});
+    return{prompt:text(it&&(it.prompt||it.stem||it.source)||('Câu '+q)),options:it&&it.options||{},reference:text(it&&it.answer||official('hsk4',n,q))};
+  }
+
+  function sectionEntry(course,n,k,assisted){
+    var p=(course==='hsk3'?H3_PARTS:H4_PARTS)[k],s=readLegacy(course,n),items=[],correct=0;if(!p)return null;
+    for(var q=p[0];q<=p[1];q++){
+      var ans=text((s.answers||{})[q]),ref=official(course,n,q),ok=norm(ans)===norm(ref),qi=course==='hsk3'?h3QuestionInfo(n,q):h4QuestionInfo(n,q);if(ok)correct++;
+      items.push({question:q,prompt:qi.prompt,answer:ans,reference:ref,correct:ok,score:ok?100:0,options:qi.options});
+    }
+    return{course:course,lesson_id:n,kind:assisted?'answer_reveal':'section_submission',section_id:k,title:p[2],score:assisted?null:Math.round(correct/items.length*100),total:items.length,correct:correct,assisted:!!assisted,items:items};
+  }
+  function h3WritingEntry(n,q,assisted){var d=h3Data(n),it=(d.writing||[]).find(function(x){return Number(x.q)===Number(q);}),s=readLegacy('hsk3',n);if(!it)return null;var ans=h3WritingValue(s,it),ref=text(it.answer),ok=norm(ans)===norm(ref);return{course:'hsk3',lesson_id:n,kind:assisted?'answer_reveal':'question_submission',section_id:'w'+q,title:'Viết · Câu '+q,score:assisted?null:(ok?100:0),total:1,correct:ok?1:0,assisted:!!assisted,items:[{question:q,prompt:text(it.source||it.prompt||''),answer:ans,reference:ref,correct:ok,score:ok?100:0}]};}
+  function h3ReviewEntry(n,q,assisted){var d=h3Data(n),it=(d.review||[]).find(function(x){return Number(x.q)===Number(q);}),s=readLegacy('hsk3',n);if(!it)return null;var vals=(s.review||{})[q]||[],refs=it.answers||[],items=[],correct=0;refs.forEach(function(ref,i){var ans=text(vals[i]),ok=norm(ans)===norm(ref);if(ok)correct++;items.push({question:q+'.'+(i+1),prompt:text(it.source||''),answer:ans,reference:text(ref),correct:ok,score:ok?100:0});});return{course:'hsk3',lesson_id:n,kind:assisted?'answer_reveal':'review_submission',section_id:'rv'+q,title:'Ôn tập · Câu '+q,score:assisted?null:Math.round(correct/Math.max(1,items.length)*100),total:items.length,correct:correct,assisted:!!assisted,items:items};}
+  function h4WritingEntry(n,q,assisted){var d=h4Data(n),it=(d.writing||[]).find(function(x){return Number(x.q)===Number(q);}),s=readLegacy('hsk4',n);if(!it)return null;var ans=text((s.writing||{})[q]),ref=text(it.answer),open=Number(q)>=49,ok=open?null:norm(ans)===norm(ref);return{course:'hsk4',lesson_id:n,kind:assisted?'answer_reveal':'question_submission',section_id:'w'+q,title:'Viết · Câu '+q,score:assisted||open?null:(ok?100:0),total:1,correct:ok===true?1:0,assisted:!!assisted,items:[{question:q,prompt:text(it.prompt||it.source||''),answer:ans,reference:ref,correct:ok,score:ok==null?null:(ok?100:0)}]};}
+
+  function wrapStrict(){
+    function install(name,builder){var old=window[name];if(typeof old!=='function'||old.__learningStrictV2)return;var fn=builder(old);fn.__learningStrictV2=true;fn.__old=old;window[name]=fn;try{eval(name+'=fn');}catch(e){}}
+
+    install('h3wbv2SubmitPart',function(old){return function(n,k){n=validLesson(n);var m=firstMissingPart('hsk3',n,k),p=H3_PARTS[k];if(m.length){missingAlert((p&&p[2])||'phần này',m);scrollQuestion('hsk3',n,m[0]);return false;}var r=old.apply(this,arguments);setTimeout(function(){var e=sectionEntry('hsk3',n,k,false);if(e)addJournal(e);saveIsolated('hsk3',n);},20);return r;};});
+    install('h4wbSubmitPart',function(old){return function(n,k){n=validLesson(n);var m=firstMissingPart('hsk4',n,k),p=H4_PARTS[k];if(m.length){missingAlert((p&&p[2])||'phần này',m);scrollQuestion('hsk4',n,m[0]);return false;}var r=old.apply(this,arguments);setTimeout(function(){var e=sectionEntry('hsk4',n,k,false);if(e)addJournal(e);saveIsolated('hsk4',n);},20);return r;};});
+
+    install('h3wbv2RevealPart',function(old){return function(n,k){n=validLesson(n);var m=firstMissingPart('hsk3',n,k),p=H3_PARTS[k];if(m.length){missingAlert((p&&p[2])||'phần này',m);scrollQuestion('hsk3',n,m[0]);return false;}var r=old.apply(this,arguments);setTimeout(function(){var e=sectionEntry('hsk3',n,k,true);if(e)addJournal(e);saveIsolated('hsk3',n);},20);return r;};});
+    install('h4wbRevealPart',function(old){return function(n,k){n=validLesson(n);var m=firstMissingPart('hsk4',n,k),p=H4_PARTS[k];if(m.length){missingAlert((p&&p[2])||'phần này',m);scrollQuestion('hsk4',n,m[0]);return false;}var r=old.apply(this,arguments);setTimeout(function(){var e=sectionEntry('hsk4',n,k,true);if(e)addJournal(e);saveIsolated('hsk4',n);},20);return r;};});
+
+    install('h3wbv2CheckWriting',function(old){return function(n,q){n=validLesson(n);q=Number(q);var d=h3Data(n),it=(d.writing||[]).find(function(x){return Number(x.q)===q;}),s=readLegacy('hsk3',n);if(!it||!h3WritingComplete(s,it)){alert('Bạn chưa hoàn thành câu '+q+'. Hãy điền đủ nội dung rồi mới kiểm tra.');scrollQuestion('hsk3',n,q);return false;}var r=old.apply(this,arguments);setTimeout(function(){var e=h3WritingEntry(n,q,false);if(e)addJournal(e);saveIsolated('hsk3',n);},20);return r;};});
+    install('h3wbv2RevealWriting',function(old){return function(n,q){n=validLesson(n);q=Number(q);var d=h3Data(n),it=(d.writing||[]).find(function(x){return Number(x.q)===q;}),s=readLegacy('hsk3',n);if(!it||!h3WritingComplete(s,it)){alert('Hãy tự làm câu '+q+' trước khi xem đáp án.');scrollQuestion('hsk3',n,q);return false;}var r=old.apply(this,arguments);setTimeout(function(){var e=h3WritingEntry(n,q,true);if(e)addJournal(e);saveIsolated('hsk3',n);},20);return r;};});
+    install('h4wbCheckWriting',function(old){return function(n,q){n=validLesson(n);q=Number(q);var s=readLegacy('hsk4',n);if(!text((s.writing||{})[q]).trim()){alert('Bạn chưa hoàn thành câu '+q+'. Hãy nhập câu trả lời rồi mới kiểm tra.');scrollQuestion('hsk4',n,q);return false;}var r=old.apply(this,arguments);setTimeout(function(){var e=h4WritingEntry(n,q,false);if(e)addJournal(e);saveIsolated('hsk4',n);},20);return r;};});
+    install('h4wbRevealWriting',function(old){return function(n,q){n=validLesson(n);q=Number(q);var s=readLegacy('hsk4',n);if(!text((s.writing||{})[q]).trim()){alert('Hãy tự làm câu '+q+' trước khi xem câu mẫu.');scrollQuestion('hsk4',n,q);return false;}var r=old.apply(this,arguments);setTimeout(function(){var e=h4WritingEntry(n,q,true);if(e)addJournal(e);saveIsolated('hsk4',n);},20);return r;};});
+
+    install('h3wbv2CheckReview',function(old){return function(n,q){n=validLesson(n);q=Number(q);var d=h3Data(n),it=(d.review||[]).find(function(x){return Number(x.q)===q;}),s=readLegacy('hsk3',n);if(!it||!h3ReviewComplete(s,it)){alert('Bạn chưa điền hết các ô của câu ôn tập '+q+'.');scrollQuestion('hsk3',n,q);return false;}var r=old.apply(this,arguments);setTimeout(function(){var e=h3ReviewEntry(n,q,false);if(e)addJournal(e);saveIsolated('hsk3',n);},20);return r;};});
+    install('h3wbv2RevealReview',function(old){return function(n,q){n=validLesson(n);q=Number(q);var d=h3Data(n),it=(d.review||[]).find(function(x){return Number(x.q)===q;}),s=readLegacy('hsk3',n);if(!it||!h3ReviewComplete(s,it)){alert('Hãy tự điền hết câu ôn tập '+q+' trước khi xem đáp án.');scrollQuestion('hsk3',n,q);return false;}var r=old.apply(this,arguments);setTimeout(function(){var e=h3ReviewEntry(n,q,true);if(e)addJournal(e);saveIsolated('hsk3',n);},20);return r;};});
+
+  }
+
+  function wrapStateSaves(){
+    var h3=['h3wbv2Pick','h3wbv2AddToken','h3wbv2UndoToken','h3wbv2ClearWriting','h3wbv2SaveWriting','h3wbv2SaveReview','h3wbv2ResetPart','h3wbv2ResetAll','h3wbv2AudioTime','h3wbv2AudioRate'];
+    var h4=['h4wbPick','h4wbOrderInput','h4wbSaveOrder','h4wbAddToken','h4wbUndoToken','h4wbClearWriting','h4wbSaveWriting','h4wbResetPart','h4wbResetAll','h4wbAudioTime','h4wbAudioRate'];
+    function one(name,course){var old=window[name];if(typeof old!=='function'||old.__learningSaveV2)return;var fn=function(){var args=arguments,n=validLesson(args[0]),ret=old.apply(this,args);var after=function(){if(n)saveIsolated(course,n);patchAnswerLockButtons(course,n);};if(ret&&typeof ret.then==='function')return ret.then(function(v){after();return v;});setTimeout(after,0);return ret;};fn.__learningSaveV2=true;window[name]=fn;try{eval(name+'=fn');}catch(e){}}
+    h3.forEach(function(x){one(x,'hsk3');});h4.forEach(function(x){one(x,'hsk4');});
+  }
+
+  function currentLessonId(){
+    var vals=[];try{var s=document.getElementById('lesson-selector');if(s&&Number(s.value))vals.push(Number(s.value));}catch(e){}
+    try{if(window.__HSK_ACTIVE_LESSON_V2)vals.push(Number(window.__HSK_ACTIVE_LESSON_V2));}catch(e){}
+    try{if(window.STATE&&Number(window.STATE.currentLesson))vals.push(Number(window.STATE.currentLesson));}catch(e){}
+    for(var i=0;i<vals.length;i++)if(validLesson(vals[i]))return vals[i];return 1;
+  }
+
+  function forceLessonRender(course,n,force){
+    n=validLesson(n);if(!n)return;var first=true;
+    window.__HSK_ACTIVE_LESSON_V2=n;
+    try{if(window.STATE)window.STATE.currentLesson=n;}catch(e){}
+    try{var sel=document.getElementById('lesson-selector');if(sel)sel.value=String(n);}catch(e){}
+    if(course==='hsk3')window.__H3WBV2_ACTIVE_LESSON=n;
+    if(course==='hsk4')window.__H4WB_ACTIVE_LESSON=n;
+    function apply(){
+      if(currentCourse()!==course)return;
+      try{
+        var panel=document.getElementById(course==='hsk3'?'h3-workbook-text-tab':'h4-workbook-text-tab');
+        var api=course==='hsk3'?window.H3WBV2:window.HSK4_WORKBOOK;
+        if(panel&&api&&typeof api.render==='function'){
+          var shell=panel.querySelector(course==='hsk3'?'.h3wbv2-shell':'.h4wb-shell');
+          if((force&&first)||!shell||Number(shell.dataset.lesson)!==n){panel.dataset.lesson=String(n);panel.innerHTML=api.render(n);}first=false;
+        }
+      }catch(e){console.warn('Lesson render isolation',e);}
+      patchAnswerLockButtons(course,n);
+      scheduleAssessmentEnhance(course,n,false);
+    }
+    lessonForceTimers.forEach(clearTimeout);lessonForceTimers=[setTimeout(apply,0),setTimeout(apply,80),setTimeout(apply,260),setTimeout(apply,700)];
+  }
+
+  function wrapLoadLesson(){
+    var old=window.loadLesson;if(typeof old!=='function'||old.__learningLessonV2)return;
+    var fn=function(id){var n=validLesson(id),course=currentCourse();if(n&&course){restoreIsolated(course,n);window.__HSK_ACTIVE_LESSON_V2=n;if(course==='hsk3')window.__H3WBV2_ACTIVE_LESSON=n;try{if(window.STATE)window.STATE.currentLesson=n;}catch(e){}}
+      var ret=old.apply(this,arguments);if(n&&course){restoreIsolated(course,n);forceLessonRender(course,n,true);}return ret;};fn.__learningLessonV2=true;fn.__old=old;window.loadLesson=fn;try{loadLesson=fn;}catch(e){}
+  }
+
+  function patchAnswerLockButtons(course,n){
+    n=validLesson(n)||currentLessonId();var panel=document.getElementById(course==='hsk3'?'h3-workbook-text-tab':'h4-workbook-text-tab');if(!panel)return;
+    // Transcript và đáp án luôn được phép mở. Chỉ kết quả đánh giá cuối bài vẫn cần hoàn thành đầy đủ.
+    panel.querySelectorAll((course==='hsk3'?'.h3wbv2-subtab':'.h4wb-subtab')+'[data-view="answers"]').forEach(function(b){
+      b.classList.remove('hsk-answers-locked');
+      b.setAttribute('aria-disabled','false');
+      b.title='Mở transcript và đáp án';
+    });
+  }
+
+  function isGradePrompt(prompt,title){return/chấm|cham|grade|đáp án của tôi|câu trả lời của tôi|bài làm|学生答案|AI chấm|写作|作文/i.test(text(prompt)+' '+text(title));}
+  function extractAfter(label,s){var r=new RegExp(label+'\\s*[:：]\\s*([\\s\\S]+)$','i').exec(s);return r?text(r[1]).trim():'';}
+  function parseAIContext(prompt,opts){
+    opts=opts||{};var s=text(prompt),course=text(opts.course||'').toLowerCase();if(course!=='hsk3'&&course!=='hsk4')course=Number(opts.hskLevel)===3?'hsk3':Number(opts.hskLevel)===4?'hsk4':currentCourse()||'hsk3';
+    var lm=s.match(/(?:Bài|Lesson)\s*(\d{1,2})/i),qm=s.match(/(?:Câu|Question)\s*(\d{1,3})/i),n=validLesson(opts.lessonId||opts.lesson||lm&&lm[1])||currentLessonId();
+    var answer=extractAfter('(?:Câu trả lời của tôi|Đáp án của tôi|Bài làm của học viên|BÀI LÀM CỦA HỌC VIÊN)',s);if(answer.length>3000)answer=answer.slice(0,3000);
+    var qtext='';var qmatch=s.match(/(?:Đề bài|Câu hỏi|Ngữ cảnh)\s*[:：]\s*([^\n]+)/i);if(qmatch)qtext=qmatch[1];
+    return{course:course,lesson:n,question:qm?Number(qm[1]):0,answer:answer,questionText:qtext,title:text(opts.title||'AI chấm')};
+  }
+  function normalizeAI(raw){var r=raw&&raw.result&&typeof raw.result==='object'?raw.result:raw||{},p=Number(r.percent);if(!isFinite(p)){p=Number(r.score);if(isFinite(p)&&p<=10)p*=10;}if(!isFinite(p))p=null;var wrong=Array.isArray(r.wrong_parts)?r.wrong_parts:Array.isArray(r.errors)?r.errors.map(function(e){return{wrong:e.wrong||e.text||'',should_be:e.should_be||e.suggestion_vi||e.fix||'',why_vi:e.why_vi||e.problem_vi||''};}):[];return{percent:p==null?null:Math.max(0,Math.min(100,Math.round(p))),wrong_parts:wrong,corrected_zh:text(r.corrected_zh||r.corrected_answer_zh||r.full_corrected_sentence_zh||r.corrected||''),comment_vi:text(r.comment_vi||r.short_feedback_vi||r.summary||''),model:text(raw&&raw.model_used||raw&&raw.model||'')};}
+  function journalAI(prompt,opts,response){
+    if(!isGradePrompt(prompt,opts&&opts.title)||!response)return;try{if(response.__hskLearningV2Saved)return;response.__hskLearningV2Saved=true;}catch(e){}
+    var ctx=parseAIContext(prompt,opts),g=normalizeAI(response),id='ai-'+ctx.course+'-'+ctx.lesson+'-'+(ctx.question||'x')+'-'+simpleHash(text(prompt)+JSON.stringify(g));
+    var e={id:id,course:ctx.course,lesson_id:ctx.lesson,kind:'ai_grade',section_id:'ai:'+(ctx.question||'open'),title:ctx.title||('AI chấm'+(ctx.question?' · Câu '+ctx.question:'')),score:g.percent,total:1,correct:g.percent!=null&&g.percent>=90?1:0,items:[{question:ctx.question||'',prompt:ctx.questionText,answer:ctx.answer,reference:'',correct:g.percent==null?null:g.percent>=90,score:g.percent,feedback:g}],model:g.model};addJournal(e);
+  }
+  function wrapAIHistory(){
+    ['askAI','runAIInlineChoice'].forEach(function(name){var old=window[name];if(typeof old!=='function'||old.__learningAIHistoryV2)return;var fn=async function(prompt,opts){opts=Object.assign({},opts||{});if(isGradePrompt(prompt,opts.title))opts.showModal=false;var args=Array.prototype.slice.call(arguments);args[1]=opts;var r=await old.apply(this,args);if(isGradePrompt(prompt,opts.title))journalAI(prompt,opts,r);return r;};fn.__learningAIHistoryV2=true;fn.__old=old;window[name]=fn;try{eval(name+'=fn');}catch(e){}});
+  }
+  function blockGradeModal(){var modal=document.getElementById('gpt-modal');if(!modal||modal.__hskLearningModalObserverV2)return;modal.__hskLearningModalObserverV2=true;function check(){var title=text((document.getElementById('gpt-modal-title')||{}).textContent),status=text((document.getElementById('gpt-modal-status')||{}).textContent);var grade=/chấm|cham|grade/i.test(title+' '+status);modal.classList.toggle('hsk-learning-grade-modal-blocked',grade);if(grade&&modal.style.display&&modal.style.display!=='none')modal.style.display='none';}
+    try{new MutationObserver(check).observe(modal,{attributes:true,childList:true,subtree:true,attributeFilter:['style','class']});}catch(e){}check();
+  }
+
+  function localDateKey(v){var d=new Date(v||Date.now());if(isNaN(d.getTime()))d=new Date();return[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
+  function dateLabel(k){var a=k.split('-');return a.length===3?(a[2]+'/'+a[1]+'/'+a[0]):k;}
+  function timeLabel(v){var d=new Date(v);return isNaN(d.getTime())?'':d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});}
+  function pillClass(score){if(score==null)return'info';return score>=90?'good':score>=60?'mid':'bad';}
+  function scoreText(score){return score==null?'Không tính điểm':Math.round(score)+'%';}
+  function parseMaybe(v){if(v&&typeof v==='object')return v;try{return JSON.parse(v||'null')||{};}catch(e){return{};}}
+
+  async function legacyEntries(course,n){
+    var api=course==='hsk3'?window.H3LA_V12:window.H4LA_V1;if(!api||typeof api.fetchAttempts!=='function')return[];
+    try{
+      var rows=await api.fetchAttempts(n,false),seen={};return(rows||[]).filter(function(r){return r&&!/^2000-/.test(text(r.created_at))&&text(r.answer).trim();}).sort(function(a,b){return text(b.created_at).localeCompare(text(a.created_at));}).filter(function(r){var k=text(r.client_attempt_id||r.question_id)+'|'+text(r.created_at)+'|'+text(r.answer);if(seen[k])return false;seen[k]=1;return true;}).map(function(r,i){var data=parseMaybe(r.result_json),feedback=data.feedback||data.result||data;return{id:'legacy-'+simpleHash(JSON.stringify(r)+i),course:course,lesson_id:n,kind:'legacy_attempt',title:text(r.exercise_type||r.source||'Bài làm cũ'),score:r.score==null?null:Number(r.score),total:1,correct:Number(r.score)>=90?1:0,created_at:r.created_at||iso(),items:[{question:text(r.question_id||''),prompt:text(r.question_text||''),answer:text(r.answer||''),reference:text(r.reference_answer||''),correct:r.score==null?null:Number(r.score)>=90,score:r.score==null?null:Number(r.score),feedback:feedback} ],legacy:true};});
+    }catch(e){return[];}
+  }
+
+  function itemHtml(it){
+    var f=it.feedback&&typeof it.feedback==='object'?it.feedback:{},wrong=Array.isArray(f.wrong_parts)?f.wrong_parts:[],h='<div class="hsk-learning-item"><div class="hsk-learning-item-top"><div class="hsk-learning-item-q">'+(it.question!==''?'Câu '+esc(it.question):'Chi tiết')+'</div><div class="hsk-learning-item-prompt">'+esc(it.prompt||'').replace(/\n/g,'<br>')+'</div><span class="hsk-learning-pill '+pillClass(it.score)+'">'+scoreText(it.score)+'</span></div>';
+    if(text(it.answer).trim())h+='<div class="hsk-learning-kv"><b>Bài làm</b><div class="hsk-learning-answer '+(it.correct===false?'bad':'')+'">'+esc(it.answer).replace(/\n/g,'<br>')+'</div></div>';
+    if(text(it.reference).trim())h+='<div class="hsk-learning-kv"><b>Đáp án</b><div class="hsk-learning-answer good">'+esc(it.reference).replace(/\n/g,'<br>')+'</div></div>';
+    if(text(f.comment_vi).trim())h+='<div class="hsk-learning-kv"><b>Nhận xét</b><div>'+esc(f.comment_vi).replace(/\n/g,'<br>')+'</div></div>';
+    if(wrong.length){h+='<div class="hsk-learning-ai-errors">'+wrong.map(function(w){return'<div class="hsk-learning-ai-error"><b>Sai:</b> <span class="hsk-learning-answer bad">'+esc(w.wrong||'')+'</span>'+(w.why_vi?'<br><b>Vì sao:</b> '+esc(w.why_vi):'')+(w.should_be?'<br><b>Sửa thành:</b> <span class="hsk-learning-answer good">'+esc(w.should_be)+'</span>':'')+'</div>';}).join('')+'</div>';}
+    var corrected=text(f.corrected_zh||f.corrected_answer_zh||f.full_corrected_sentence_zh||'');if(corrected)h+='<div class="hsk-learning-kv"><b>Câu sửa</b><div class="hsk-learning-answer good">'+esc(corrected).replace(/\n/g,'<br>')+'</div></div>';
+    return h+'</div>';
+  }
+  function sessionHtml(e){var label=e.assisted?'Đã xem đáp án':scoreText(e.score);return'<details class="hsk-learning-session"><summary><span class="hsk-learning-time">'+esc(timeLabel(e.created_at))+'</span><span class="hsk-learning-session-title">'+esc(e.title||'Bài làm')+'</span><span class="hsk-learning-pill '+(e.assisted?'info':pillClass(e.score))+'">'+esc(label)+'</span><span class="hsk-learning-pill">'+Number(e.total||((e.items||[]).length)||0)+' nội dung</span></summary><div class="hsk-learning-session-body">'+(e.items||[]).map(itemHtml).join('')+(e.legacy?'<div class="hsk-learning-source-note">Dữ liệu cũ được khôi phục từ lịch sử đã lưu trước bản cập nhật này.</div>':'')+'</div></details>';}
+  function historyHtml(entries){
+    if(!entries.length)return'<div class="hsk-learning-v2-empty">Chưa có lần nộp bài hoàn chỉnh nào cho bài này.<br>Khi bạn làm đủ một phần và bấm <b>Nộp phần</b>, kết quả theo ngày và chi tiết từng câu sẽ xuất hiện tại đây.</div>';
+    var groups={};entries.forEach(function(e){var k=localDateKey(e.created_at);(groups[k]=groups[k]||[]).push(e);});var keys=Object.keys(groups).sort().reverse();return keys.map(function(k,idx){var list=groups[k].sort(function(a,b){return text(b.created_at).localeCompare(text(a.created_at));}),sum=0,w=0,total=0;list.forEach(function(e){total+=Number(e.total||0);if(e.score!=null){var ww=Math.max(1,Number(e.total||1));sum+=Number(e.score)*ww;w+=ww;}});var avg=w?Math.round(sum/w):null;return'<details class="hsk-learning-day" '+(idx===0?'open':'')+'><summary><div><div class="hsk-learning-day-date">📅 '+dateLabel(k)+'</div><div class="hsk-learning-day-meta">'+list.length+' lần lưu · '+total+' nội dung chi tiết</div></div><div class="hsk-learning-day-score">'+(avg==null?'—':avg+'%')+'</div><div class="hsk-learning-day-toggle">Mở chi tiết ▾</div></summary><div class="hsk-learning-day-content">'+list.map(sessionHtml).join('')+'</div></details>';}).join('');
+  }
+
+  async function entriesFor(course,n){var own=readJournal().filter(function(e){return e&&e.course===course&&Number(e.lesson_id)===Number(n);});if(own.length)return own.sort(function(a,b){return text(b.created_at).localeCompare(text(a.created_at));});return await legacyEntries(course,n);}
+
+  function assessmentIds(course){return course==='hsk3'?{panel:'h3-learning-assessment-tab',wrap:'.h3la-wrap'}:{panel:'h4-learning-assessment-tab',wrap:'.h4la-wrap'};}
+  async function enhanceAssessment(course,n,force){
+    n=validLesson(n)||currentLessonId();var ids=assessmentIds(course),panel=document.getElementById(ids.panel);if(!panel||currentCourse()!==course)return;
+    var wrap=panel.querySelector(ids.wrap)||panel,comp=completion(course,n);panel.classList.toggle('hsk-learning-v2-locked',!comp.complete);
+    var entries=await entriesFor(course,n),sig=[course,n,comp.done,comp.submitted,entries.length,entries[0]&&entries[0].id].join('|'),existing=panel.querySelector('.hsk-learning-v2-section[data-signature]');
+    if(!force&&existing&&existing.dataset.signature===sig)return;
+    panel.classList.toggle('hsk-learning-v2-locked',!comp.complete);
+    panel.querySelectorAll('.hsk-result-lock-note,.hsk-learning-v2-section').forEach(function(x){x.remove();});
+    if(!comp.complete){var pct=Math.round(comp.done/Math.max(1,comp.total)*100),note=document.createElement('div');note.className='hsk-result-lock-note hsk-learning-v2-section';note.innerHTML='<strong>🔒 Kết quả cuối bài chưa được mở</strong>Bạn còn phải hoàn thành và nộp toàn bộ Bài '+n+' trước khi xem điểm tổng, điểm yếu và kế hoạch AI.<div class="hsk-result-lock-progress"><i style="width:'+pct+'%"></i></div><div>Đã làm: <b>'+comp.done+'/'+comp.total+'</b> nội dung · Đã nộp: <b>'+comp.submitted+'/'+comp.required+'</b> phần. Bản nháp được lưu riêng cho đúng Bài '+n+'.</div>';var anchor=wrap.querySelector(course==='hsk3'?'.h3la-hero':'.h4la-hero');if(anchor&&anchor.nextSibling)wrap.insertBefore(note,anchor.nextSibling);else wrap.insertBefore(note,wrap.firstChild);}
+    var section=document.createElement('section');section.className=(course==='hsk3'?'h3la-section ':'h4la-section ')+'hsk-learning-v2-section';section.dataset.signature=sig;section.innerHTML='<div class="hsk-learning-v2-head"><div><div class="hsk-learning-v2-title">📅 Kết quả theo ngày và chi tiết bài làm</div><div class="hsk-learning-v2-sub">Mỗi ngày hiển thị điểm chung, từng lần nộp, bài làm, đáp án, lỗi AI, lý do và câu sửa.</div></div><div class="hsk-learning-v2-actions"><button type="button" onclick="hskLearningV2Refresh(\''+course+'\','+n+')">↻ Làm mới</button><button type="button" onclick="hskLearningV2Export(\''+course+'\','+n+')">Xuất JSON</button></div></div><div class="hsk-learning-v2-body">'+historyHtml(entries)+'</div>';
+    wrap.appendChild(section);
+  }
+  function scheduleAssessmentEnhance(course,n,force){var ids=assessmentIds(course),p=document.getElementById(ids.panel),c=completion(course,n);if(p)p.classList.toggle('hsk-learning-v2-locked',!c.complete);var k=course+':'+n;clearTimeout(historyRenderTimers[k]);historyRenderTimers[k]=setTimeout(function(){enhanceAssessment(course,n,force);},180);}
+
+  window.hskLearningV2Refresh=function(course,n){scheduleAssessmentEnhance(course,validLesson(n)||currentLessonId(),true);};
+  window.hskLearningV2Export=function(course,n){n=validLesson(n)||currentLessonId();var entries=readJournal().filter(function(e){return e.course===course&&Number(e.lesson_id)===n;}),payload={version:VERSION,exported_at:iso(),user_scope:scope(),course:course,lesson_id:n,completion:completion(course,n),state:readJson(stateKey(course,n),null),history:entries};var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=course+'_lesson_'+n+'_learning_history.json';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);};
+
+  function wrapAssessmentRenders(){
+    [['H3LA_V12','hsk3'],['H4LA_V1','hsk4']].forEach(function(pair){var api=window[pair[0]],course=pair[1];if(!api||typeof api.renderAssessment!=='function'||api.renderAssessment.__learningV2)return;var old=api.renderAssessment;api.renderAssessment=async function(n){var r=await old.apply(this,arguments);scheduleAssessmentEnhance(course,validLesson(n)||currentLessonId(),true);return r;};api.renderAssessment.__learningV2=true;});
+    [['h3laRefresh','hsk3'],['h4laRefresh','hsk4']].forEach(function(pair){var old=window[pair[0]],course=pair[1];if(typeof old!=='function'||old.__learningV2)return;var fn=function(n){var r=old.apply(this,arguments);setTimeout(function(){scheduleAssessmentEnhance(course,validLesson(n)||currentLessonId(),true);},400);return r;};fn.__learningV2=true;window[pair[0]]=fn;});
+  }
+
+  function observePanels(){
+    var obs=new MutationObserver(function(muts){muts.forEach(function(m){var p=m.target.nodeType===1?m.target:m.target.parentElement;if(!p)return;var h3=p.closest&&p.closest('#h3-learning-assessment-tab'),h4=p.closest&&p.closest('#h4-learning-assessment-tab');if(h3)scheduleAssessmentEnhance('hsk3',Number(h3.dataset.lesson)||currentLessonId(),false);if(h4)scheduleAssessmentEnhance('hsk4',Number(h4.dataset.lesson)||currentLessonId(),false);});patchWorkbookUI();});
+    try{obs.observe(document.getElementById('lesson-detail-view')||document.body,{childList:true,subtree:true});}catch(e){}
+  }
+  function patchWorkbookUI(){var c=currentCourse(),n=currentLessonId();if(c)patchAnswerLockButtons(c,n);blockGradeModal();}
+
+  function installAll(){wrapStrict();wrapStateSaves();wrapLoadLesson();wrapAIHistory();wrapAssessmentRenders();patchWorkbookUI();var c=currentCourse(),n=currentLessonId();if(c&&n){restoreIsolated(c,n);forceLessonRender(c,n);scheduleAssessmentEnhance(c,n,true);}}
+  function boot(){
+    migrateGuestToUser();installAll();observePanels();blockGradeModal();
+    [120,450,1000,2200].forEach(function(ms){setTimeout(installAll,ms);});
+    if(window.hskSupabase&&window.hskSupabase.auth&&window.hskSupabase.auth.onAuthStateChange)try{window.hskSupabase.auth.onAuthStateChange(function(ev,session){if(session&&session.user){window.hskCurrentUser=session.user;migrateGuestToUser();setTimeout(function(){loadCloud();installAll();},220);}});}catch(e){}
+    setTimeout(loadCloud,700);
+    window.addEventListener('pagehide',function(){var c=currentCourse(),n=currentLessonId();if(c&&n)saveIsolated(c,n);});
+    document.documentElement.setAttribute('data-hsk-learning-storage-version',VERSION);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+
+  window.HSK_LEARNING_STORAGE_V2={version:VERSION,scope:scope,completion:completion,saveIsolated:saveIsolated,restoreIsolated:restoreIsolated,addJournal:addJournal,entries:function(course,n){return readJournal().filter(function(e){return e.course===course&&Number(e.lesson_id)===Number(n);});},enhanceAssessment:enhanceAssessment,loadCloud:loadCloud,audit:function(){var c=currentCourse()||'hsk3',n=currentLessonId();return{version:VERSION,scope:scope(),course:c,lesson:n,completion:completion(c,n),journal_entries:readJournal().length,state_key:stateKey(c,n),legacy_key:legacyKey(c,n),modal_inline_only:true};}};
+})();
+</script>
+<!-- /HSK Albert: per-user/per-lesson storage, strict completion, dated assessment history -->
+
 </body>
 </html>
