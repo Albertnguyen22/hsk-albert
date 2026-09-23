@@ -31699,7 +31699,7 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
   if(window.__HSK_AI_V6_FINAL_CONTROLLER__) return;
   window.__HSK_AI_V6_FINAL_CONTROLLER__ = true;
 
-  var VERSION = '2026.09.23-v6.2-dynamic-free-routing';
+  var VERSION = '2026.09.23-v6.3-simple-router';
   var FUNCTION_NAME = 'hsk-ai-grade';
   var requestSequence = 0;
   var responseCache = Object.create(null);
@@ -32173,11 +32173,11 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
     var data=response&&response.data;
     if(!data)throw new Error('Edge Function không trả dữ liệu.');
     if(data.ok!==true){
-      console.error('HSK AI v6.2 provider diagnostics:',data);
+      console.error('HSK AI v6.3 router diagnostics:',data);
       var backendVersion=text(data.version||'');
       var message='';
-      if(backendVersion && !/^v6\.2/i.test(backendVersion)){
-        message='Supabase vẫn đang chạy '+backendVersion+'. Hãy deploy file hsk-ai-grade-v6.2-dynamic-routing.ts rồi thử lại.';
+      if(backendVersion && !/^v6\.3/i.test(backendVersion)){
+        message='Supabase vẫn đang chạy '+backendVersion+'. Hãy deploy file hsk-ai-grade-v6.3-simple-router.ts rồi thử lại.';
       }else{
         message=text(data.error||data.detail||'AI trả về lỗi.');
         if(data.hint) message+='\n'+text(data.hint);
@@ -32190,14 +32190,14 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
         if(data.retryable===true && data.retry_after_seconds){
           message+='\nCó thể thử lại sau khoảng '+text(data.retry_after_seconds)+' giây.';
         }
-        var tried=Array.isArray(data.models_tried)?data.models_tried:[];
-        if(tried.length) message+='\nĐã tự thử '+tried.length+' model khác nhau.';
+        var routerName=data.model_resolution&&data.model_resolution.source?text(data.model_resolution.source):'';
+        if(routerName) message+='\nRouter: '+routerName.replace(/^router:/,'');
       }
       if(data.request_id) message+='\nRequest ID: '+text(data.request_id);
       throw new Error(message);
     }
     if(data.ai_verified!==true)throw new Error('Edge Function chưa trả xác nhận AI thật.');
-    if(!/^v6\.2/i.test(text(data.version)))throw new Error('Supabase vẫn đang chạy function cũ. Hãy deploy hsk-ai-grade-v6.2-dynamic-routing.ts rồi thử lại.');
+    if(!/^v6\.3/i.test(text(data.version)))throw new Error('Supabase vẫn đang chạy function cũ. Hãy deploy hsk-ai-grade-v6.3-simple-router.ts rồi thử lại.');
     if(payload.mode==='grade'&&(!data.result||data.result.ai_verified!==true))throw new Error('Kết quả chấm không có xác nhận AI thật nên app đã từ chối hiển thị điểm.');
     if(payload.mode==='tutor'&&payload.sourceText&&data.complete!==true)throw new Error('AI chưa hoàn tất toàn bộ bản dịch nên app không hiển thị bản dịch bị cắt.');
     return data;
