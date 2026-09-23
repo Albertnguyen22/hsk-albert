@@ -31699,7 +31699,7 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
   if(window.__HSK_AI_V6_FINAL_CONTROLLER__) return;
   window.__HSK_AI_V6_FINAL_CONTROLLER__ = true;
 
-  var VERSION = '2026.09.23-v6-fast-context-locked';
+  var VERSION = '2026.09.23-v6.1-stable-model-fallback';
   var FUNCTION_NAME = 'hsk-ai-grade';
   var requestSequence = 0;
   var responseCache = Object.create(null);
@@ -32172,7 +32172,27 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
     if(response&&response.error)throw new Error(response.error.message||response.error.context||text(response.error));
     var data=response&&response.data;
     if(!data)throw new Error('Edge Function không trả dữ liệu.');
-    if(data.ok!==true)throw new Error(data.error||data.detail||'AI trả về lỗi.');
+    if(data.ok!==true){
+      var message=text(data.error||data.detail||'AI trả về lỗi.');
+      if(data.hint) message+='\n'+text(data.hint);
+      var firstAttempt=data.attempts&&data.attempts[0];
+      if(firstAttempt){
+        if(firstAttempt.status!=null) message+='\nMã lỗi OpenRouter: '+text(firstAttempt.status);
+        var detail=text(firstAttempt.detail||'').trim();
+        if(detail){
+          try{
+            var parsedDetail=JSON.parse(detail), arr=parsedDetail&&parsedDetail.attempts;
+            if(Array.isArray(arr)&&arr.length){
+              var last=arr[arr.length-1]||{};
+              message+='\nModel cuối: '+text(last.model||'không xác định');
+              message+='\nChi tiết: '+text(last.detail||'').slice(0,500);
+            }else message+='\nChi tiết: '+detail.slice(0,500);
+          }catch(_e){ message+='\nChi tiết: '+detail.slice(0,500); }
+        }
+      }
+      if(data.request_id) message+='\nRequest ID: '+text(data.request_id);
+      throw new Error(message);
+    }
     if(data.ai_verified!==true)throw new Error('Edge Function chưa trả xác nhận AI thật.');
     if(!/v6/i.test(text(data.version)))throw new Error('Supabase vẫn đang chạy function cũ. Hãy deploy hsk-ai-grade-v6-fast-context.ts rồi thử lại.');
     if(payload.mode==='grade'&&(!data.result||data.result.ai_verified!==true))throw new Error('Kết quả chấm không có xác nhận AI thật nên app đã từ chối hiển thị điểm.');
