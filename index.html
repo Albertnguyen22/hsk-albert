@@ -17356,6 +17356,10 @@ document.addEventListener('DOMContentLoaded', function(){
     // Ghi chép bài học được quản lý riêng theo course+lesson (xem saveNote / renderNotesTab),
     // KHÔNG để cơ chế đồng bộ chung áp giá trị theo id (vì #lesson-note dùng chung id cho mọi bài).
     if(el.id === 'lesson-note') return false;
+    // FIX: course-selector / lesson-selector là menu điều hướng, không phải ô nhập liệu.
+    // Trước đây giá trị cũ bị tự điền lại (dropdown hiện HSK 5 trong khi nội dung là HSK 4),
+    // nên chọn lại HSK 5 không phát sự kiện change -> không chuyển được giáo trình.
+    if(el.id === 'course-selector' || el.id === 'lesson-selector') return false;
     if(el.closest && el.closest('#auth-card')) return false;
     var type = (el.type || '').toLowerCase();
     if(['button','submit','reset','password','email','hidden','file','checkbox','radio','range'].indexOf(type) >= 0) return false;
@@ -17433,7 +17437,9 @@ document.addEventListener('DOMContentLoaded', function(){
       });
 
       // refresh state/progress from cloud-backed localStorage
-      try { if(typeof window.loadState === 'function') { window.loadState(); if(typeof window.updateStreak === 'function') window.updateStreak(); } } catch(e) {}
+      // FIX: loadState() đọc tiến độ HSK 5 (hsk5_app_v2); chỉ nạp lại khi đang ở HSK 5,
+      // tránh ghi đè tiến độ HSK 4 / HSK 3 bằng dữ liệu HSK 5 sau khi đăng nhập.
+      try { if(typeof window.loadState === 'function' && String(window.CURRENT_COURSE || 'hsk5').toLowerCase() === 'hsk5') { window.loadState(); if(typeof window.updateStreak === 'function') window.updateStreak(); } } catch(e) {}
       hskCloudApplyToDom(document);
       setTimeout(function(){ hskCloudApplyToDom(document); }, 500);
     } catch(e) {
@@ -33324,6 +33330,21 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
 
   body.albert-menu-shell.albert-menu-open {
     overflow: hidden !important;
+  }
+
+  /* FIX cuộn trang: .app đổi sang display:block nhưng vẫn giữ height:100vh + overflow:hidden,
+     còn .main không có chiều cao cố định nên không cuộn được -> phần dưới bị cắt.
+     Trên màn hình rộng, cho .main cao đúng bằng màn hình và tự cuộn (như thiết kế gốc).
+     Màn hình <= 860px đã cuộn theo body trong hsk-mobile-friendly-css nên không đụng vào. */
+  @media (min-width: 861px) {
+    body.albert-menu-shell .main {
+      height: 100vh !important;
+      height: 100dvh !important;
+      overflow-y: auto !important;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      scroll-padding-top: calc(54px + env(safe-area-inset-top, 0px));
+    }
   }
 
   body.albert-menu-shell.albert-menu-open .sidebar {
