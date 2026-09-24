@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>HSK Albert — HSK 4 · 20 bài hoàn chỉnh · Ngữ pháp · Bài tập · Vận dụng AI</title>
+<title>Albert</title>
 <!-- HSK3 V8 STABLE: synchronous lesson render; no retry observers; explanation + notes preserved -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -31699,7 +31699,7 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
   if(window.__HSK_AI_V6_FINAL_CONTROLLER__) return;
   window.__HSK_AI_V6_FINAL_CONTROLLER__ = true;
 
-  var VERSION = '2026.09.23-v6.3-simple-router';
+  var VERSION = '2026.09.23-v6.4-any-provider';
   var FUNCTION_NAME = 'hsk-ai-grade';
   var requestSequence = 0;
   var responseCache = Object.create(null);
@@ -32173,11 +32173,11 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
     var data=response&&response.data;
     if(!data)throw new Error('Edge Function không trả dữ liệu.');
     if(data.ok!==true){
-      console.error('HSK AI v6.3 router diagnostics:',data);
+      console.error('HSK AI v6.4 provider diagnostics:',data);
       var backendVersion=text(data.version||'');
       var message='';
-      if(backendVersion && !/^v6\.3/i.test(backendVersion)){
-        message='Supabase vẫn đang chạy '+backendVersion+'. Hãy deploy file hsk-ai-grade-v6.3-simple-router.ts rồi thử lại.';
+      if(backendVersion && !/^v6\.4/i.test(backendVersion)){
+        message='Supabase vẫn đang chạy '+backendVersion+'. Hãy deploy file hsk-ai-grade-v6.4-any-provider.ts rồi thử lại.';
       }else{
         message=text(data.error||data.detail||'AI trả về lỗi.');
         if(data.hint) message+='\n'+text(data.hint);
@@ -32190,14 +32190,21 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
         if(data.retryable===true && data.retry_after_seconds){
           message+='\nCó thể thử lại sau khoảng '+text(data.retry_after_seconds)+' giây.';
         }
-        var routerName=data.model_resolution&&data.model_resolution.source?text(data.model_resolution.source):'';
-        if(routerName) message+='\nRouter: '+routerName.replace(/^router:/,'');
+        var configured=data.configured_providers||{};
+        var enabled=[];
+        if(configured.gemini) enabled.push('Gemini');
+        if(configured.groq) enabled.push('Groq');
+        if(configured.openrouter) enabled.push('OpenRouter');
+        if(enabled.length) message+='\nProvider đã cấu hình: '+enabled.join(', ');
+        if(Array.isArray(data.providers_tried)&&data.providers_tried.length){
+          message+='\nProvider đã thử: '+data.providers_tried.join(', ');
+        }
       }
       if(data.request_id) message+='\nRequest ID: '+text(data.request_id);
       throw new Error(message);
     }
     if(data.ai_verified!==true)throw new Error('Edge Function chưa trả xác nhận AI thật.');
-    if(!/^v6\.3/i.test(text(data.version)))throw new Error('Supabase vẫn đang chạy function cũ. Hãy deploy hsk-ai-grade-v6.3-simple-router.ts rồi thử lại.');
+    if(!/^v6\.4/i.test(text(data.version)))throw new Error('Supabase vẫn đang chạy function cũ. Hãy deploy hsk-ai-grade-v6.4-any-provider.ts rồi thử lại.');
     if(payload.mode==='grade'&&(!data.result||data.result.ai_verified!==true))throw new Error('Kết quả chấm không có xác nhận AI thật nên app đã từ chối hiển thị điểm.');
     if(payload.mode==='tutor'&&payload.sourceText&&data.complete!==true)throw new Error('AI chưa hoàn tất toàn bộ bản dịch nên app không hiển thị bản dịch bị cắt.');
     return data;
@@ -33189,6 +33196,486 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
 })();
 </script>
 <!-- /HSK5 inline grammar AI grading fix -->
+
+
+
+<!-- Albert UI patch: fixed browser title, lesson-name-only header, universal hamburger menu -->
+<style id="albert-universal-menu-and-title-style">
+  /* Replace the permanent vertical sidebar with an off-canvas menu on every screen size. */
+  #mobile-appbar,
+  #mobile-sidebar-backdrop {
+    display: none !important;
+  }
+
+  #albert-menu-appbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(54px + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) 14px 0;
+    z-index: 1000010;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(250, 248, 243, .97);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 14px rgba(26, 26, 46, .08);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  #albert-menu-toggle {
+    min-width: 106px;
+    height: 40px;
+    padding: 0 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 11px;
+    background: #fff;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 9px rgba(0, 0, 0, .06);
+    transition: background .15s ease, border-color .15s ease, transform .15s ease;
+  }
+
+  #albert-menu-toggle:hover {
+    border-color: var(--ink);
+    background: var(--paper2);
+  }
+
+  #albert-menu-toggle:active {
+    transform: scale(.98);
+  }
+
+  #albert-menu-toggle .albert-menu-icon {
+    font-size: 21px;
+    line-height: 1;
+  }
+
+  #albert-menu-app-name {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+
+  #albert-menu-app-name strong {
+    font-size: 17px;
+    color: var(--ink);
+    letter-spacing: -.2px;
+  }
+
+  #albert-menu-app-name span {
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  #albert-menu-backdrop {
+    position: fixed;
+    top: calc(54px + env(safe-area-inset-top, 0px));
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1000007;
+    background: rgba(12, 12, 25, .5);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .2s ease, visibility .2s ease;
+  }
+
+  body.albert-menu-shell .app {
+    display: block !important;
+  }
+
+  body.albert-menu-shell .main {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    padding-top: calc(54px + env(safe-area-inset-top, 0px)) !important;
+  }
+
+  body.albert-menu-shell .sidebar {
+    position: fixed !important;
+    top: calc(54px + env(safe-area-inset-top, 0px)) !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: min(88vw, 330px) !important;
+    min-width: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    z-index: 1000009 !important;
+    transform: translateX(-106%) !important;
+    transition: transform .23s ease !important;
+    box-shadow: 22px 0 60px rgba(0, 0, 0, .36) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.albert-menu-shell.albert-menu-open {
+    overflow: hidden !important;
+  }
+
+  body.albert-menu-shell.albert-menu-open .sidebar {
+    transform: translateX(0) !important;
+  }
+
+  body.albert-menu-shell.albert-menu-open #albert-menu-backdrop {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /* The compact lesson heading now shows names only: Chinese + Vietnamese. */
+  #lesson-page-title.albert-lesson-name-only {
+    display: flex !important;
+    align-items: baseline !important;
+    flex-wrap: wrap !important;
+    gap: 7px 12px !important;
+    line-height: 1.3 !important;
+  }
+
+  .albert-only-lesson-title {
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 7px 12px;
+    min-width: 0;
+  }
+
+  .albert-only-lesson-title .albert-title-zh {
+    color: var(--ink);
+    font-size: 19px;
+    font-weight: 900;
+  }
+
+  .albert-only-lesson-title .albert-title-vi {
+    color: #5d584d;
+    font-size: 14px;
+    font-weight: 650;
+  }
+
+  #lesson-page-title.albert-lesson-name-only .compact-topic,
+  #lesson-page-title.albert-lesson-name-only + #lesson-page-sub {
+    display: none !important;
+  }
+
+  @media (max-width: 600px) {
+    #albert-menu-appbar {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+
+    #albert-menu-toggle {
+      min-width: 94px;
+      padding: 0 11px;
+      font-size: 13px;
+    }
+
+    #albert-menu-app-name strong {
+      font-size: 15px;
+    }
+
+    #albert-menu-app-name span {
+      font-size: 10px;
+    }
+
+    .albert-only-lesson-title .albert-title-zh {
+      font-size: 17px;
+    }
+
+    .albert-only-lesson-title .albert-title-vi {
+      width: 100%;
+      font-size: 12px;
+    }
+  }
+</style>
+
+<script id="albert-universal-menu-and-title-script">
+(function(){
+  'use strict';
+  if(window.__ALBERT_UNIVERSAL_MENU_TITLE_PATCH__) return;
+  window.__ALBERT_UNIVERSAL_MENU_TITLE_PATCH__ = true;
+
+  var syncingLessonTitle = false;
+  var syncTimer = 0;
+
+  function esc(value){
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
+  }
+
+  function enforceBrowserTitle(){
+    if(document.title !== 'Albert') document.title = 'Albert';
+    var titleNode = document.querySelector('head > title');
+    if(titleNode && titleNode.textContent !== 'Albert') titleNode.textContent = 'Albert';
+  }
+
+  function currentCourse(){
+    var value = '';
+    try { value = String(window.CURRENT_COURSE || ''); } catch(e) {}
+    if(!value){
+      try { value = String(localStorage.getItem('hsk_albert_course') || localStorage.getItem('hsk_course') || ''); } catch(e) {}
+    }
+    value = value.toLowerCase();
+    if(/hsk\s*1|hsk1/.test(value)) return 'hsk1';
+    if(/hsk\s*3|hsk3/.test(value)) return 'hsk3';
+    if(/hsk\s*4|hsk4/.test(value)) return 'hsk4';
+    return 'hsk5';
+  }
+
+  function activeLessonId(){
+    var values = [];
+    try {
+      var selector = document.getElementById('lesson-selector');
+      if(selector && selector.value) values.push(selector.value);
+    } catch(e) {}
+    try { if(window.STATE && window.STATE.currentLesson) values.push(window.STATE.currentLesson); } catch(e) {}
+    try { if(typeof STATE !== 'undefined' && STATE && STATE.currentLesson) values.push(STATE.currentLesson); } catch(e) {}
+    try {
+      var badge = document.querySelector('#lesson-detail-header .lesson-num-badge');
+      if(badge) values.push((badge.textContent || '').trim());
+    } catch(e) {}
+    for(var i=0;i<values.length;i++){
+      var match = String(values[i] == null ? '' : values[i]).match(/\d+/);
+      if(match){
+        var number = Number(match[0]);
+        if(Number.isFinite(number) && number > 0) return number;
+      }
+    }
+    return 0;
+  }
+
+  function lessonListFor(course){
+    try {
+      if(course === 'hsk4' && window.HSK4_STUDY_DATA && Array.isArray(window.HSK4_STUDY_DATA.lessons)){
+        return window.HSK4_STUDY_DATA.lessons;
+      }
+    } catch(e) {}
+    try {
+      if(course === 'hsk3' && window.HSK3_COMPLETE_DATA && Array.isArray(window.HSK3_COMPLETE_DATA.lessons)){
+        return window.HSK3_COMPLETE_DATA.lessons;
+      }
+    } catch(e) {}
+    try {
+      if(typeof LESSONS !== 'undefined' && Array.isArray(LESSONS)) return LESSONS;
+    } catch(e) {}
+    try {
+      if(Array.isArray(window.LESSONS)) return window.LESSONS;
+    } catch(e) {}
+    return [];
+  }
+
+  function findLesson(course, id){
+    var rows = lessonListFor(course);
+    for(var i=0;i<rows.length;i++){
+      if(Number(rows[i] && rows[i].id) === Number(id)) return rows[i] || {};
+    }
+    return {};
+  }
+
+  function stripLevelAndNumber(text){
+    var value = String(text == null ? '' : text).replace(/\s+/g, ' ').trim();
+    value = value.replace(/^HSK\s*[1-6]\s*[·•|｜:：\-–—]*\s*/i, '');
+    value = value.replace(/^(?:T(?:ập)?\s*[12])\s*[·•|｜:：\-–—]*\s*/i, '');
+    value = value.replace(/^Bài\s*\d+\s*[:：·•|｜\-–—]*\s*/i, '');
+    value = value.replace(/^第\s*\d+\s*课\s*[:：·•|｜\-–—]*\s*/i, '');
+    return value.trim();
+  }
+
+  function detailIsVisible(){
+    var detail = document.getElementById('lesson-detail-view');
+    if(!detail) return false;
+    try { return getComputedStyle(detail).display !== 'none'; } catch(e) {}
+    return detail.style.display !== 'none';
+  }
+
+  function syncLessonTitle(){
+    if(syncingLessonTitle || !detailIsVisible()) return;
+    var title = document.getElementById('lesson-page-title');
+    if(!title) return;
+
+    var course = currentCourse();
+    var id = activeLessonId();
+    var lesson = findLesson(course, id);
+    var zh = String((lesson && (lesson.titleZh || lesson.zh || lesson.title)) || '').trim();
+    var vi = String((lesson && (lesson.titleVi || lesson.vi)) || '').trim();
+
+    if(!zh){
+      var zhNode = title.querySelector('.zh');
+      zh = stripLevelAndNumber(zhNode ? zhNode.textContent : title.textContent);
+    }
+    if(!vi){
+      var viNode = title.querySelector('.compact-vi');
+      if(viNode) vi = String(viNode.textContent || '').trim();
+    }
+
+    zh = stripLevelAndNumber(zh);
+    vi = stripLevelAndNumber(vi);
+    if(!zh) return;
+
+    var key = course + ':' + id + ':' + zh + ':' + vi;
+    var currentNode = title.querySelector('.albert-only-lesson-title');
+    if(currentNode && title.getAttribute('data-albert-lesson-title-key') === key) return;
+
+    syncingLessonTitle = true;
+    title.classList.add('albert-lesson-name-only');
+    title.setAttribute('data-albert-lesson-title-key', key);
+    title.innerHTML = '<span class="albert-only-lesson-title">' +
+      '<span class="zh albert-title-zh">' + esc(zh) + '</span>' +
+      (vi ? '<span class="albert-title-vi">' + esc(vi) + '</span>' : '') +
+      '</span>';
+    var sub = document.getElementById('lesson-page-sub');
+    if(sub) sub.style.display = 'none';
+    syncingLessonTitle = false;
+  }
+
+  function scheduleLessonTitleSync(delay){
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function(){
+      enforceBrowserTitle();
+      syncLessonTitle();
+    }, typeof delay === 'number' ? delay : 0);
+  }
+
+  function setMenuOpen(open){
+    var body = document.body;
+    if(!body) return;
+    body.classList.toggle('albert-menu-open', !!open);
+    body.classList.remove('mobile-nav-open');
+    var button = document.getElementById('albert-menu-toggle');
+    if(button){
+      button.setAttribute('aria-expanded', open ? 'true' : 'false');
+      button.innerHTML = open
+        ? '<span class="albert-menu-icon">×</span><span>Đóng</span>'
+        : '<span class="albert-menu-icon">☰</span><span>Menu</span>';
+    }
+  }
+
+  function toggleMenu(){
+    setMenuOpen(!(document.body && document.body.classList.contains('albert-menu-open')));
+  }
+
+  function ensureMenuShell(){
+    if(!document.body) return;
+    document.body.classList.add('albert-menu-shell');
+
+    var oldAppbar = document.getElementById('mobile-appbar');
+    if(oldAppbar) oldAppbar.style.display = 'none';
+
+    var appbar = document.getElementById('albert-menu-appbar');
+    if(!appbar){
+      appbar = document.createElement('div');
+      appbar.id = 'albert-menu-appbar';
+      appbar.innerHTML =
+        '<button type="button" id="albert-menu-toggle" aria-label="Mở hoặc đóng menu" aria-expanded="false">' +
+          '<span class="albert-menu-icon">☰</span><span>Menu</span>' +
+        '</button>' +
+        '<div id="albert-menu-app-name"><strong>Albert</strong><span>Học tiếng Trung</span></div>';
+      document.body.insertBefore(appbar, document.body.firstChild);
+      var toggle = document.getElementById('albert-menu-toggle');
+      if(toggle) toggle.addEventListener('click', toggleMenu);
+    }
+
+    var backdrop = document.getElementById('albert-menu-backdrop');
+    if(!backdrop){
+      backdrop = document.createElement('div');
+      backdrop.id = 'albert-menu-backdrop';
+      backdrop.setAttribute('aria-hidden', 'true');
+      backdrop.addEventListener('click', function(){ setMenuOpen(false); });
+      document.body.appendChild(backdrop);
+    }
+  }
+
+  function wrapFunction(name){
+    var original = window[name];
+    if(typeof original !== 'function' || original.__albertTitleMenuWrapped) return;
+    var wrapped = function(){
+      var result = original.apply(this, arguments);
+      setMenuOpen(false);
+      scheduleLessonTitleSync(0);
+      setTimeout(function(){ scheduleLessonTitleSync(0); }, 80);
+      setTimeout(function(){ scheduleLessonTitleSync(0); }, 260);
+      return result;
+    };
+    wrapped.__albertTitleMenuWrapped = true;
+    window[name] = wrapped;
+    try { eval(name + ' = window[name]'); } catch(e) {}
+  }
+
+  function bindEvents(){
+    document.addEventListener('click', function(event){
+      var nav = event.target && event.target.closest ? event.target.closest('.sidebar .nav-item') : null;
+      if(nav) setMenuOpen(false);
+    }, true);
+    document.addEventListener('keydown', function(event){
+      if(event.key === 'Escape') setMenuOpen(false);
+    });
+    document.addEventListener('change', function(event){
+      if(event.target && (event.target.id === 'lesson-selector' || event.target.id === 'course-selector')){
+        scheduleLessonTitleSync(30);
+      }
+    }, true);
+  }
+
+  function observeChanges(){
+    var browserTitle = document.querySelector('head > title');
+    if(browserTitle && window.MutationObserver){
+      new MutationObserver(enforceBrowserTitle).observe(browserTitle, {childList:true, characterData:true, subtree:true});
+    }
+    var lessonTitle = document.getElementById('lesson-page-title');
+    if(lessonTitle && window.MutationObserver){
+      new MutationObserver(function(){
+        if(!syncingLessonTitle) scheduleLessonTitleSync(10);
+      }).observe(lessonTitle, {childList:true, characterData:true, subtree:true});
+    }
+  }
+
+  function boot(){
+    enforceBrowserTitle();
+    ensureMenuShell();
+    setMenuOpen(false);
+    wrapFunction('loadLesson');
+    wrapFunction('switchCourse');
+    wrapFunction('showPage');
+    wrapFunction('showLessonList');
+    bindEvents();
+    observeChanges();
+    scheduleLessonTitleSync(0);
+    [80, 250, 700, 1500, 3000].forEach(function(ms){
+      setTimeout(function(){
+        enforceBrowserTitle();
+        ensureMenuShell();
+        wrapFunction('loadLesson');
+        wrapFunction('switchCourse');
+        wrapFunction('showPage');
+        wrapFunction('showLessonList');
+        scheduleLessonTitleSync(0);
+      }, ms);
+    });
+  }
+
+  window.albertToggleMenu = toggleMenu;
+  window.albertOpenMenu = function(){ setMenuOpen(true); };
+  window.albertCloseMenu = function(){ setMenuOpen(false); };
+  window.albertSyncLessonTitle = syncLessonTitle;
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+<!-- /Albert UI patch -->
 
 </body>
 </html>
