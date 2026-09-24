@@ -17360,28 +17360,83 @@ document.addEventListener('DOMContentLoaded', function(){
     // Trước đây giá trị cũ bị tự điền lại (dropdown hiện HSK 5 trong khi nội dung là HSK 4),
     // nên chọn lại HSK 5 không phát sự kiện change -> không chuyển được giáo trình.
     if(el.id === 'course-selector' || el.id === 'lesson-selector') return false;
+    // FIX: ô chat "AI — hỏi đáp tiếng Trung" không phải bài làm -> không lưu, không tự điền lại
+    // (trước đây gửi xong thì câu vừa hỏi bị điền lại vào ô).
+    if(el.id === 'ai-input') return false;
+    // FIX: ghi chép HSK 4 đã có bộ lưu riêng theo từng bài (note_hsk4_lesson_N), giống #lesson-note.
+    if(el.id === 'h4-lesson-note') return false;
     if(el.closest && el.closest('#auth-card')) return false;
     var type = (el.type || '').toLowerCase();
     if(['button','submit','reset','password','email','hidden','file','checkbox','radio','range'].indexOf(type) >= 0) return false;
     return true;
   }
 
+  // FIX: xác định đúng bài đang mở. window.STATE không tồn tại (STATE khai báo bằng let),
+  // nên trước đây mọi ô của mọi bài đều bị lưu chung vào key "L0" -> nội dung bài 1 hiện sang bài 2.
+  function activeLessonNumber(){
+    var n = 0;
+    try {
+      var badge = document.querySelector('#lesson-detail-header .lesson-num-badge');
+      if(badge) n = parseInt(String(badge.textContent || '').replace(/[^0-9]/g, ''), 10) || 0;
+    } catch(e) {}
+    if(!n){
+      try {
+        var sel = document.getElementById('lesson-selector');
+        if(sel) n = parseInt(sel.value, 10) || 0;
+      } catch(e) {}
+    }
+    return n > 0 ? n : 0;
+  }
+
+  // Ô nằm trong nội dung bài học -> key riêng theo giáo trình + bài; ô ngoài bài học (tìm từ, cài đặt quiz...)
+  // giữ key cũ L0. Key được gắn cố định vào ô ngay lần đầu gặp, nên ô của bài 1 không thể bị lưu sang bài 2.
   function inputKey(el){
-    return 'input:' + currentCourse() + ':L' + currentLessonId() + ':' + el.id;
+    if(el.dataset && el.dataset.hskCloudKey) return el.dataset.hskCloudKey;
+    var inLesson = !!(el.closest && el.closest('#lesson-detail-view'));
+    var key = 'input:' + currentCourse() + ':L' + (inLesson ? activeLessonNumber() : 0) + ':' + el.id;
+    try { el.dataset.hskCloudKey = key; } catch(e) {}
+    return key;
+  }
+
+  function lookupValue(key){
+    return cloudCache.hasOwnProperty(key) ? cloudCache[key] : restoreLocal(key);
+  }
+
+  // Dữ liệu cũ lưu dưới L0: chỉ dùng lại khi id của ô đã chứa số bài (vd h4x-gsent-3-0 ở Bài 3),
+  // vì khi đó giá trị chắc chắn thuộc đúng bài. Ô dùng chung id cho mọi bài (ex-input-0...) thì bỏ qua.
+  function legacyValue(el, key){
+    var m = /^input:([^:]*):L(\d+):/.exec(key);
+    if(!m || m[2] === '0') return null;
+    if(/^ex-(input-)?\d+$/.test(el.id)) return null;
+    if(!new RegExp('(^|[^0-9])' + m[2] + '([^0-9]|$)').test(el.id)) return null;
+    return lookupValue('input:' + m[1] + ':L0:' + el.id);
   }
 
   function saveElement(el){
     if(!isEditable(el) || applyingCloud) return;
+    try { el.dataset.hskCloudTouched = '1'; } catch(e) {}
     hskCloudSaveKV(inputKey(el), el.value || '', false);
   }
 
+  // FIX: chỉ tự điền vào ô MỚI vẽ ra và còn trống. Không ghi đè ô người dùng đã gõ, ô đã điền trước đó,
+  // hay ô đang có nội dung riêng của bài đó (trước đây ghi đè rồi còn phát sự kiện input -> lưu nhầm bài).
   function applyElement(el){
     if(!isEditable(el)) return;
     var key = inputKey(el);
-    var val = cloudCache.hasOwnProperty(key) ? cloudCache[key] : restoreLocal(key);
-    if(val == null || val === '') return;
+    if(el.dataset.hskCloudTouched === '1' || el.dataset.hskCloudApplied === '1'){
+      // Khi code tự xóa/đặt lại ô (gửi xong, bấm làm lại) thì cập nhật bản lưu để lần sau không hiện lại nội dung cũ.
+      if(document.activeElement !== el){
+        var saved = lookupValue(key);
+        if(saved != null && String(saved) !== String(el.value || '')) hskCloudSaveKV(key, el.value || '', false);
+      }
+      return;
+    }
     if(document.activeElement === el) return;
-    if(el.dataset.hskCloudApplied === '1' && el.value) return;
+    var isSelect = (el.tagName || '').toLowerCase() === 'select';
+    if(!isSelect && el.value){ el.dataset.hskCloudApplied = '1'; return; }
+    var val = lookupValue(key);
+    if(val == null || val === '') val = legacyValue(el, key);
+    if(val == null || val === '') return;
     applyingCloud = true;
     el.value = val;
     el.dataset.hskCloudApplied = '1';
@@ -17399,7 +17454,8 @@ document.addEventListener('DOMContentLoaded', function(){
       if(note && document.activeElement !== note && typeof noteStorageKey === 'function'){
         var lid = note.getAttribute('data-lesson-id');
         if(lid){
-          var v = localStorage.getItem('note_' + ((window.CURRENT_COURSE==='hsk1')?'hsk1':'hsk5') + '_lesson_' + lid);
+          // FIX: dùng đúng key theo giáo trình (noteStorageKey), trước đây HSK 3 bị lấy ghi chép HSK 5.
+          var v = localStorage.getItem(noteStorageKey(lid));
           if(v != null && v !== '' && note.value !== v) note.value = v;
         }
       }
@@ -17456,7 +17512,7 @@ document.addEventListener('DOMContentLoaded', function(){
       for(var i=0;i<localStorage.length;i++) {
         var k = localStorage.key(i);
         if(!k) continue;
-        if(k === 'hsk5_app_v2' || /^note_lesson_/.test(k) || /^note_hsk[15]_lesson_/.test(k) || /^typing_draft_/.test(k) || /^hsk1_progress_/.test(k) || /^hsk_cloud_input_/.test(k)) {
+        if(k === 'hsk5_app_v2' || /^note_lesson_/.test(k) || /^note_hsk[1-6]_lesson_/.test(k) || /^typing_draft_/.test(k) || /^hsk1_progress_/.test(k) || /^hsk_cloud_input_/.test(k)) {
           keys.push(k);
         }
       }
@@ -17529,7 +17585,7 @@ document.addEventListener('DOMContentLoaded', function(){
         var r = oldSaveNote.apply(this, arguments);
         // Lưu cloud bằng đúng key có course + lesson (khớp với noteStorageKey ở frontend).
         var course = (window.CURRENT_COURSE === 'hsk1') ? 'hsk1' : 'hsk5';
-        var key = 'note_' + course + '_lesson_' + lessonId;
+        var key = (typeof noteStorageKey === 'function') ? noteStorageKey(lessonId) : ('note_' + course + '_lesson_' + lessonId);
         hskCloudSaveLocalStorageKey(key, false);
         return r;
       };
