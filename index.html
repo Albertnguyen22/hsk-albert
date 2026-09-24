@@ -32234,12 +32234,18 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
     if(response&&response.error)throw new Error(response.error.message||response.error.context||text(response.error));
     var data=response&&response.data;
     if(!data)throw new Error('Edge Function không trả dữ liệu.');
+    // FIX: trước đây app chỉ chấp nhận đúng nhãn "v6.4" nên function v6.3.2-groq-fallback (đang deploy)
+    // chấm xong vẫn bị từ chối. Giờ chỉ chặn function thật sự cũ (trước v6); mọi bản v6 trở lên đều dùng được
+    // vì các bước kiểm tra ai_verified / result.ai_verified / complete bên dưới vẫn giữ nguyên.
+    var backendMajor=(function(m){return m?Number(m[1]):null;})(/^v(\d+)/i.exec(text(data.version||'')));
+    var backendTooOld=backendMajor!=null&&backendMajor<6;
+    var oldBackendMessage='Supabase đang chạy function cũ ('+text(data.version||'')+'). Hãy deploy lại hsk-ai-grade bằng file TS mới nhất rồi thử lại.';
     if(data.ok!==true){
       console.error('HSK AI v6.4 provider diagnostics:',data);
       var backendVersion=text(data.version||'');
       var message='';
-      if(backendVersion && !/^v6\.4/i.test(backendVersion)){
-        message='Supabase vẫn đang chạy '+backendVersion+'. Hãy deploy file hsk-ai-grade-v6.4-any-provider.ts rồi thử lại.';
+      if(backendTooOld){
+        message=oldBackendMessage;
       }else{
         message=text(data.error||data.detail||'AI trả về lỗi.');
         if(data.hint) message+='\n'+text(data.hint);
@@ -32260,13 +32266,15 @@ document.documentElement.setAttribute('data-hsk4-notes-like-hsk5',VERSION);
         if(enabled.length) message+='\nProvider đã cấu hình: '+enabled.join(', ');
         if(Array.isArray(data.providers_tried)&&data.providers_tried.length){
           message+='\nProvider đã thử: '+data.providers_tried.join(', ');
+        }else if(Array.isArray(data.models_tried)&&data.models_tried.length){
+          message+='\nModel đã thử: '+data.models_tried.join(', ');
         }
       }
       if(data.request_id) message+='\nRequest ID: '+text(data.request_id);
       throw new Error(message);
     }
     if(data.ai_verified!==true)throw new Error('Edge Function chưa trả xác nhận AI thật.');
-    if(!/^v6\.4/i.test(text(data.version)))throw new Error('Supabase vẫn đang chạy function cũ. Hãy deploy hsk-ai-grade-v6.4-any-provider.ts rồi thử lại.');
+    if(backendTooOld)throw new Error(oldBackendMessage);
     if(payload.mode==='grade'&&(!data.result||data.result.ai_verified!==true))throw new Error('Kết quả chấm không có xác nhận AI thật nên app đã từ chối hiển thị điểm.');
     if(payload.mode==='tutor'&&payload.sourceText&&data.complete!==true)throw new Error('AI chưa hoàn tất toàn bộ bản dịch nên app không hiển thị bản dịch bị cắt.');
     return data;
