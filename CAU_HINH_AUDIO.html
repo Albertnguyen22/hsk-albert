@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Albert - Ket noi MP3 Google Drive</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f7f9;color:#242424;font:15px/1.7 "Segoe UI",Arial,sans-serif}main{max-width:940px;margin:32px auto;padding:0 20px 50px}h1{font-size:28px;line-height:1.3;margin:10px 0}h2{font-size:19px;margin:0 0 14px}h3{font-size:15px;margin:22px 0 6px}p{margin:8px 0 16px}.tag{font-weight:600;font-size:12px;letter-spacing:.08em;color:#0f6cbd}.sub{color:#616161}.card{background:white;border:1px solid #e0e0e0;border-radius:9px;padding:24px;margin:20px 0}.note{padding:12px 15px;background:#eff6fc;border-left:3px solid #0f6cbd;margin:15px 0}.warn{background:#fff8ea;border-color:#b47700}button,a.button{font:600 14px "Segoe UI",Arial,sans-serif;border:1px solid #c7c7c7;border-radius:5px;padding:10px 15px;background:#fff;color:#242424;cursor:pointer;text-decoration:none;display:inline-block;min-height:42px}button.primary{background:#0f6cbd;color:white;border-color:#0f6cbd}button:disabled{opacity:.45;cursor:default}button:hover:not(:disabled),a.button:hover{filter:brightness(.96)}.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}input[type=url]{width:100%;padding:12px;border:1px solid #bdbdbd;border-radius:5px;font:14px monospace;margin:6px 0 16px}textarea.code{width:100%;height:200px;resize:vertical;font:12px/1.6 monospace;border:1px solid #ddd;background:#fafafa;padding:12px;border-radius:5px}summary{cursor:pointer;font-weight:600}.steps{counter-reset:step}code{font:13px monospace;background:#f4f4f4;padding:2px 5px;overflow-wrap:anywhere}#status{white-space:pre-wrap;overflow-wrap:anywhere;min-height:30px}#player{width:100%;margin:12px 0}table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:10px 7px;border-bottom:1px solid #e5e5e5;text-align:left;overflow-wrap:anywhere}th{font-weight:600;color:#616161}td:nth-child(2){word-break:break-word}footer{color:#777;font-size:12px}#report{max-height:220px;overflow:auto;white-space:pre-wrap;font:12px/1.6 monospace}[hidden]{display:none!important}@media(max-width:600px){main{padding:0 12px 30px}.card{padding:18px 14px}h1{font-size:23px}td,th{padding:8px 4px}td:first-child{white-space:nowrap}.row button{flex:1 1 150px}}
+</style></head><body><main>
+<div class="tag">ALBERT / HSK 2 - 3.0</div>
+<h1>K&#7871;t n&#7889;i MP3 t&#7915; Google Drive</h1>
+<p class="sub">16 file b&#7841;n &#273;&#227; cung c&#7845;p. Kh&#244;ng upload MP3 l&#234;n GitHub. Kh&#244;ng gh&#233;p b&#224;i theo th&#7913; t&#7921; link.</p>
+<div class="note warn">B&#7843;n n&#224;y c&#7847;n tri&#7875;n khai Google Apps Script tr&#432;&#7899;c khi d&#249;ng. Ch&#432;a ki&#7875;m th&#7917; v&#7899;i Drive th&#7853;t c&#7911;a b&#7841;n. Kh&#244;ng thay app &#273;ang ch&#7841;y tr&#432;&#7899;c khi ho&#224;n th&#224;nh c&#7845;u h&#236;nh b&#234;n d&#432;&#7899;i.</div>
+<section class="card"><h2>1. T&#7841;o k&#7871;t n&#7889;i tr&#234;n t&#224;i kho&#7843;n Google c&#7911;a b&#7841;n</h2>
+<p>M&#7903; Google Apps Script b&#7857;ng t&#224;i kho&#7843;n &#273;ang ch&#7913;a 16 MP3, t&#7841;o <b>New project</b>. Thay n&#7897;i dung <code>Code.gs</code> b&#7857;ng &#273;o&#7841;n m&#227; &#273;&#227; chu&#7849;n b&#7883;.</p>
+<div class="row"><a class="button" href="https://script.google.com/home/start" target="_blank" rel="noopener noreferrer">M&#7903; Google Apps Script</a><button data-copy="server">Sao ch&#233;p Code.gs</button></div>
+<details><summary>Xem m&#227; &#273;&#7885;c 16 file</summary><textarea class="code" id="server" readonly>/**
+ * Albert HSK 2 / 3.0 - read-only Drive audio gateway.
+ * No folder scans, uploads, edits, permission changes or external HTTP calls.
+ * Deploy only in an account which can read the 16 listed files.
+ * appsscript.json restricts OAuth to Drive READ ONLY.
+ * Access is still required at OAuth scope level for all readable Drive files;
+ * this code further limits reads to these 16 IDs and only publicly shared MP3s.
+ * JSONP is public: never put personal/private materials in this allow-list.
+ * Full MP3 is returned as base64; NOT an HTTP Range streaming server/CDN.
+ */
+const HSK_PROTOCOL = &#x27;albert-hsk2-workbook-drive-v1&#x27;;
+const HSK_ALLOWED_IDS = [
+  &quot;182gBm5dSRaaSDSuVzSf7mOr4EkBB9TwS&quot;,
+  &quot;15B-hGVm5vgSujsY5L438T_3qat6sc-oC&quot;,
+  &quot;19Qlic050faWesflff-bQlwhVSxAUV8f4&quot;,
+  &quot;1ILD7xPLoj3t5OFQRq3F2KRCM7fttsKGt&quot;,
+  &quot;1GLqlziZCh4j1koVgCYlCbrTSiPV6PyTN&quot;,
+  &quot;1Hr_laAYIhmSbkItk3yJOQxkdNUegV4WQ&quot;,
+  &quot;1P8CFhSyJwfF7NaQtMNpPGmp1nA0k2b79&quot;,
+  &quot;1Z9Skyw5TTe3ipkbtyXPewj9NrvQYPLt1&quot;,
+  &quot;1tJjIfQpUtMyejxFvq03M5D2_CvurFtw-&quot;,
+  &quot;1VJ1D7IYe3YNRXOpZIHdX86bh3jBSOcmX&quot;,
+  &quot;1NztfEbGYWiaJbom47t--GeCXBKFMfZ3Q&quot;,
+  &quot;18XmAMIOCh2DNK1jTgN9HwheiWvpv9pyl&quot;,
+  &quot;1BSepiUQ1WKCzq6Romw-YSHgLhAKa39J7&quot;,
+  &quot;1BkdG17lSD_3MrWqIYy4U36u4G3oQZMI5&quot;,
+  &quot;1UFhf5AILRhxD7dhS3_Zyip2s8WoJWe5y&quot;,
+  &quot;19IhSVjmEDra2ENhihgwKyLejCzyZmCaK&quot;
+];
+const HSK_EXPECTED = {
+  &quot;lesson-01&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c1\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 8867630,
+    &quot;sha256&quot;: &quot;84ffe23599d89e23a65e80a08f1894d93c8c76027b4280f14c78ddc128385f10&quot;,
+    &quot;duration&quot;: 542.968067
+  },
+  &quot;lesson-02&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c2\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 9152858,
+    &quot;sha256&quot;: &quot;f2efc3cf2ecb390d14df3f2f411b01d438987813ca4c8d38f43a813918359879&quot;,
+    &quot;duration&quot;: 560.794813
+  },
+  &quot;lesson-03&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c3\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 8961038,
+    &quot;sha256&quot;: &quot;18d28ccaa69ac7fb4ed47785d629a8c3f0da38000c3cbf1416e0f6972310e7d8&quot;,
+    &quot;duration&quot;: 548.806067
+  },
+  &quot;lesson-04&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c4\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 9256691,
+    &quot;sha256&quot;: &quot;606a83a81219ebfb9325ba3fe496b716adc97bd6435f12c84297e8867c297c61&quot;,
+    &quot;duration&quot;: 567.284378
+  },
+  &quot;lesson-05&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c5\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 9101567,
+    &quot;sha256&quot;: &quot;ce610309721699b6fb3ecece74d5e7518327cd210ab5ad56148a973022e8d01e&quot;,
+    &quot;duration&quot;: 557.589125
+  },
+  &quot;lesson-06&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c6\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 9041102,
+    &quot;sha256&quot;: &quot;866a241dd5b72fb8a9fdd8f2271622420e57424cb11590656977bf21bc5375a4&quot;,
+    &quot;duration&quot;: 553.810067
+  },
+  &quot;lesson-07&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c7\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 8849282,
+    &quot;sha256&quot;: &quot;5651784def848427dcf2e4c19ace0830055989face8ab4b5ce81a0959b4cca2d&quot;,
+    &quot;duration&quot;: 541.821313
+  },
+  &quot;lesson-08&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c8\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 9378038,
+    &quot;sha256&quot;: &quot;7ebc7dbf48651fdacb3e3d174c575c4375b177fabdddb841ba2d6ed093b87a80&quot;,
+    &quot;duration&quot;: 574.868567
+  },
+  &quot;lesson-09&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c9\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 9504806,
+    &quot;sha256&quot;: &quot;794b97eda8e4a94bd25ec59d08c3a250e3606715863ec508c1f8f97c8cb0e474&quot;,
+    &quot;duration&quot;: 582.791567
+  },
+  &quot;lesson-10&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c10\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 8725016,
+    &quot;sha256&quot;: &quot;cf0689509219a4f1fadd9b2225788c9e6a619a99a42e44de9956045b086a3151&quot;,
+    &quot;duration&quot;: 534.054689
+  },
+  &quot;lesson-11&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c11\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 9243764,
+    &quot;sha256&quot;: &quot;acd0b771fc6c1d290e4c64f2c6f53d07622c503532002d872ed66d7b7d8c0c3d&quot;,
+    &quot;duration&quot;: 566.476438
+  },
+  &quot;lesson-12&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c12\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 9419321,
+    &quot;sha256&quot;: &quot;7b4ef06e76bc4db4aca419f93963ddec121277f513632d0fa32ae6c94b18e0bb&quot;,
+    &quot;duration&quot;: 577.448756
+  },
+  &quot;lesson-13&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c13\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 9454766,
+    &quot;sha256&quot;: &quot;9f284f273ac60115696576cdc08efbe4accd7bb361540fa6dc0735503dbbfed6&quot;,
+    &quot;duration&quot;: 579.664067
+  },
+  &quot;lesson-14&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c14\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 9233339,
+    &quot;sha256&quot;: &quot;1cee8b87ac3a59a0caa22256c02337cd4e63c0d97a6bcdb2e24110bdf9313a50&quot;,
+    &quot;duration&quot;: 565.824878
+  },
+  &quot;lesson-15&quot;: {
+    &quot;sourceName&quot;: &quot;\u7b2c15\u8bfe.mp3&quot;,
+    &quot;bytes&quot;: 9184550,
+    &quot;sha256&quot;: &quot;53e4e2402e460d5c2e2efd69de5bd4aa6427105be29df042043b5cbb264dfb5f&quot;,
+    &quot;duration&quot;: 562.775567
+  },
+  &quot;mock&quot;: {
+    &quot;sourceName&quot;: &quot;\u6a21\u62df\u6d4b\u8bd5 HSK(\u4e8c\u7ea7)\u6a21\u62df\u8bd5\u5377.mp3&quot;,
+    &quot;bytes&quot;: 17993675,
+    &quot;sha256&quot;: &quot;1955a77e29c1db389afbd85d4ed42fce54686149279aef38f4eb7000d324b609&quot;,
+    &quot;duration&quot;: 1113.345878
+  }
+};
+const HSK_MANIFEST_CACHE = &#x27;hsk2-mp3-manifest-20261012-v1&#x27;;
+
+function hskError_(message) { throw new Error(message); }
+function hskPublicFile_(id) {
+  if (HSK_ALLOWED_IDS.indexOf(id) &lt; 0) hskError_(&#x27;File ID khong nam trong 16 file duoc cho phep.&#x27;);
+  const file = DriveApp.getFileById(id);
+  if (file.isTrashed()) hskError_(&#x27;File da nam trong thung rac.&#x27;);
+  const access = file.getSharingAccess();
+  if (access !== DriveApp.Access.ANYONE &amp;&amp; access !== DriveApp.Access.ANYONE_WITH_LINK)
+    hskError_(&#x27;File chua chia se: Bat ky ai co duong lien ket / Nguoi xem. Script khong tu doi quyen.&#x27;);
+  const name = file.getName();
+  if (!/\.mp3$/i.test(name)) hskError_(&#x27;Khong phai ten file MP3.&#x27;);
+  const type = file.getMimeType();
+  if (!/^(audio\/(mpeg|mp3|x-mpeg|x-mp3|mpeg3)|application\/octet-stream)$/i.test(type))
+    hskError_(&#x27;Loai file khong phai MP3: &#x27; + type);
+  const bytes = Number(file.getSize());
+  if (!Number.isSafeInteger(bytes) || bytes &lt; 100 || bytes &gt; 24 * 1024 * 1024)
+    hskError_(&#x27;Dung luong MP3 nam ngoai gioi han cua bo nay.&#x27;);
+  return {file:file, id:id, name:name, bytes:bytes, mime:type};
+}
+function hskNameKey_(name) {
+  const clean = String(name).trim().normalize(&#x27;NFKC&#x27;);
+  for (const key in HSK_EXPECTED) if (clean === HSK_EXPECTED[key].sourceName.normalize(&#x27;NFKC&#x27;)) return key;
+  const match = clean.match(/^(?:lesson[-_ ]*|\u7b2c\s*)(0?[1-9]|1[0-5])(?:\s*\u8bfe)?\.mp3$/i);
+  if (match) return &#x27;lesson-&#x27; + String(Number(match[1])).padStart(2,&#x27;0&#x27;);
+  if (/^mock[-_ ]*test\.mp3$/i.test(clean)) return &#x27;mock&#x27;;
+  return null;
+}
+function hskManifest_(fresh) {
+  const cache = CacheService.getScriptCache();
+  if (!fresh) {
+    const old = cache.get(HSK_MANIFEST_CACHE);
+    if (old) { try { return JSON.parse(old); } catch (_) {} }
+  }
+  const entries = [], errors = [], seen = Object.create(null);
+  HSK_ALLOWED_IDS.forEach(function(id) {
+    try {
+      const item = hskPublicFile_(id);
+      const nameKey = hskNameKey_(item.name);
+      const sizeKeys = Object.keys(HSK_EXPECTED).filter(function(key) { return HSK_EXPECTED[key].bytes === item.bytes; });
+      if (sizeKeys.length !== 1) hskError_(&#x27;Dung luong khong khop MP3 goc da cung cap.&#x27;);
+      const key = sizeKeys[0];
+      if (nameKey &amp;&amp; nameKey !== key) hskError_(&#x27;Ten file va dung luong chi den hai bai khac nhau; can doi chieu lai.&#x27;);
+      if (seen[key]) hskError_(&#x27;Trung file cho &#x27; + key + &#x27;.&#x27;);
+      seen[key] = true;
+      entries.push({key:key,id:id,name:item.name,bytes:item.bytes,mime:&#x27;audio/mpeg&#x27;,
+        identity:&#x27;metadata-only-until-audio-sha256-check&#x27;,
+        matchMethod:nameKey?&#x27;name-and-byte-size&#x27;:&#x27;unique-byte-size-pending-hash&#x27;,
+        expectedSha256:HSK_EXPECTED[key].sha256});
+    } catch (err) { errors.push({id:id,message:String(err.message || err)}); }
+  });
+  const missing = Object.keys(HSK_EXPECTED).filter(function(key) { return !seen[key]; });
+  entries.sort(function(a,b) { return a.key.localeCompare(b.key); });
+  const output = {ok:errors.length===0 &amp;&amp; missing.length===0,protocol:HSK_PROTOCOL,entries:entries,errors:errors,missing:missing,
+    complete:entries.length===16 &amp;&amp; errors.length===0,verifiedAudioCount:0,
+    note:&#x27;Metadata is not content verification. Every MP3 is SHA-256 checked on its audio request.&#x27;,
+    checkedAt:new Date().toISOString()};
+  if (output.ok) cache.put(HSK_MANIFEST_CACHE,JSON.stringify(output),300);
+  return output;
+}
+function hskDigest_(bytes) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, bytes)
+    .map(function(b) { return ((b + 256) % 256).toString(16).padStart(2,&#x27;0&#x27;); }).join(&#x27;&#x27;);
+}
+function hskAudio_(key) {
+  if (!Object.prototype.hasOwnProperty.call(HSK_EXPECTED,key)) hskError_(&#x27;Bai khong hop le.&#x27;);
+  const manifest = hskManifest_(false);
+  if (!manifest.ok) hskError_(&#x27;Chua ghep du 16 MP3. Mo che do manifest de xem loi.&#x27;);
+  const record = manifest.entries.find(function(item) { return item.key===key; });
+  if (!record) hskError_(&#x27;Khong tim thay MP3 cua bai.&#x27;);
+  const item = hskPublicFile_(record.id); // Re-check access even when metadata is cached.
+  const want = HSK_EXPECTED[key];
+  if (item.bytes !== want.bytes) hskError_(&#x27;File tren Drive da thay doi dung luong.&#x27;);
+  const blob = item.file.getBlob();
+  const bytes = blob.getBytes();
+  const hash = hskDigest_(bytes);
+  if (bytes.length!==want.bytes || hash!==want.sha256)
+    hskError_(&#x27;SHA-256 khong khop MP3 goc cua &#x27; + key + &#x27;. Khong phat de tranh ghep nham bai.&#x27;);
+  return {ok:true,protocol:HSK_PROTOCOL,key:key,id:item.id,name:item.name,
+    mime:&#x27;audio/mpeg&#x27;,bytes:bytes.length,sha256:hash,verified:true,
+    base64:Utilities.base64Encode(bytes)};
+}
+function doGet(e) {
+  const p = (e &amp;&amp; e.parameter) || {};
+  const callback = String(p.callback || &#x27;&#x27;);
+  if (callback &amp;&amp; !/^albertHskAudio_[A-Za-z0-9_]{1,80}$/.test(callback))
+    return ContentService.createTextOutput(&#x27;{&quot;ok&quot;:false,&quot;error&quot;:&quot;Invalid callback&quot;}&#x27;).setMimeType(ContentService.MimeType.JSON);
+  let result;
+  try {
+    const mode = String(p.mode || &#x27;manifest&#x27;);
+    if (mode===&#x27;manifest&#x27;) result=hskManifest_(p.refresh===&#x27;1&#x27;);
+    else if (mode===&#x27;audio&#x27;) result=hskAudio_(String(p.track || &#x27;&#x27;));
+    else hskError_(&#x27;Mode khong hop le.&#x27;);
+  } catch (err) { result={ok:false,protocol:HSK_PROTOCOL,error:String(err.message || err)}; }
+  const json = JSON.stringify(result).replace(/&lt;/g,&#x27;\\u003c&#x27;).replace(/\u2028/g,&#x27;\\u2028&#x27;).replace(/\u2029/g,&#x27;\\u2029&#x27;);
+  return ContentService.createTextOutput(callback?callback+&#x27;(&#x27;+json+&#x27;);&#x27;:json)
+    .setMimeType(callback?ContentService.MimeType.JAVASCRIPT:ContentService.MimeType.JSON);
+}
+/** Run once in the editor to authorize and inspect metadata. Does not edit files. */
+function kiemTraDanhSach() {
+  const manifest = hskManifest_(true);
+  console.log(JSON.stringify(manifest,null,2));
+  return manifest;
+}
+/** Optional owner-only editor test. Does not return MP3 bytes to the log. */
+function kiemTraMP3Bai1() {
+  const audio = hskAudio_(&#x27;lesson-01&#x27;);
+  delete audio.base64;
+  console.log(JSON.stringify(audio,null,2));
+  return audio;
+}
+</textarea></details>
+<h3>Ch&#7881; c&#7845;p quy&#7873;n &#273;&#7885;c Drive</h3>
+<p>V&#224;o <b>Project Settings</b>, b&#7853;t <b>Show appsscript.json manifest file in editor</b>. Quay l&#7841;i Editor, thay n&#7897;i dung <code>appsscript.json</code> b&#7857;ng m&#227; sau:</p>
+<button data-copy="scope">Sao ch&#233;p appsscript.json</button><details><summary>Xem quy&#7873;n</summary><textarea class="code" id="scope" readonly>{
+  &quot;timeZone&quot;: &quot;Asia/Ho_Chi_Minh&quot;,
+  &quot;dependencies&quot;: {},
+  &quot;exceptionLogging&quot;: &quot;STACKDRIVER&quot;,
+  &quot;runtimeVersion&quot;: &quot;V8&quot;,
+  &quot;oauthScopes&quot;: [
+    &quot;https://www.googleapis.com/auth/drive.readonly&quot;
+  ]
+}</textarea></details>
+<p class="sub">Quy&#7873;n OAuth <code>drive.readonly</code> l&#224; quy&#7873;n &#273;&#7885;c Drive, kh&#244;ng ph&#7843;i quy&#7873;n ch&#7881; &#273;&#7885;c 16 file. &#272;o&#7841;n m&#227; gi&#7899;i h&#7841;n th&#234;m b&#7857;ng danh s&#225;ch 16 ID, kh&#244;ng qu&#233;t th&#432; m&#7909;c, kh&#244;ng s&#7917;a, x&#243;a ho&#7863;c &#273;&#7893;i quy&#7873;n file.</p>
+<h3>Ki&#7875;m tra v&#224; tri&#7875;n khai</h3>
+<p>Ch&#7885;n h&#224;m <code>kiemTraDanhSach</code> &#8594; <b>Run</b>. Ch&#7881; c&#7845;p quy&#7873;n sau khi ki&#7875;m tra &#273;&#250;ng d&#7921; &#225;n v&#224; m&#227; c&#7911;a b&#7841;n. Script ch&#7881; c&#7845;p audio cho file &#273;&#227; chia s&#7867; <b>Anyone with the link / Viewer</b>; kh&#244;ng t&#7921; b&#7853;t chia s&#7867;.</p>
+<p>Sau &#273;&#243;: <b>Deploy &#8594; New deployment &#8594; Web app</b>. Ch&#7885;n <b>Execute as: Me</b>, <b>Who has access: Anyone</b>, r&#7891;i <b>Deploy</b>. Sao ch&#233;p <b>Web app URL</b> k&#7871;t th&#250;c b&#7857;ng <code>/exec</code>.</p>
+<div class="note">Endpoint n&#224;y c&#244;ng khai 16 audio &#273;&#432;&#7907;c cho ph&#233;p, kh&#244;ng y&#234;u c&#7847;u ng&#432;&#7901;i h&#7885;c &#273;&#259;ng nh&#7853;p Google. Kh&#244;ng th&#234;m file c&#225; nh&#226;n v&#224;o danh s&#225;ch. N&#7871;u t&#224;i kho&#7843;n kh&#244;ng c&#243; t&#249;y ch&#7885;n Anyone, ch&#432;a th&#7875; d&#249;ng c&#225;ch n&#224;y cho kh&#225;ch kh&#244;ng &#273;&#259;ng nh&#7853;p.</div>
+</section>
+<section class="card"><h2>2. Ki&#7875;m tra ngu&#7891;n v&#224; nghe th&#7917;</h2>
+<label for="endpoint">Web app URL <code>/exec</code></label><input id="endpoint" type="url" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/.../exec">
+<div class="row"><button id="test" class="primary">Ki&#7875;m tra &amp; t&#7843;i B&#224;i 1</button><button id="all" disabled>Ki&#7875;m tra c&#7843; 16 MP3</button></div>
+<p class="sub">Ki&#7875;m tra danh s&#225;ch ch&#7881; &#273;&#7885;c t&#234;n v&#224; dung l&#432;&#7907;ng. T&#7915;ng MP3 c&#7847;n kh&#7899;p SHA-256 v&#7899;i file g&#7889;c tr&#432;&#7899;c khi ph&#225;t. Ki&#7875;m tra c&#7843; b&#7897; s&#7869; t&#7843;i l&#7847;n l&#432;&#7907;t kho&#7843;ng 155 MB d&#7919; li&#7879;u g&#7889;c (d&#7919; li&#7879;u truy&#7873;n l&#7899;n h&#417;n do base64).</p>
+<div class="note" id="status" role="status" aria-live="polite">D&#225;n URL tri&#7875;n khai, r&#7891;i b&#7845;m ki&#7875;m tra. Kh&#244;ng d&#225;n kh&#243;a API ho&#7863;c m&#7853;t kh&#7849;u.</div>
+<div id="audio-box" hidden><b id="audio-title"></b><audio id="player" controls preload="none"></audio><p class="sub">B&#7845;m Play, k&#233;o thanh tua v&#224; nghe ki&#7875;m tra. Trang kh&#244;ng t&#7921; ph&#225;t &#226;m thanh.</p></div>
+<div id="table-box" hidden><table><thead><tr><th>B&#224;i</th><th>T&#234;n file tr&#234;n Drive</th><th>Ki&#7875;m tra</th></tr></thead><tbody id="rows"></tbody></table></div>
+</section>
+<section class="card"><h2>3. L&#432;u c&#7845;u h&#236;nh d&#249;ng chung cho m&#7885;i thi&#7871;t b&#7883;</h2>
+<p>Sau khi t&#7843;i v&#224; ki&#7875;m tra B&#224;i 1 th&#224;nh c&#244;ng, t&#7843;i file c&#7845;u h&#236;nh. Thay <b>ba file</b> n&#224;y t&#7841;i c&#249;ng th&#432; m&#7909;c tr&#234;n GitHub:</p>
+<p><code>index.html</code> (trong g&#243;i n&#224;y)<br><code>hsk-drive-audio.js</code> (trong g&#243;i n&#224;y)<br><code>hsk-drive-config.js</code> (t&#7843;i b&#7857;ng n&#250;t d&#432;&#7899;i)</p>
+<div class="row"><button id="config" class="primary" disabled>T&#7843;i hsk-drive-config.js</button><button id="save-report" disabled>T&#7843;i k&#7871;t qu&#7843; ki&#7875;m tra</button></div>
+<p class="sub">Gi&#7919; nguy&#234;n <code>hsk30-textbook-*.js</code>, <code>hsk30-workbook-*.js</code> v&#224; <code>hsk-workbook-media.js</code> c&#7841;nh <code>index.html</code>, <code>CNAME</code> v&#224; file kh&#225;c. Kh&#244;ng c&#7847;n upload MP3. Kh&#244;ng upload <code>appsscript.json</code> hay <code>Code.gs</code> l&#234;n GitHub &#273;&#7875; thay cho vi&#7879;c tri&#7875;n khai tr&#234;n Google.</p>
+<div class="note warn">L&#7847;n &#273;&#7847;u m&#7895;i b&#224;i ph&#7843;i t&#7843;i xong MP3 r&#7891;i m&#7899;i nghe; &#273;&#226;y kh&#244;ng ph&#7843;i m&#225;y ch&#7911; ph&#225;t tr&#7921;c ti&#7871;p t&#7915;ng &#273;o&#7841;n nh&#432; Internet Archive. Apps Script c&#243; h&#7841;n m&#7913;c, kh&#244;ng b&#7843;o &#273;&#7843;m ph&#7909;c v&#7909; kh&#244;ng gi&#7899;i h&#7841;n.</div>
+</section>
+<footer>Ch&#7881; s&#7917; d&#7909;ng MP3 trong ph&#7841;m vi b&#7841;n c&#243; quy&#7873;n chia s&#7867;. Kh&#244;ng d&#249;ng gi&#7885;ng m&#225;y; kh&#244;ng nh&#250;ng tr&#236;nh ph&#225;t Drive.</footer>
+</main><script src="hsk-drive-audio.js"></script><script>
+'use strict';
+const $=id=>document.getElementById(id),transport=window.AlbertDriveAudio;
+const expected=transport?.getExpected()||{}, tests={}, notes=[];
+let busy=false,list=null,blobURL=null,validEndpoint='',lastReport=null;
+const label=key=>key==='mock'?'\u0110\u1ec1 t\u1ed5ng h\u1ee3p':'B\u00e0i '+Number(key.slice(-2));
+function status(text){$('status').textContent=text;}
+function lock(on){busy=on;$('test').disabled=on;$('endpoint').disabled=on;$('all').disabled=on||!list;$('config').disabled=on||!validEndpoint||!tests['lesson-01']?.ok;$('save-report').disabled=on||!lastReport;}
+function download(text,name,type){const url=URL.createObjectURL(new Blob([text],{type:type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),15000);}
+function paint(){
+ if(!list)return;$('table-box').hidden=false;$('rows').replaceChildren();
+ list.entries.forEach(item=>{
+  const row=document.createElement('tr');
+  for(const content of [label(item.key),item.name,tests[item.key]?.ok?'SHA-256 kh\u1edbp':tests[item.key]?.error||'Ch\u1edd ki\u1ec3m tra MP3']){const td=document.createElement('td');td.textContent=content;row.appendChild(td);}
+  $('rows').appendChild(row);
+ });
+}
+function report(){lastReport={at:new Date().toISOString(),endpoint:validEndpoint||$('endpoint').value.trim(),browser:navigator.userAgent,origin:location.origin,manifest:list,audioTests:tests,notes};}
+async function inspect(key){
+ const item=await transport.load(key,text=>status(label(key)+'\n'+text));
+ const a=$('player');a.pause();a.removeAttribute('src');a.load();if(blobURL)URL.revokeObjectURL(blobURL);
+ blobURL=URL.createObjectURL(item.blob);$('audio-title').textContent=label(key)+' \u00b7 '+item.name;$('audio-box').hidden=false;
+ const duration=await new Promise((resolve,reject)=>{
+  const timer=setTimeout(()=>finish(new Error('Kh\u00f4ng \u0111\u1ecdc \u0111\u01b0\u1ee3c th\u1eddi l\u01b0\u1ee3ng MP3 tr\u00ean tr\u00ecnh duy\u1ec7t n\u00e0y.')),20000);
+  function finish(err){clearTimeout(timer);a.removeEventListener('loadedmetadata',ready);a.removeEventListener('error',fail);err?reject(err):resolve(a.duration);}
+  const ready=()=>finish(Number.isFinite(a.duration)&&a.duration>0?null:new Error('Th\u1eddi l\u01b0\u1ee3ng MP3 kh\u00f4ng h\u1ee3p l\u1ec7.'));
+  const fail=()=>finish(new Error('Tr\u00ecnh duy\u1ec7t kh\u00f4ng gi\u1ea3i m\u00e3 \u0111\u01b0\u1ee3c MP3.'));
+  a.addEventListener('loadedmetadata',ready);a.addEventListener('error',fail);a.src=blobURL;a.load();
+ });
+ tests[key]={ok:true,sha256:item.sha256,bytes:item.blob.size,duration,heardByHuman:false,seekTestedByHuman:false};paint();report();
+ return item;
+}
+$('test').onclick=async()=>{
+ if(busy)return;
+ for(const key of Object.keys(tests))delete tests[key];list=null;validEndpoint='';notes.length=0;lock(true);
+ try{
+  if(!transport)throw new Error('Thi\u1ebfu hsk-drive-audio.js. Gi\u1ea3i n\u00e9n \u0111\u1ee7 g\u00f3i v\u00e0 m\u1edf l\u1ea1i.');
+  transport.configure($('endpoint').value);status('\u0110ang l\u1ea5y t\u00ean v\u00e0 dung l\u01b0\u1ee3ng c\u1ee7a 16 file\u2026');
+  list=await transport.manifest(true);validEndpoint=transport.endpoint();paint();
+  await inspect('lesson-01');status('\u0110\u00e3 gh\u00e9p \u0111\u1ee7 danh s\u00e1ch 16 file; B\u00e0i 1 kh\u1edbp SHA-256 v\u00e0 \u0111\u1ecdc \u0111\u01b0\u1ee3c th\u1eddi l\u01b0\u1ee3ng. B\u1ea5m Play, th\u1eed tua v\u00e0 nghe tr\u01b0\u1edbc khi thay app. 15 file c\u00f2n l\u1ea1i ch\u01b0a ki\u1ec3m tra n\u1ed9i dung n\u1ebfu ch\u01b0a b\u1ea5m Ki\u1ec3m tra c\u1ea3 16 MP3.');
+ }catch(e){notes.push(String(e.message||e));status(String(e.message||e));}
+ finally{report();lock(false);}
+};
+$('all').onclick=async()=>{
+ if(busy||!list)return;lock(true);
+ try{
+  for(const item of list.entries){
+   try{await inspect(item.key);}catch(e){tests[item.key]={ok:false,error:String(e.message||e)};paint();}
+  }
+  const pass=Object.values(tests).filter(x=>x.ok).length;status('K\u1ebft qu\u1ea3: '+pass+'/16 file kh\u1edbp SHA-256 v\u00e0 \u0111\u1ecdc \u0111\u01b0\u1ee3c th\u1eddi l\u01b0\u1ee3ng. Ki\u1ec3m tra n\u00e0y kh\u00f4ng thay cho vi\u1ec7c nghe v\u00e0 th\u1eed tua tr\u00ean thi\u1ebft b\u1ecb th\u1eadt.');
+ }finally{report();lock(false);}
+};
+$('config').onclick=()=>{
+ if(busy||!tests['lesson-01']?.ok||!validEndpoint)return;
+ download('/* Public deployment URL; no password or API key. Same config for every device. */\nwindow.HSK_DRIVE_AUDIO_CONFIG = '+JSON.stringify({endpoint:validEndpoint},null,2)+';\n','hsk-drive-config.js','text/javascript');
+};
+$('save-report').onclick=()=>{report();download(JSON.stringify(lastReport,null,2),'HSK_Drive_Test_Result.json','application/json');};
+document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{const field=$(b.dataset.copy);try{await navigator.clipboard.writeText(field.value);b.textContent='\u0110\u00e3 sao ch\u00e9p';}catch(e){field.closest('details').open=true;field.focus();field.select();status('B\u1ea5m Ctrl+C \u0111\u1ec3 sao ch\u00e9p ph\u1ea7n \u0111\u00e3 ch\u1ecdn.');}});
+</script></body></html>
