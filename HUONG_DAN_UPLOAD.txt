@@ -1,0 +1,76 @@
+ALBERT HSK - THU MUC PHANG, KHONG TRUNG TEN FILE
+Bản 2026-10-12.12-flat-unique-names
+
+1. CHỈ DÙNG GÓI MỚI NÀY
+Giải nén HSK_GITHUB_KHONG_TRUNG_TEN.zip ra một nơi riêng.
+Mở thư mục HSK_GITHUB_KHONG_TRUNG_TEN, tất cả file nằm cạnh index.html.
+KHÔNG còn hai thư mục asset/workbook để phải tự gộp.
+KHÔNG trộn file lesson-01.js... từ các ZIP cũ vào đây.
+KHÔNG tự đổi tên: mã app đã được sửa để đọc các tên mới.
+
+2. NHẬN BIẾT FILE
+- index.html: một file app duy nhất.
+- hsk30-textbook-01.js ... hsk30-textbook-15.js: tài nguyên Textbook.
+- hsk30-textbook-resources.js: tài liệu chung Textbook.
+- hsk30-workbook-01.js ... hsk30-workbook-15.js: ảnh Workbook.
+- hsk30-workbook-mock.js: ảnh đề tổng hợp Workbook.
+- hsk-workbook-media.js: bộ nạp ảnh theo tên mới.
+- hsk-drive-audio.js: kết nối MP3 Drive, giữ nguyên cách hoạt động.
+- CAU_HINH_AUDIO.html: trang cấu hình Drive, không phải app thứ hai.
+- HUONG_DAN_UPLOAD.txt, KIEM_TRA_DONG_GOI.json: hướng dẫn / kiểm tra.
+- THIRD_PARTY_NOTICES.txt: ghi chú quyền sử dụng.
+Tổng cộng: 39 file, tất cả tên khác nhau. Không có thư mục con.
+
+3. UPLOAD LÊN GITHUB
+A. Mở repository HSK đang dùng. Không tạo repository mới.
+B. Vào đúng nhánh và vị trí Pages đang xuất bản:
+   - /(root): nơi có index.html hiện tại.
+   - /docs: mở docs, rồi upload tại đó.
+   - Workflow tùy chỉnh: giữ nguyên thư mục workflow đang dùng.
+   Không đổi cấu hình Pages đang hoạt động.
+C. Bấm Add file > Upload files > choose your files.
+D. Trong hộp chọn file, mở thư mục mới đến khi thấy index.html.
+   Ctrl+A chọn tất cả 39 file > Open. Cũng có thể kéo cả nhóm file vào GitHub.
+   KHÔNG upload ZIP hoặc kéo thư mục bao ngoài.
+E. Chờ upload xong. Kiểm tra các đường dẫn:
+       index.html
+       hsk-workbook-media.js
+       hsk30-textbook-01.js
+       hsk30-workbook-01.js
+   Không có HSK_GITHUB_KHONG_TRUNG_TEN/ ở trước các tên này.
+   Khi dùng /docs, các file nằm cùng nhau trong docs là đúng.
+F. Nhập mô tả: Fix HSK resource filenames
+   Lưu/Commit changes. Nếu tạo nhánh mới, hợp nhất pull request vào nhánh Pages.
+G. Mở Actions, chờ lần triển khai mới nhất hoàn tất.
+H. Mở địa chỉ WEBSITE học, tải lại trang.
+
+4. KHI GITHUB BÁO THAY FILE CŨ
+Thay index.html / hsk-workbook-media.js bằng bản mới là cập nhật cần thiết.
+Textbook và Workbook nay dùng tiền tố khác nhau, không ghi đè lẫn nhau.
+Các file lesson-01.js... hoặc hsk30-assets/, hsk30-workbook/ cũ:
+- Không cần xóa ngay. Bản mới không nạp các file tài nguyên cũ đó.
+- Dù đã lỡ ghi đè chúng, bộ mới có đủ dữ liệu thay thế.
+- KHÔNG xóa CNAME, .github, từ điển, tài nguyên HSK 2.0 hoặc cấu hình riêng.
+
+5. GIỮ NGUYÊN CẤU HÌNH AUDIO
+Bộ này KHÔNG có hsk-drive-config.js rỗng.
+Nếu file cấu hình đã hoạt động trên GitHub, giữ nguyên.
+Không cần tạo Apps Script mới hay upload lại MP3.
+Nếu chưa cấu hình, ảnh/bài tập vẫn dùng được; audio Drive chưa sẵn sàng.
+Dùng CAU_HINH_AUDIO.html để tiếp tục cấu hình khi cần.
+
+6. KIỂM TRA SAU KHI UPLOAD
+- Bài 2 > Textbook > Khởi động: có ảnh Textbook.
+- Bài 2 > Bài tập > Nghe: có ảnh câu 1.
+- Bấm Trang 13 / Trang 14: mở được trang sách.
+- Chuyển Textbook / Bài tập: vẫn ở đúng bài.
+- Thử trên điện thoại bằng cùng địa chỉ website.
+Không xóa dữ liệu trình duyệt để thử; có thể mất bài làm lưu cục bộ.
+
+Chỉ đổi tên file, đường dẫn nạp và hướng dẫn liên quan.
+Giữ nguyên nội dung bài, đáp án, ảnh, dữ liệu Textbook, kết nối Drive.
+Chưa triển khai lên GitHub hoặc kiểm thử Drive thật của bạn.
+
+Tài liệu GitHub chính thức:
+https://docs.github.com/en/repositories/working-with-files/managing-files/adding-a-file-to-a-repository
+https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site

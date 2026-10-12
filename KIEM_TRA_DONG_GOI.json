@@ -1,0 +1,993 @@
+{
+  "build": "2026-10-12.12-flat-unique-names",
+  "source_archive": "HSK_GITHUB_MOT_THU_MUC.zip",
+  "purpose": "Unique flat resource filenames; update the two loaders; preserve curriculum, media and Drive transport.",
+  "layout": "All files next to index.html; no asset subfolders required for this version.",
+  "mapping": [
+    {
+      "from": "hsk30-assets/lesson-01.js",
+      "to": "hsk30-textbook-01.js",
+      "bytes": 7682623,
+      "sha256": "da4ff390e044ec5da1d4c5645247d0cf94deb9010df8580fc86f3baa1e174ca9",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-02.js",
+      "to": "hsk30-textbook-02.js",
+      "bytes": 7463291,
+      "sha256": "6fb0d4caf250bb75336ffc3a4e34906f644280d3088f8ac75f5fbbaa2914c8ec",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-03.js",
+      "to": "hsk30-textbook-03.js",
+      "bytes": 7344879,
+      "sha256": "c101b3aed1ae01a05c2973d3f6e803ec05f94be931361ca979de1d3cc99dd180",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-04.js",
+      "to": "hsk30-textbook-04.js",
+      "bytes": 7313887,
+      "sha256": "c8cfa63058ff0a36e8628b8ffdbcea33e4180a88d9d35cfc602ad7755918ed7c",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-05.js",
+      "to": "hsk30-textbook-05.js",
+      "bytes": 8714827,
+      "sha256": "5f6c558f659fd9b385252d2bc18769672faa5aea13089b5a7b96cb677ea55fe2",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-06.js",
+      "to": "hsk30-textbook-06.js",
+      "bytes": 8371739,
+      "sha256": "f252dc346dfecd92777bc3b6cc3e4347b93da7ee94a69d35ac4898988c425f10",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-07.js",
+      "to": "hsk30-textbook-07.js",
+      "bytes": 6685627,
+      "sha256": "d94a665d826dc658bc4da7190513f8064117dce3c807bdd7ff218e7c9ea66fa9",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-08.js",
+      "to": "hsk30-textbook-08.js",
+      "bytes": 7784135,
+      "sha256": "b3d87c55accda7c28ca297a898840eb23f60578cb823eb855fc1ffec78c50807",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-09.js",
+      "to": "hsk30-textbook-09.js",
+      "bytes": 7743495,
+      "sha256": "d272f19e35f0e0455c7ae0db6aa9f5116949e3b89f28c827b8284eae09f55060",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-10.js",
+      "to": "hsk30-textbook-10.js",
+      "bytes": 7323524,
+      "sha256": "4c46815e457b3e2713dcd32885cd0e9842e1abfe2792235206a0b8b260ea64a6",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-11.js",
+      "to": "hsk30-textbook-11.js",
+      "bytes": 8081068,
+      "sha256": "c1e9cb4a554531e569135462cb91243dc1d711e43014af220db639c5009ac493",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-12.js",
+      "to": "hsk30-textbook-12.js",
+      "bytes": 7912892,
+      "sha256": "93c980c100be8a0c1ce21054a65c81c22c21643e6e9959415a92f9c7042a49d2",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-13.js",
+      "to": "hsk30-textbook-13.js",
+      "bytes": 8262432,
+      "sha256": "b7d1bbf39be3731a30212bea259b199041ce672701ec9696c7af00bea063f8f2",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-14.js",
+      "to": "hsk30-textbook-14.js",
+      "bytes": 8421868,
+      "sha256": "c30e375786aa9de98d7f9ccbd5b954a4793a3eb27bf63f4c93e678225cb9866d",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/lesson-15.js",
+      "to": "hsk30-textbook-15.js",
+      "bytes": 8375208,
+      "sha256": "7a855d6dc7d5845acbb63982751b73b7945e303c41a76c9e45dc6b9205bb9a23",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-assets/resources.js",
+      "to": "hsk30-textbook-resources.js",
+      "bytes": 7190069,
+      "sha256": "929773e569058368be660d9b988184076060cbf0ed7710104891f86e27303cf0",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-01.js",
+      "to": "hsk30-workbook-01.js",
+      "bytes": 2656545,
+      "sha256": "752f50cd1a4f618987dba1c471dc420b362222d949c7df8e27bb0e5c223cd348",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-02.js",
+      "to": "hsk30-workbook-02.js",
+      "bytes": 2592977,
+      "sha256": "ff62d08e194ecba13d8cf7bdcc75f9da69085deb0a4f005ca6dde709bb65aa34",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-03.js",
+      "to": "hsk30-workbook-03.js",
+      "bytes": 2678193,
+      "sha256": "9405bbfcdfcf340cce0b9a78ebebfe91965d18e139ef361862b98f3460defc40",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-04.js",
+      "to": "hsk30-workbook-04.js",
+      "bytes": 2757241,
+      "sha256": "6bd4d4fe3d46427cfb02a608a8384cc495479b5e754d123fc13b8f405103edcd",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-05.js",
+      "to": "hsk30-workbook-05.js",
+      "bytes": 2753109,
+      "sha256": "6ad175ba54e91dee92336b2a56f83d2a2dad11dccc38de5ed3a85750ae9c3a1b",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-06.js",
+      "to": "hsk30-workbook-06.js",
+      "bytes": 2729141,
+      "sha256": "af978a9bf4a68ce36ec66dd0f579d9cc79fed6f5a598d793b78734f68488faf6",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-07.js",
+      "to": "hsk30-workbook-07.js",
+      "bytes": 2679961,
+      "sha256": "ff68abadc91d6a77ea16986cc4603df927da5c37e8863375b0f54ca46772d339",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-08.js",
+      "to": "hsk30-workbook-08.js",
+      "bytes": 2762253,
+      "sha256": "ceac374e86f6b7b4685c2004ea2bff6a67aee1bc305a3857417bd2fc3185310c",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-09.js",
+      "to": "hsk30-workbook-09.js",
+      "bytes": 2785205,
+      "sha256": "20ec2ee32f26789d9abf74c1b68e072ee6c56e317c0149b29110151659f30e40",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-10.js",
+      "to": "hsk30-workbook-10.js",
+      "bytes": 2582029,
+      "sha256": "efb630367cb45c2480e744e0244751ee707dfb743eac3800acad38f480fdb156",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-11.js",
+      "to": "hsk30-workbook-11.js",
+      "bytes": 2557253,
+      "sha256": "cb00f8c402cd42d129d85526b47a895505dcf520555957df480503c4ba1b4e8e",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-12.js",
+      "to": "hsk30-workbook-12.js",
+      "bytes": 2678037,
+      "sha256": "92d4c2c140494aa5120fb2aaf35eba94b72ce95d2ab683b740480755e581be8f",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-13.js",
+      "to": "hsk30-workbook-13.js",
+      "bytes": 2702669,
+      "sha256": "cb5051b7af26a82fcdd459b2688e1c455d4ffd73584c199cc3c1627c902d8948",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-14.js",
+      "to": "hsk30-workbook-14.js",
+      "bytes": 2818537,
+      "sha256": "2128cca75c396a4a5a9fbd376005756f2d816ddf249d6cb913b01ec5082beadf",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/lesson-15.js",
+      "to": "hsk30-workbook-15.js",
+      "bytes": 2822169,
+      "sha256": "7e29ab7b0452d4dda93cf2d56f585de377b84652225a7712f4142a065e1e3642",
+      "unchanged": true
+    },
+    {
+      "from": "hsk30-workbook/mock.js",
+      "to": "hsk30-workbook-mock.js",
+      "bytes": 2955927,
+      "sha256": "d149473aa5891abc3dd6614faa6830820cd70d72adc90ef8b36499709ccc4d49",
+      "unchanged": true
+    }
+  ],
+  "preserved": {
+    "resource_files_byte_identical": 32,
+    "curriculum_json_blocks_identical": 6,
+    "drive_transport_identical": true,
+    "drive_config_included": false
+  },
+  "limitations": [
+    "Not deployed to the user GitHub repository.",
+    "Live Google Drive, Supabase authentication, and AI grading were not exercised."
+  ],
+  "static_checks": {
+    "flat_file_count": 39,
+    "unique_filenames_case_insensitive": true,
+    "subfolders": 0,
+    "index_html_count": 1,
+    "max_file_bytes": 15764065,
+    "under_github_web_file_limit_25_MiB": true,
+    "syntax_blocks_parsed": 120,
+    "workbook_images_validated": 129,
+    "workbook_pages_validated": 166,
+    "resource_payloads_byte_identical": 32
+  },
+  "browser_checks": {
+    "environment": "Chromium local document, HTTPS project base simulated with routed local assets; memory storage shim; external network blocked; no live account services.",
+    "results": [
+      {
+        "check": "textbook overview images",
+        "lesson": 1,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 1,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 1,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 1,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 1,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 1,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 2,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 2,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 2,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 2,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 2,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 2,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 3,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 3,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 3,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 3,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 3,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 3,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 4,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 4,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 4,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 4,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 4,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 4,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 5,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 5,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 5,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 5,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 5,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 5,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 6,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 6,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 6,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 6,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 6,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 6,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 7,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 7,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 7,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 7,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 7,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 7,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 8,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 8,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 8,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 8,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 8,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 8,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 9,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 9,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 9,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 9,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 9,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 9,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 10,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 10,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 10,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 10,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 10,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 10,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 11,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 11,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 11,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 11,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 11,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 11,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 12,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 12,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 12,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 12,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 12,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 12,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 13,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 13,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 13,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 13,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 13,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 13,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 14,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 14,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 14,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 14,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 14,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 14,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "textbook overview images",
+        "lesson": 15,
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 15,
+        "section": "listening",
+        "images": 4,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 15,
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 15,
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 15,
+        "section": "vocabulary",
+        "images": 2,
+        "pass": true
+      },
+      {
+        "check": "workbook section images",
+        "lesson": 15,
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "workbook source page",
+        "pdfPage": 20,
+        "printedPage": 13,
+        "pass": true
+      },
+      {
+        "check": "workbook source page",
+        "pdfPage": 21,
+        "printedPage": 14,
+        "pass": true
+      },
+      {
+        "check": "lesson 2 answer survives material switches",
+        "pass": true
+      },
+      {
+        "check": "mock section",
+        "section": "listening",
+        "images": 7,
+        "pass": true
+      },
+      {
+        "check": "mock section",
+        "section": "reading",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "mock section",
+        "section": "writing",
+        "images": 1,
+        "pass": true
+      },
+      {
+        "check": "mock section",
+        "section": "transcript",
+        "images": 0,
+        "pass": true
+      },
+      {
+        "check": "responsive layout",
+        "width": 360,
+        "dimensions": {
+          "window": 360,
+          "doc": 360,
+          "main": 360
+        },
+        "pass": true
+      },
+      {
+        "check": "responsive layout",
+        "width": 390,
+        "dimensions": {
+          "window": 390,
+          "doc": 390,
+          "main": 390
+        },
+        "pass": true
+      },
+      {
+        "check": "responsive layout",
+        "width": 768,
+        "dimensions": {
+          "window": 768,
+          "doc": 768,
+          "main": 768
+        },
+        "pass": true
+      },
+      {
+        "check": "responsive layout",
+        "width": 1440,
+        "dimensions": {
+          "window": 1440,
+          "doc": 1440,
+          "main": 1440
+        },
+        "pass": true
+      }
+    ],
+    "all_32_unique_resource_urls_loaded": true,
+    "missing_local_files": [],
+    "javascript_errors": [],
+    "requested_resource_files": [
+      "hsk-drive-audio.js",
+      "hsk-workbook-media.js",
+      "hsk30-textbook-01.js",
+      "hsk30-textbook-02.js",
+      "hsk30-textbook-03.js",
+      "hsk30-textbook-04.js",
+      "hsk30-textbook-05.js",
+      "hsk30-textbook-06.js",
+      "hsk30-textbook-07.js",
+      "hsk30-textbook-08.js",
+      "hsk30-textbook-09.js",
+      "hsk30-textbook-10.js",
+      "hsk30-textbook-11.js",
+      "hsk30-textbook-12.js",
+      "hsk30-textbook-13.js",
+      "hsk30-textbook-14.js",
+      "hsk30-textbook-15.js",
+      "hsk30-textbook-resources.js",
+      "hsk30-workbook-01.js",
+      "hsk30-workbook-02.js",
+      "hsk30-workbook-03.js",
+      "hsk30-workbook-04.js",
+      "hsk30-workbook-05.js",
+      "hsk30-workbook-06.js",
+      "hsk30-workbook-07.js",
+      "hsk30-workbook-08.js",
+      "hsk30-workbook-09.js",
+      "hsk30-workbook-10.js",
+      "hsk30-workbook-11.js",
+      "hsk30-workbook-12.js",
+      "hsk30-workbook-13.js",
+      "hsk30-workbook-14.js",
+      "hsk30-workbook-15.js",
+      "hsk30-workbook-mock.js"
+    ]
+  }
+}
