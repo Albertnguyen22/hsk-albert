@@ -864,7 +864,7 @@ audio.ex-player { height:34px;border-radius:8px;outline:none;flex:1;min-width:0;
 </style>
 <script src="hsk-drive-config.js"></script>
 <script src="hsk-drive-audio.js"></script>
-<script src="hsk-workbook-media.js"></script>
+<script src="hsk-workbook-media.js?v=20261012-flat1"></script>
 </head>
 <body>
 
@@ -34664,8 +34664,8 @@ window.HSK30_ACCEPT_PACK=function(n,files){packCache.set(Number(n),{files,urls:n
 function ensurePack(n){
  n=Number(n);if(packCache.has(n)){touchPack(n);return Promise.resolve(packCache.get(n));}if(pending.has(n))return pending.get(n).promise;
  let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});pending.set(n,{promise,resolve,reject});setAssetStatus('Đang nạp trang sách và MP3 gốc của '+(n?'bài '+n:'tài liệu')+'…');
- const script=document.createElement('script');script.src=new URL('hsk30-assets/'+(n?'lesson-'+pad(n):'resources')+'.js?v=20261009-simple3',document.baseURI).href;script.async=true;
- const fail=()=>{if(pending.has(n)){pending.get(n).reject(new Error('Không nạp được gói tài nguyên'));pending.delete(n);}script.remove();setAssetStatus('Chưa nạp được tài nguyên. Thư mục hsk30-assets phải nằm cùng cấp với index.html. Kiểm tra kết nối rồi nhấn Nạp lại.',true);};
+ const script=document.createElement('script');script.src=new URL('hsk30-textbook-'+(n?pad(n):'resources')+'.js?v=20261012-flat1',document.baseURI).href;script.async=true;
+ const fail=()=>{if(pending.has(n)){pending.get(n).reject(new Error('Không nạp được gói tài nguyên'));pending.delete(n);}script.remove();setAssetStatus('Chưa nạp được tài nguyên Textbook. Đặt các file hsk30-textbook-01.js đến hsk30-textbook-15.js và hsk30-textbook-resources.js cạnh index.html, rồi nhấn Nạp lại.',true);};
  script.onerror=fail;script.onload=()=>{if(!packCache.has(n))fail();else script.remove();};document.body.appendChild(script);return promise;
 }
 async function mediaURL(n,path){const pack=await ensurePack(n);if(pack.urls.has(path))return pack.urls.get(path);const f=pack.files[path];if(!f)throw new Error('Thiếu tài nguyên '+path);const raw=atob(f.b64),bytes=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);const u=URL.createObjectURL(new Blob([bytes],{type:f.mime}));pack.urls.set(path,u);return u;}
@@ -34686,7 +34686,7 @@ function wbHydrateImages(scope=app){
   }).catch(()=>{
    node.dataset.wbBound='';node.removeAttribute('aria-busy');
    node.alt='Chưa tải được ảnh Workbook.';
-   setAssetStatus('Chưa tải được gói ảnh. Kiểm tra hsk-workbook-media.js và thư mục hsk30-workbook.',true);
+   setAssetStatus('Chưa tải được gói ảnh. Kiểm tra hsk-workbook-media.js và các file hsk30-workbook-XX.js cạnh index.html.',true);
   });
  });
 }
@@ -34995,7 +34995,7 @@ function installEvents(){
  else if(act==='import')$('#import-file').click();
  else if(act==='sync'){if(userId==='guest'){cloudStatus='Chế độ khách: đang lưu trên trình duyệt. Đăng nhập bằng tài khoản của app để đồng bộ.';updateProgress();}else{cloudLoaded.delete(userId+':'+lessonId);await readCloud(lessonId);await syncLesson(lessonId);}}
  else if(act==='retry'){$$('[data-asset]').forEach(el=>{if(!el.getAttribute('src')&&!el.getAttribute('href'))el.dataset.bound='';});hydrate(root);}
- else if(act==='download-audio'){const track=b.dataset.track;try{const url=await mediaURL(Number(track.split('-')[0]),'audio/'+track+'.mp3');const a=document.createElement('a');a.href=url;a.download=track+'.mp3';a.click();}catch(e){setAssetStatus('Chưa nạp được MP3. Kiểm tra thư mục hsk30-assets rồi thử lại.',true);}}
+ else if(act==='download-audio'){const track=b.dataset.track;try{const url=await mediaURL(Number(track.split('-')[0]),'audio/'+track+'.mp3');const a=document.createElement('a');a.href=url;a.download=track+'.mp3';a.click();}catch(e){setAssetStatus('Chưa nạp được MP3 Textbook. Kiểm tra file hsk30-textbook-XX.js cạnh index.html rồi thử lại.',true);}}
  else if(['seek','set-a','set-b','clear-ab'].includes(act)){const box=b.closest('.audio'),a=box.querySelector('audio'),label=box.querySelector('.ab-label');if(act==='seek'){if(Number.isFinite(a.duration))a.currentTime=Math.max(0,Math.min(a.duration,a.currentTime+Number(b.dataset.seconds)));}else if(act==='set-a'){a.dataset.abA=String(a.currentTime);a.dataset.abOn='0';label.textContent='A: '+a.currentTime.toFixed(1)+'s · tiếp tục nghe, rồi đặt B';}else if(act==='set-b'){const start=Number(a.dataset.abA);if(!Number.isFinite(start)||a.currentTime<=start+.15){label.textContent='Đặt A trước, sau đó đặt B ở thời điểm muộn hơn.';}else{a.dataset.abB=String(a.currentTime);a.dataset.abOn='1';a.loop=false;box.querySelector('[data-audio-loop]').checked=false;label.textContent='Lặp A–B: '+start.toFixed(1)+'s → '+a.currentTime.toFixed(1)+'s';a.currentTime=start;}}else{delete a.dataset.abA;delete a.dataset.abB;delete a.dataset.abOn;label.textContent='A–B: lặp phần cần nghe kỹ';}}
  });
  window.addEventListener('online',()=>{scheduleSync(lessonId);});window.addEventListener('beforeunload',writeStore);document.addEventListener('visibilitychange',()=>{if(document.hidden)writeStore();else accountChanged();});
@@ -35576,7 +35576,6 @@ function installDictionary(){
 
 /* Workbook module: source-key checking is local; AI remains an explicit, authenticated group request. */
 const WB=JSON.parse(document.getElementById('hsk30-workbook-data').textContent);
-const WB_BASE='hsk30-workbook/';
 let wbSection='listening',wbSourcePage=null,wbFocusField=null,mockReturn=null;
 const WB_TRANSCRIPTS=JSON.parse(document.getElementById('hsk30-workbook-transcripts').textContent);
 const WB_PAGES=[...new Set(WB.lessons.flatMap(l=>l.pages).concat([158,159,160,161,162,163,164,165,166,167,168,169,170,172,173,174]))].sort((a,b)=>a-b);
@@ -35888,7 +35887,7 @@ function installWorkbookEvents(){
   [...document.querySelectorAll('audio'),...root.querySelectorAll('audio')].forEach(a=>{if(a!==e.target)a.pause();});
  },true);
  root.addEventListener('error',e=>{
-  if(e.target.matches?.('.wb-image'))e.target.alt='Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c \u1ea3nh workbook. Ki\u1ec3m tra th\u01b0 m\u1ee5c hsk30-workbook c\u00f9ng c\u1ea5p index.html.';
+  if(e.target.matches?.('.wb-image'))e.target.alt='Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c \u1ea3nh Workbook. Ki\u1ec3m tra file hsk30-workbook-XX.js v\u00e0 hsk-workbook-media.js c\u1ea1nh index.html.';
   if(e.target.matches?.('[data-wb-original]')){const out=e.target.closest('.wb-original-audio')?.querySelector('.wb-original-error');if(out)out.textContent='Ch\u01b0a t\u1ea3i \u0111\u01b0\u1ee3c b\u1ea3n thu g\u1ed1c. B\u00e0i l\u00e0m v\u1eabn \u0111\u01b0\u1ee3c gi\u1eef.';}
  },true);
  root.addEventListener('click',e=>{
@@ -35951,7 +35950,7 @@ function workbookGradingPayload(group,tasks,n){
  const question=rules+'\n\nDỮ LIỆU CỤM BÀI:\n'+JSON.stringify({lesson:lessonScope,context:group.context,items});
  return {mode:'tutor',purpose:'workbook_group_grading',exerciseType:'hsk30_workbook_group',exerciseId:'hsk30-hsk2-'+n+'-'+group.id,course:'hsk2',courseVersion:'3.0',hskLevel:2,lessonId:n,lessonTitle:lessonScope.lessonTitle,lessonScope,question,userQuestion:question,prompt:question,systemPrompt:rules,history:[],targetWord:'',maxTokens:Math.min(6000,1200+tasks.length*500),max_tokens:Math.min(6000,1200+tasks.length*500)};
 }
-window.AlbertHSK30={build:'2026-10-12.11-single-folder',setEdition,openLesson:goLesson,getCounts:()=>({lessons:DATA.length,texts:DATA.reduce((a,l)=>a+l.texts.length,0),grammar:DATA.reduce((a,l)=>a+l.grammar.length,0),vocab:DATA.reduce((a,l)=>a+l.vocab.length,0),tracks:120,workbookTracks:16,totalTracks:136}),getUiVersion:()=>({grammarGuides:45,grammarExamplePairs:90,grammarPinyin:true,dictionaryToggle:true,gradeButtonLabel:'AI chấm',textbookSections:5,textbookTabs:5,stickyStudyTabs:true,groupGrading:true,lessonTabs:4,workbookQuestions:510,workbookVocabularyFills:45,workbookOpenQuestions:30,workbookTranscriptQuestions:175,workbookTranscriptTab:true,workbookOriginalAudioOnly:true,workbookVerifiedRecordings:16,workbookStickyAudio:true,workbookPlaybackMemory:true,workbookAudioContinuesInTranscript:true,sharedLessonWorkspace:true,lessonScopedMaterials:true,perLessonSectionMemory:true,originalAudioIntegrated:true,driveGateway:true,driveSetupRequired:true,liveDriveVerified:false,questionCount:240,inlineVocabulary:true,inlineComprehension:true,originalExerciseComparison:false,pictureCards:60,iconSet:"Microsoft Fluent UI System Icons Regular"}),getLocation:()=>({edition,view,lessonId,tab,sectionTab,workbookSection:wbSection,textId,userId}),getWorkbookAudioManifest:()=>JSON.parse(JSON.stringify(WB_RECORDINGS)),getWorkbookData:()=>WB,openWorkbookMock:goWorkbookMock,getSourceData:()=>DATA,getGrammarGuides:()=>GRAMMAR_GUIDES,getGradeGroups:n=>buildGradeGroups(Number(n)||lessonId).map(g=>({id:g.id,title:g.title,items:g.items})),selectSection};
+window.AlbertHSK30={build:'2026-10-12.12-flat-unique-names',setEdition,openLesson:goLesson,getCounts:()=>({lessons:DATA.length,texts:DATA.reduce((a,l)=>a+l.texts.length,0),grammar:DATA.reduce((a,l)=>a+l.grammar.length,0),vocab:DATA.reduce((a,l)=>a+l.vocab.length,0),tracks:120,workbookTracks:16,totalTracks:136}),getUiVersion:()=>({grammarGuides:45,grammarExamplePairs:90,grammarPinyin:true,dictionaryToggle:true,gradeButtonLabel:'AI chấm',textbookSections:5,textbookTabs:5,stickyStudyTabs:true,groupGrading:true,lessonTabs:4,workbookQuestions:510,workbookVocabularyFills:45,workbookOpenQuestions:30,workbookTranscriptQuestions:175,workbookTranscriptTab:true,workbookOriginalAudioOnly:true,workbookVerifiedRecordings:16,workbookStickyAudio:true,workbookPlaybackMemory:true,workbookAudioContinuesInTranscript:true,sharedLessonWorkspace:true,lessonScopedMaterials:true,perLessonSectionMemory:true,originalAudioIntegrated:true,driveGateway:true,driveSetupRequired:true,liveDriveVerified:false,questionCount:240,inlineVocabulary:true,inlineComprehension:true,originalExerciseComparison:false,pictureCards:60,iconSet:"Microsoft Fluent UI System Icons Regular"}),getLocation:()=>({edition,view,lessonId,tab,sectionTab,workbookSection:wbSection,textId,userId}),getWorkbookAudioManifest:()=>JSON.parse(JSON.stringify(WB_RECORDINGS)),getWorkbookData:()=>WB,openWorkbookMock:goWorkbookMock,getSourceData:()=>DATA,getGrammarGuides:()=>GRAMMAR_GUIDES,getGradeGroups:n=>buildGradeGroups(Number(n)||lessonId).map(g=>({id:g.id,title:g.title,items:g.items})),selectSection};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
 
