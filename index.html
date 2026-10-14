@@ -40344,7 +40344,7 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
 @media (max-width:640px){#albert-menu-appbar .albert-appbar-logo{width:36px!important;height:36px!important}body #albert-menu-appbar #albert-menu-app-name strong{font-size:16px!important}}
 </style>
 
-<!-- HSK Albert: giao diện giống app cho trình duyệt điện thoại / iPad (người dùng tự chọn; máy tính không đổi) -->
+<!-- HSK Albert: giao diện giống app cho trình duyệt điện thoại / iPad -->
 <script id="albert-web-app-ui">
 /*
  * HSK Albert — giao diện gọn cho app Android (CHỈ chạy trong app, web không bị ảnh hưởng).
@@ -42250,6 +42250,151 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(start, 0); });
   else setTimeout(start, 0);
+})();
+
+</script>
+<!-- HSK Albert: bắt buộc đăng nhập -->
+<script id="albert-web-auth-gate">
+/* HSK Albert — bắt buộc đăng nhập trên bản web (mọi thiết bị). App Android có màn hình đăng nhập riêng.
+ * Dùng lại đúng chức năng đăng nhập của web (hskSignIn / hskSignUp / hskForgotPassword, Supabase).
+ * - Phiên đăng nhập được kiểm tra với máy chủ Supabase (auth.getUser), phiên giả/bị thu hồi sẽ bị chặn.
+ * - Chưa đăng nhập: nội dung trang bị ẩn hẳn; xoá màn hình chặn bằng công cụ trình duyệt thì nó tự hiện lại.
+ * - Không chặn luồng đặt lại mật khẩu (link trong email). */
+(function () {
+  'use strict';
+  try { if (window.top !== window) return; } catch (e) { return; }
+  if (window.__albertWebGate) return;
+  if (window.ALBERT_ANDROID_APP || /HSKAlbertAndroid/.test(navigator.userAgent || '')) return; // app có màn hình riêng
+  window.__albertWebGate = true;
+
+  var AUTH_KEY = 'sb-pdsxreonrlrfcotszblj-auth-token';
+  var F = 'system-ui,-apple-system,Roboto,"Segoe UI",sans-serif';
+  var gate = null, serverDenied = false, styleEl = null;
+
+  function hasLocalSession() {
+    if (window.hskCurrentUser) return true;
+    var keys = [AUTH_KEY];
+    try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k) && keys.indexOf(k) < 0) keys.push(k); } } catch (e) { /* ignore */ }
+    return keys.some(function (k) {
+      try { var v = JSON.parse(localStorage.getItem(k) || 'null'); var s = v && (v.currentSession || v); return !!(s && (s.refresh_token || s.access_token)); }
+      catch (e) { return false; }
+    });
+  }
+  function recovering() {
+    return !!window.hskRecoveryInProgress || /type=recovery|access_token=/.test(location.hash || '') || /type=recovery/.test(location.search || '');
+  }
+  function shouldLock() { return !recovering() && (serverDenied || !hasLocalSession()); }
+
+  // Hỏi máy chủ: phiên còn hợp lệ không? true / false / null (không xác định được, ví dụ mất mạng).
+  function verifyServer() {
+    var sb = window.hskSupabase;
+    if (!sb || !sb.auth || typeof sb.auth.getUser !== 'function' || navigator.onLine === false || !hasLocalSession()) return;
+    sb.auth.getUser().then(function (r) {
+      if (r && r.data && r.data.user) { serverDenied = false; }
+      else if (r && r.error && (r.error.status === 401 || r.error.status === 403 || /jwt|token|session|expired|invalid/i.test(r.error.message || ''))) { serverDenied = true; }
+      enforce();
+    }).catch(function () { /* mạng lỗi: giữ nguyên */ });
+  }
+
+  var CSS = [
+    'html.albert-locked,html.albert-locked body{overflow:hidden!important}',
+    'html.albert-locked body>*:not(#albert-wgate){visibility:hidden!important}',
+    '#albert-wgate{position:fixed;inset:0;z-index:2147483000;background:#faf8f3;overflow-y:auto;font-family:' + F + ';color:#1a1a2e;visibility:visible!important;display:block!important}',
+    '#albert-wgate .box{max-width:400px;margin:0 auto;padding:max(40px,9vh) 24px 32px;display:flex;flex-direction:column}',
+    '#albert-wgate .logo{width:84px;height:84px;object-fit:contain;align-self:center}',
+    '#albert-wgate h1{margin:14px 0 4px;text-align:center;color:#d80117;font-size:28px;font-weight:700}',
+    '#albert-wgate .lead{margin:0 0 24px;text-align:center;color:#4a4754;font-size:15px;line-height:1.45}',
+    '#albert-wgate label{font-size:13px;font-weight:600;color:#4a4754;margin:0 2px 6px}',
+    '#albert-wgate input{height:48px;border:1px solid #e2ddd2;border-radius:8px;background:#fff;padding:0 14px;font:16px ' + F + ';color:#1a1a2e;margin-bottom:14px;outline:none;box-sizing:border-box;width:100%}',
+    '#albert-wgate input:focus{border-color:#c0392b;box-shadow:0 0 0 3px rgba(192,57,43,.15)}',
+    '#albert-wgate .pw{position:relative}#albert-wgate .pw input{padding-right:64px}',
+    '#albert-wgate .pw button{position:absolute;right:6px;top:6px;height:36px;border:0;background:none;color:#7a7568;font:600 13px ' + F + ';padding:0 10px;cursor:pointer}',
+    '#albert-wgate .primary{height:50px;border:0;border-radius:8px;background:#c0392b;color:#fff;font:600 16px ' + F + ';margin-top:4px;cursor:pointer;box-shadow:0 2px 4px rgba(26,26,46,.14)}',
+    '#albert-wgate .secondary{height:48px;border:1px solid #e2ddd2;border-radius:8px;background:#fff;color:#1a1a2e;font:600 15px ' + F + ';margin-top:10px;cursor:pointer}',
+    '#albert-wgate .link{border:0;background:none;color:#c0392b;font:600 14px ' + F + ';margin:14px auto 0;padding:6px;cursor:pointer}',
+    '#albert-wgate .msg{min-height:20px;margin:10px 2px 0;font-size:13.5px;color:#4a4754;text-align:center;line-height:1.4}',
+    '#albert-wgate .msg.err{color:#c0392b}',
+    '#albert-wgate .why{margin-top:22px;font-size:12.5px;color:#7a7568;text-align:center;line-height:1.45}'
+  ].join('\n');
+
+  function ensureStyle() {
+    if (styleEl && styleEl.isConnected) return;
+    styleEl = document.createElement('style');
+    styleEl.id = 'albert-wgate-style';
+    styleEl.textContent = CSS;
+    (document.head || document.documentElement).appendChild(styleEl);
+  }
+
+  function buildGate() {
+    var logoImg = document.querySelector('.albert-logo-img');
+    var logo = logoImg && logoImg.getAttribute('src') ? '<img class="logo" alt="" src="' + logoImg.getAttribute('src') + '">' : '';
+    var g = document.createElement('div');
+    g.id = 'albert-wgate';
+    g.setAttribute('role', 'dialog');
+    g.setAttribute('aria-modal', 'true');
+    g.setAttribute('aria-label', 'Đăng nhập');
+    g.innerHTML = '<div class="box">' + logo + '<h1>HSK Albert</h1>' +
+      '<p class="lead">Đăng nhập để học và lưu tiến độ trên mọi thiết bị.</p>' +
+      '<label for="albert-wg-email">Email</label><input id="albert-wg-email" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="ban@email.com">' +
+      '<label for="albert-wg-pass">Mật khẩu</label><div class="pw"><input id="albert-wg-pass" type="password" autocomplete="current-password" placeholder="Mật khẩu"><button type="button" class="show">Hiện</button></div>' +
+      '<button type="button" class="primary act" data-fn="hskSignIn">Đăng nhập</button>' +
+      '<button type="button" class="secondary act" data-fn="hskSignUp">Tạo tài khoản mới</button>' +
+      '<button type="button" class="link act" data-fn="hskForgotPassword">Quên mật khẩu?</button>' +
+      '<div class="msg" aria-live="polite"></div>' +
+      '<div class="why">Tài khoản dùng chung với app Android HSK Albert.</div></div>';
+    var pass = g.querySelector('#albert-wg-pass');
+    g.querySelector('.show').addEventListener('click', function () {
+      var hidden = pass.type === 'password';
+      pass.type = hidden ? 'text' : 'password';
+      this.textContent = hidden ? 'Ẩn' : 'Hiện';
+    });
+    pass.addEventListener('keydown', function (e) { if (e.key === 'Enter') act('hskSignIn'); });
+    Array.prototype.forEach.call(g.querySelectorAll('.act'), function (b) { b.addEventListener('click', function () { act(b.getAttribute('data-fn')); }); });
+    return g;
+  }
+
+  function msg(t, err) { var m = gate && gate.querySelector('.msg'); if (m) { m.textContent = t || ''; m.classList.toggle('err', !!err); } }
+
+  function act(fn) {
+    var email = gate.querySelector('#albert-wg-email').value.trim();
+    var pw = gate.querySelector('#albert-wg-pass').value;
+    if (!email) { msg('Hãy nhập email.', true); return; }
+    if (fn !== 'hskForgotPassword' && !pw) { msg('Hãy nhập mật khẩu.', true); return; }
+    if (navigator.onLine === false) { msg('Cần có mạng để đăng nhập.', true); return; }
+    var we = document.getElementById('auth-email'), wp = document.getElementById('auth-password');
+    if (we) { we.value = email; we.dispatchEvent(new Event('input', { bubbles: true })); }
+    if (wp) { wp.value = pw; wp.dispatchEvent(new Event('input', { bubbles: true })); }
+    if (typeof window[fn] !== 'function') { msg('Chưa tải xong chức năng đăng nhập, thử lại sau giây lát.', true); return; }
+    serverDenied = false;
+    msg(fn === 'hskForgotPassword' ? 'Đang gửi email đặt lại mật khẩu…' : 'Đang xử lý…');
+    try { window[fn](); } catch (e) { msg('Có lỗi, hãy thử lại.', true); }
+  }
+
+  function enforce() {
+    if (!document.body) return;
+    if (shouldLock()) {
+      ensureStyle();
+      document.documentElement.classList.add('albert-locked');
+      if (!gate) gate = buildGate();
+      if (!gate.isConnected) document.body.appendChild(gate);   // bị xoá thì gắn lại
+    } else {
+      document.documentElement.classList.remove('albert-locked');
+      if (gate && gate.isConnected) gate.remove();
+    }
+  }
+
+  function start() {
+    enforce();
+    // Gỡ màn hình chặn / gỡ lớp khoá → tự khôi phục.
+    new MutationObserver(function () { if (shouldLock() && (!gate || !gate.isConnected || !document.documentElement.classList.contains('albert-locked') || !styleEl || !styleEl.isConnected)) enforce(); })
+      .observe(document.documentElement, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
+    setInterval(enforce, 1000);
+    setTimeout(verifyServer, 2500);
+    setInterval(verifyServer, 60000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) verifyServer(); });
+    window.addEventListener('storage', function () { serverDenied = false; enforce(); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
 
 </script>
