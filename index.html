@@ -34648,6 +34648,54 @@ textarea.note,[data-field="review-next"],[data-field="activity-reflection"],[dat
 @media(max-width:1000px){.la30-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.la30-priorities{grid-template-columns:1fr}.la30-priorities article{padding:4px 0 6px 14px}.la30-hero{flex-direction:column}.la30-stat>span,.la30-stat small{min-height:0}}
 @media(max-width:700px){.la30 h1{font-size:24px}.la30 h2{font-size:17px}.la30-two{grid-template-columns:1fr;gap:0}.la30-skills{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 16px}.la30-card{padding:15px}.la30-stat{padding:14px}.la30-stat>strong{font-size:25px}.la30-filters{gap:10px}.la30-filters label{width:100%;flex-basis:100%}.la30-filters label:last-child{min-width:0}.la30-answer{grid-template-columns:1fr;gap:5px}.la30-history article{flex-wrap:wrap}.la30-history article>div{flex-basis:75%}.la30-history article>.btn{margin-left:auto}.la30-table thead{display:none}.la30-table tbody,.la30-table tr,.la30-table td{display:block}.la30-table tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:14px 0;border-bottom:1px solid var(--line)}.la30-table td{padding:0;border:0;min-width:0!important;width:auto!important}.la30-table td:first-child{grid-column:1/-1}.la30-table td:nth-child(2)::before{content:'Da lam';display:block;font-size:10px;color:var(--muted)}.la30-table td:nth-child(3)::before{content:'Da cham';display:block;font-size:10px;color:var(--muted)}.la30-table td:nth-child(4)::before{content:'Diem';display:block;font-size:10px;color:var(--muted)}.la30-table td:nth-child(5){grid-column:1/3}.la30-table td:nth-child(6){justify-self:end;align-self:center}.la30-table td:nth-child(2)::before{content:'\0110\00e3 l\00e0m'}.la30-table td:nth-child(3)::before{content:'\0110\00e3 ch\1ea5m'}.la30-table td:nth-child(4)::before{content:'\0110i\1ec3m'}}
 @media(max-width:360px){.la30-stats{gap:8px}.la30-stat{padding:11px}.la30-stat>strong{font-size:23px}.la30-skills{grid-template-columns:1fr}.la30-group>summary{padding:10px;gap:8px}.la30-group-body{padding:10px}}
+
+/* 2026-10-14: content-sized Textbook/Workbook subtabs, both in-page and pinned. */
+.study-tab-row.study-navigation .study-subrow,
+#study-dock .study-tab-row.study-navigation .study-subrow{padding:3px 10px;min-height:0}
+.study-tab-row.study-navigation .study-subrow .textbook-tabs,
+#study-dock .study-tab-row.study-navigation .study-subrow .textbook-tabs{
+ align-items:center;justify-content:flex-start;gap:4px;min-height:34px;height:auto;padding:0;width:100%;flex:1 1 auto
+}
+.study-tab-row.study-navigation .study-subrow .textbook-tabs button,
+#study-dock .study-tab-row.study-navigation .study-subrow .textbook-tabs button{
+ flex:0 0 auto;width:auto;min-width:0;max-width:none;min-height:32px;height:auto;
+ margin:0;padding:6px 11px;border-radius:5px;font-size:13px;line-height:1.4;white-space:nowrap
+}
+.reading-copy{margin:20px 0;border:1px solid var(--line);border-radius:7px;padding:16px;background:#fafbfc;min-width:0}
+.copy-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.copy-head h4{font:600 15px/1.5 var(--font-ui);color:var(--navy);margin:0}
+.copy-head p,.copy-rule{font:12px/1.65 var(--font-ui);color:var(--muted);margin:4px 0 0}
+.copy-input-label{display:block;font-size:12px;font-weight:600;margin:0 0 6px}
+textarea.copy-input{display:block;width:100%;max-width:100%;min-height:150px;resize:vertical;padding:12px;border:1px solid #ccd4df;border-radius:5px;background:#fff;color:var(--navy);font:17px/1.9 var(--font-zh),var(--font-ui);box-sizing:border-box}
+textarea.copy-input::placeholder{font:12px/1.8 var(--font-ui);color:var(--muted)}
+.copy-options{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;margin:10px 0;color:var(--muted);font-size:11px}
+.copy-options label{display:inline-flex;align-items:center;gap:7px;font-size:12px;cursor:pointer}
+.copy-options input{width:16px;height:16px;margin:0;accent-color:var(--teal)}
+.copy-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}
+.copy-stats{display:flex;gap:7px 15px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.copy-stats strong{font-weight:600;color:var(--navy)}
+.copy-buttons{display:flex;gap:6px;flex-wrap:wrap}
+.copy-result{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;min-width:0}
+.copy-result-summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.copy-result-summary>strong{font-size:23px;font-weight:700;color:var(--teal)}
+.copy-legend{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0;font-size:11px}
+.copy-legend>span{padding:2px 6px;border-radius:3px}
+.copy-diff{font:18px/2.1 var(--font-zh),var(--font-ui);white-space:pre-wrap;overflow-wrap:anywhere;background:#fff;border:1px solid var(--line);border-radius:5px;padding:10px}
+.copy-correct{color:#12674a}
+.copy-wrong{color:#a4262c;background:#fce8e8;border-radius:3px}
+.copy-wrong del{opacity:.8}
+.copy-wrong ins{text-decoration:none;font-weight:600}
+.copy-missing{color:#8a5700;background:#fff3ce;text-decoration:underline;text-decoration-style:dotted;border-radius:3px}
+.copy-extra{color:#a4262c;background:#fce8e8;border-radius:3px}
+.copy-stale{margin:0;font-size:12px;line-height:1.8;color:#785500}
+@media(max-width:600px){
+ .study-tab-row.study-navigation .study-subrow,
+ #study-dock .study-tab-row.study-navigation .study-subrow{padding:3px 6px}
+ .reading-copy{padding:12px;margin:16px 0}
+ .copy-head h4{font-size:14px}
+ .copy-buttons{margin-left:auto}
+ textarea.copy-input{font-size:16px;min-height:140px}
+}
 </script>
 <script type="application/json" id="hsk30-grade-context">{"1":{"warm":{"options":["不好意思","旅游","介绍","帮忙"],"pictureMatches":["D","A","B","C"],"responsePrompt":"回忆自己上次出行的经历，完成调查表：出发时间（什么时候去的）、同伴（和谁去的）、旅行方式（怎么去的）。按自己的经历回答，没有唯一答案。"},"pictures":[{"prompt":"他们是开车{}。","scene":"几个人拉着行李，在汽车旁准备出行。"},{"prompt":"妈妈{}孩子们{}。","scene":"一位成人端着一盘饭菜，孩子们在旁，准备吃饭。"},{"prompt":"他们{}去的。","scene":"两位旅客拉着行李走向飞机。"},{"prompt":"她{}7点{}。","scene":"人早上坐在床上伸展，前景是闹钟；句子给定7点。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"2":{"warm":{"options":["票","教室","打车","公交车"],"pictureMatches":["D","C","B","A"],"responsePrompt":"说说下列情况中，更喜欢哪种方式：去旅游的时候（坐火车去/坐飞机去）；很晚下班的时候（回家做饭/去饭店吃饭）；星期六的晚上（在家休息/去看电影）。个人选择没有唯一答案。"},"pictures":[{"prompt":"今天不忙，你{}在家吃早饭吧。","scene":"早餐有油条、鸡蛋和饮品；句子是在不忙的情况下提出建议。"},{"prompt":"这件衣服{}。","scene":"商店的衣服价格牌显示219。"},{"prompt":"他在学习，我们{}去找他玩了。","scene":"孩子正坐在桌前写作业。"},{"prompt":"新来的这个老师{}岁。","scene":"年轻成人在给孩子上课；图片无法确定真实年龄，只能作合理约数。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"3":{"warm":{"options":["洗","累","拿","不错"],"pictureMatches":["D","A","B","C"],"responsePrompt":"给下面的动词加上合适的名词：1.送___ 2.拿___ 3.做___ 4.吃___ 5.洗___ 6.看___。接受语义自然的搭配，不要求唯一名词。"},"pictures":[{"prompt":"你吃苹果吗？我去给你{}。","scene":"有人正在水龙头下洗苹果。"},{"prompt":"每天回家后他就想{}。","scene":"人下班穿着正装，躺在沙发上休息。"},{"prompt":"这本书她还没{}。","scene":"有人拿着打开的书阅读。"},{"prompt":"饭菜{}，你们来吃饭吧。","scene":"饭菜已摆在桌上，成人准备招呼家人吃饭。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"4":{"warm":{"options":["裤子","书包","过去","颜色"],"pictureMatches":["A","C","D","B"],"responsePrompt":"读词语，选择自己曾经有过的经历：吃（包子/饺子/面条儿）；喝（绿茶/红茶/花茶）；去（中国/法国/泰国）。可以写选择的词语或完整句子；个人经历没有唯一答案。"},"pictures":[{"prompt":"她们{}北京。","scene":"两个游客在北京景点合影。"},{"prompt":"这两个书包，我喜欢{}，你呢？","scene":"两个书包，一个黑色、一个红色；偏好可以不同。"},{"prompt":"{}，所以她没去上班。","scene":"人躺在床上，额头贴着降温贴。"},{"prompt":"你看，学校就在那儿，{}吧。","scene":"两人在街上，一人指向前面的方向。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"5":{"warm":{"options":["爷爷","奶奶","礼物","酒店"],"pictureMatches":["C","B","D","A"],"responsePrompt":"给第二组6张图片选择对应词语：A过来 B过去 C进来 D进去 E下来 F下去。图片顺序：1门边的人开门邀请进入；2街上的人向前景的人走来；3两人从室外走进门；4一人下台阶走向下方的人；5大人孩子背向观看者走下台阶；6人物隔着楼梯平台招手。必须考虑来/去的观察方向；最后一图方向不能仅从文字描述完全确定时说明不确定，不强行唯一判错。"},"pictures":[{"prompt":"{}，你还不起来？","scene":"床边闹钟和伸手关闹钟的人；时针近10点，表达时间晚及催起床。"},{"prompt":"他们要看电影，现在已经{}。","scene":"几个人已经走进电影院。"},{"prompt":"晚饭{}就做好了，你去洗洗手，准备吃饭吧。","scene":"有人正在做饭，孩子在旁边等待。"},{"prompt":"她{}一个苹果。","scene":"一位成人在打开的冰箱旁，手里拿着苹果。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"6":{"warm":{"options":["鱼","画笔","床","快乐"],"pictureMatches":["D","B","A","C"],"responsePrompt":"给第二组图片选择词语：A画画 B过生日 C很舒服 D打开礼物。图片顺序：1打开礼物盒；2孩子画画；3生日聚会；4人躺在椅子上休息。可以提交字母或中文词语。"},"pictures":[{"prompt":"大家高高兴兴地给他{}。","scene":"朋友们围着生日蛋糕给中间的人庆生。"},{"prompt":"桌子上有电脑、杯子{}。","scene":"桌上有电脑、杯子、笔记本、台灯、花等物品。"},{"prompt":"爷爷过生日，爸爸给他做了{}的面条儿。","scene":"图中是长面条；用符合本课的形容表达。"},{"prompt":"下班了，他{}在家休息。","scene":"人戴着耳机舒服地躺在家中休息。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"7":{"warm":{"options":["跑步","篮球","游泳","足球"],"pictureMatches":["B","A","C","D"],"responsePrompt":"说说做完以下事情后马上会做什么：吃完早饭、下课、回家。每种情境给出自己的后续行动；没有唯一答案。"},"pictures":[{"prompt":"她喜欢画画，{}。","scene":"画者拿着一幅色彩鲜艳的花卉画，画得好。"},{"prompt":"她{}有时间就{}。","scene":"孩子在泳池游泳。"},{"prompt":"我的{}是唱歌，一有时间我就去唱歌。","scene":"人们在一起唱歌、演奏音乐。"},{"prompt":"你们{}这里{}前走，那边更漂亮。","scene":"游客指向前方远处，给出路线建议。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"8":{"warm":{"options":["左边","右边","妻子","丈夫"],"pictureMatches":["D","B","A","C"],"responsePrompt":"说出下列词语的反义词：1贵 2大 3热 4多 5早。"},"pictures":[{"prompt":"虽然他{}，但是都吃完了。","scene":"桌上有许多盘碗，食物已经吃完。"},{"prompt":"{}很晚了，{}他还在教室里学习。","scene":"教室里只有一位学生还在看书。"},{"prompt":"这两件衣服都不错，但是我觉得黑色的{}白色的{}好看。","scene":"人在比较黑色和白色的衣服；根据句子表达同样好看等本课用法。"},{"prompt":"我觉得你做的菜{}饭馆的菜还好吃。","scene":"人展示自己做的菜，另一个人品尝。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"9":{"warm":{"options":["个子","走路","咖啡","门口"],"pictureMatches":["C","D","A","B"],"responsePrompt":"根据实际情况填表：今天与昨天的气温（℃）；咖啡与奶茶的价格（每杯）；包子与饺子的味道（非常/很/不好吃）；看电视与看电影的偏好（非常/很/没有意思）。不要假设学生当地真实气温或价格，只检查填写表达和搭配。"},"pictures":[{"prompt":"我的桌子{}教室门口很近。","scene":"教室里的桌子位于门口附近。"},{"prompt":"你看，超市{}这儿{}。","scene":"眼前就是超市，距离近。"},{"prompt":"她觉得那件衣服{}这件衣服好看。","scene":"人在挑选衣服；主观比较，无唯一偏好。"},{"prompt":"左边的孩子{}右边的孩子{}。","scene":"左边孩子明显比右边孩子矮。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"10":{"warm":{"options":["门","题","笑","错","考试","本子"],"pictureMatches":["E","D","B","F","A","C"],"responsePrompt":"根据实际情况互相问答：（1）爷爷买了奶茶、咖啡和牛奶，你想喝什么？（2）商场有白色的裤子，也有黑色的裤子，你买哪条？（3）明天星期六，可以在家看电视，也可以去看电影，你想做什么？个人选择没有唯一答案。"},"pictures":[{"prompt":"往左边走{}往右边走？","scene":"一个人站在岔路口，两条路可以选。"},{"prompt":"{}我都{}了。","scene":"有人在洗苹果；对象是苹果，动作是洗。"},{"prompt":"{}下雨{}，别玩了，我们回家吧。","scene":"天色阴沉，孩子还在外面玩，可能快下雨。"},{"prompt":"电影{}开始{}，你到哪儿了？","scene":"电影院里有人给还没到的人打电话，电影即将开始。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"11":{"warm":{"options":["疼","药","药店","路上"],"pictureMatches":["C","D","B","A"],"responsePrompt":"用一个动词或动词短语描述第二组4张图片：1夜间街上下雪；2戴耳机听音乐；3用钥匙开门；4手拿一瓶水。接受合适的动词/短语，不强求整句。"},"pictures":[{"prompt":"他是我的老师，也是我{}好的朋友。","scene":"老师与学生击掌，关系友好。"},{"prompt":"这是离我家最近的{}，我不舒服时就来这儿买药。","scene":"药店工作人员与顾客交谈，货架上摆着药品。"},{"prompt":"他生病了，{}。","scene":"病人坐在医生对面，手扶额头。"},{"prompt":"看完电影，她还在那里{}。","scene":"电影观众仍坐在电影院座位上。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"12":{"warm":{"options":["晴","楼","地铁","阴"],"pictureMatches":["C","A","D","B"],"responsePrompt":"小调查：四人一组，记录我、A、B、C：几点起床？几点睡觉？跑步快不快？没有真实同学资料时可先写自己的部分，不编造他人的事实；只评已填写内容的表达。"},"pictures":[{"prompt":"{}我比弟弟高多了，但现在没有他高了。","scene":"图片显示较早时期的两个孩子；文字对比以前与现在的身高。"},{"prompt":"明天的天气会{}今天{}得多。","scene":"天气图显示今天19℃有雨，明天26℃晴。"},{"prompt":"弟弟跑得{}姐姐{}。","scene":"男孩跑在女孩前面，弟弟跑得快。"},{"prompt":"她{}唱得{}。","scene":"一个人持麦克风唱歌，语境可表达一次比一次好。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"13":{"warm":{"options":["教","花","新年","希望","告诉","洗手间"],"pictureMatches":["E","D","B","F","C","A"],"responsePrompt":"说出下列每组词语的差别：1上楼/楼上 2下楼/楼下 3上网/网上。说明动词短语与处所词的区别，可用中文或越南语解释并举例。"},"pictures":[{"prompt":"老师{}我们新的汉字。","scene":"老师在黑板上写汉字，教学生。"},{"prompt":"哥哥比我大{}，我喜欢跟他玩儿。","scene":"两个年龄不同的男孩在一起；图片不能确定年龄差，接受合理差量。"},{"prompt":"妻子游得{}丈夫快{}。","scene":"一位女泳者游在男泳者前面。"},{"prompt":"我们一起高高兴兴地过{}。","scene":"一家人在布置春节，贴红色装饰、福字。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"14":{"warm":{"options":["包","女孩儿","跳舞","眼睛"],"pictureMatches":["C","D","B","A"],"responsePrompt":"看第二组图片，说画面中有什么：1车里（几个人）；2手里（笔记本电脑）；3本子上（写的汉字）；4门外（站着一个人）。可以按词语/短语填写或写完整句子。"},"pictures":[{"prompt":"上课前，她{}给大家唱了个歌。","scene":"女孩在教室前面站着唱歌。"},{"prompt":"跟好朋友一起玩，他{}高兴啊！","scene":"孩子们一起在草地上跑着玩，十分高兴。"},{"prompt":"他的本子上{}一个房子。","scene":"孩子的本子上画着房子。"},{"prompt":"房子{}站着几个人。","scene":"几个人站在房子外面或前面。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."},"15":{"warm":{"options":["路","鸟","机场","出门"],"pictureMatches":["B","A","D","C"],"responsePrompt":"根据自己的实际情况，说说行为发生的频率：运动（一个星期___次）；看电影（一个月___次）；去旅游（一年___次）。个人频率没有唯一答案。"},"pictures":[{"prompt":"她一个星期{}三次法国。","scene":"机舱内乘务人员在服务乘客；句子表达每周去法国的频率。"},{"prompt":"你的{}同学有50个人吗？","scene":"班级里有学生坐着学习。"},{"prompt":"我走过这条到{}的{}。","scene":"通往机场的道路，远处有飞机。"},{"prompt":"他们喜欢踢球，每个星期踢{}次。","scene":"孩子们在踢足球；图片不提供具体次数，接受合理频率。"}],"provenance":"Prompts transcribed and literal scenes described from the supplied textbook images. Scene descriptions and matching guidance are editorial context, not a publisher answer key."}}</script>
 
@@ -34694,7 +34742,7 @@ function save(key,v,n=lessonId){if(currentUser()!==userId){accountChanged();retu
 function pendingCount(n=lessonId){return Object.values(lstore(n).values).filter(x=>x.dirty).length;}
 function statusText(){if(persistError)return persistError;if(userId==='guest')return cloudStatus||'Đã lưu trên trình duyệt này · Chế độ khách';if(cloudStatus)return cloudStatus;return pendingCount()?'Đã lưu trên máy · Đang chờ đồng bộ':'Đã lưu trên máy · Tách riêng theo tài khoản';}
 function updateProgress(){const node=$('#save-status');if(node)node.textContent=statusText();const c=$('#filled-count');if(c)c.textContent=filled(lessonId)+' ô đã điền';$$('[data-group-count]').forEach(el=>{const p=el.dataset.groupCount;const vals=lstore().values;el.textContent=Object.keys(vals).filter(k=>k.startsWith(p)&&String(vals[k].value).trim()).length+' ô đã điền';});}
-function filled(n){return Object.entries(lstore(n).values).filter(([k,r])=>!/^(done-|known-|listen-|goal-|grade:|wbcheck:|assessment:)/.test(k)&&typeof r.value==='string'&&r.value.trim()).length;}
+function filled(n){return Object.entries(lstore(n).values).filter(([k,r])=>!/^(done-|known-|listen-|goal-|grade:|wbcheck:|assessment:|typing:result:)/.test(k)&&typeof r.value==='string'&&r.value.trim()).length;}
 function completed(n){const known=DATA[n-1].vocab.every((_,i)=>value('known-'+i,n)===true);return ['texts','grammar','practice'].filter(s=>value('done-'+s,n)===true).length+((known||value('done-vocab',n)===true)?1:0);}
 function scheduleSync(n){clearTimeout(cloudTimer);if(userId!=='guest')cloudTimer=setTimeout(()=>syncLesson(n),900);}
 async function syncLesson(n=lessonId){
@@ -34732,7 +34780,7 @@ function readCloud(n){
     writeStore();
     if(lessonId===n&&edition==='3.0'){
      $$('[data-field]').forEach(el=>{if(root.activeElement===el)return;const v=value(el.dataset.field);if(el.type==='checkbox')el.checked=v===true;else if(el.type==='radio')el.checked=el.value===String(v);else el.value=String(v);});
-     updateProgress();refreshGradeControls();
+     updateProgress();refreshGradeControls();typingRefreshAll();
     }
     a30ScheduleRefresh();
    }
@@ -34898,7 +34946,7 @@ function textsTab(){
  audio(r.track,'Nghe bài khóa '+r.id,'reading')+
  '<section class="qblock" aria-labelledby="listen-title-'+r.id+'"><h4 class="question-heading" id="listen-title-'+r.id+'">Nghe & trả lời <span class="meta">2 câu</span></h4><div class="question-body"><p class="zh instruction">'+(r.id===4?'听两遍课文，判断正误。':'听两遍对话，选择正确答案。')+'</p>'+r.listenQuestions.map((q,i)=>nativeQuestion(q,'text-'+r.id+'-listen-'+(i+1),i+1)).join('')+checkbox('listen-'+r.id,'Tôi đã nghe đoạn này.')+gradeControls('text-'+r.id+'-listen')+'</div></section>'+
  '<div class="reading-actions">'+btn('Ẩn bài đọc','toggle-text','aria-expanded="true" aria-controls="transcript-'+r.id+'"','tiny subtle')+'<span class="small muted">Đọc theo vai</span></div>'+
- '<div class="textbody" id="transcript-'+r.id+'"><div class="dialogue '+(r.id===4?'narrative':'')+'">'+r.lines.map(x=>'<div class="speech"><div class="speaker">'+esc(x.speaker)+'</div><div class="zh">'+esc(x.zh)+'</div></div>').join('')+'</div></div>'+
+ '<div class="textbody" id="transcript-'+r.id+'"><div class="dialogue '+(r.id===4?'narrative':'')+'">'+r.lines.map(x=>'<div class="speech"><div class="speaker">'+esc(x.speaker)+'</div><div class="zh">'+esc(x.zh)+'</div></div>').join('')+'</div></div>'+typingBlock(r)+
  '<section class="qblock" aria-labelledby="comprehension-title-'+r.id+'"><h4 class="question-heading" id="comprehension-title-'+r.id+'">Đọc hiểu <span class="meta">2 câu</span></h4><div class="question-body"><p class="zh instruction">'+(r.id===4?'朗读课文，读后选择正确答案。':'分角色朗读对话，读后回答问题。')+'</p>'+r.afterQuestions.map((q,i)=>nativeQuestion(q,'text-'+r.id+'-after-'+(i+1),i+1)).join('')+gradeControls('text-'+r.id+'-after')+'</div></section></article>').join('')+
  '<p class="small muted gap">Bài làm được tự lưu. Bấm “AI chấm” sau mỗi phần nghe hoặc đọc hiểu; hệ thống chấm dựa trên bài khóa tương ứng.</p>'+
  stageDone('texts','Tôi đã nghe, đọc và trả lời câu hỏi của cả 4 bài khóa.');
@@ -34983,7 +35031,7 @@ function render(){
    studyResizeObserver.disconnect();studyResizeObserver.observe(studyDock);studyResizeObserver.observe(app);
    $$('.tb-audio-slot .audio').forEach(box=>studyResizeObserver.observe(box));
  }
- hydrate();decorateSummaries();updateProgress();refreshGradeControls();refreshDictionaryToggles();wbInitializeAudio();syncStudyDock();a30AfterRender();
+ hydrate();decorateSummaries();updateProgress();refreshGradeControls();refreshDictionaryToggles();wbInitializeAudio();syncStudyDock();a30AfterRender();typingRefreshAll();
 }
 
 function studyScrollElement(){
@@ -35051,6 +35099,7 @@ function handleInput(e){
  if(t.matches('[data-audio-progress]')){const a=t.closest('.audio').querySelector('audio');if(Number.isFinite(a.duration))a.currentTime=Number(t.value)/1000*a.duration;}
 }
 function installEvents(){
+ installTypingEvents();
  installSimpleEvents();root.addEventListener('input',handleInput);root.addEventListener('focusin',e=>{if(e.target.matches('.inline[data-field]'))activeBlank=e.target;});
  root.addEventListener('change',e=>{const t=e.target;handleInput(e);if(t.matches('[data-lesson-select]'))goLesson(t.value,tab);if(t.matches('[data-audio-lesson]')){audioLessonId=Math.min(15,Math.max(1,Number(t.value)||1));render();scrollTop();}if(t.matches('[data-audio-rate]'))t.closest('.audio').querySelector('audio').playbackRate=Number(t.value);if(t.matches('[data-audio-loop]')){const box=t.closest('.audio'),a=box.querySelector('audio');a.loop=t.checked;if(t.checked){delete a.dataset.abOn;delete a.dataset.abA;delete a.dataset.abB;box.querySelector('.ab-label').textContent='A-B';}}
  
@@ -35086,7 +35135,7 @@ function installEvents(){
  else if(act==='zoom')$('.dialogscroll',modalRoot).classList.toggle('zoom');
  else if(act==='book-prev'){bookPage--;render();scrollTop();}
  else if(act==='book-next'){bookPage++;render();scrollTop();}
- else if(act==='toggle-text'){const x=b.closest('.textpanel').querySelector('.textbody');x.hidden=!x.hidden;b.setAttribute('aria-expanded',String(!x.hidden));b.textContent=x.hidden?'Hiện bài đọc':'Ẩn bài đọc';}
+ else if(act==='toggle-text'){const x=b.closest('.textpanel').querySelector('.textbody');typingSetOriginal(x.id.replace('transcript-',''),!x.hidden);}
  else if(act==='insert-word'){let target=activeBlank;if(!target?.isConnected||!target.dataset.field.startsWith('comp-'))target=$$('.inline').find(x=>!x.value)||$('.inline');if(target){target.value=b.dataset.value;save(target.dataset.field,target.value);target.focus();}}
  else if(act==='check-word'){const i=Number(b.dataset.word),got=String(value('type-'+i)).trim(),expected=lesson().vocab[i].zh;const feedback=$('[data-feedback-word="'+i+'"]');feedback.textContent=!got?'Bạn chưa nhập chữ Hán.':got===expected?'Khớp từ gốc: '+expected:'Chưa khớp. Từ trong tài liệu: '+expected;}
  else if(act==='export')exportData();
@@ -36444,6 +36493,124 @@ function installAssessmentEvents(){
  });
 }
 
+/* Reading-copy practice. Private to this edition/level module.
+   Uses the existing per-account store, backup and cloud queue. */
+function typingKey(kind,id){return 'typing:'+kind+':'+id;}
+function typingReference(id){const r=lesson().texts.find(x=>String(x.id)===String(id));return r?r.lines.map(x=>String(x.zh||'')).join('\n'):'';}
+function typingNormalize(text,strict){
+ const s=String(text||'').normalize('NFKC').replace(/\s+/gu,'');
+ return strict?s:s.replace(/\p{P}/gu,'');
+}
+function typingAlign(reference,answer){
+ const a=Array.from(reference),b=Array.from(answer),n=a.length,m=b.length,w=m+1;
+ // Full edit-distance alignment: one missing character does not shift all later text.
+ const d=new Uint16Array((n+1)*w);
+ for(let i=0;i<=n;i++)d[i*w]=i;
+ for(let j=0;j<=m;j++)d[j]=j;
+ for(let i=1;i<=n;i++)for(let j=1;j<=m;j++){
+  d[i*w+j]=Math.min(d[(i-1)*w+j-1]+(a[i-1]===b[j-1]?0:1),d[(i-1)*w+j]+1,d[i*w+j-1]+1);
+ }
+ let i=n,j=m,correct=0,wrong=0,missing=0,extra=0;const parts=[];
+ while(i||j){
+  const at=d[i*w+j];
+  if(i&&j&&a[i-1]===b[j-1]&&at===d[(i-1)*w+j-1]){parts.push({kind:'correct',expected:a[--i],actual:b[--j]});correct++;}
+  else if(i&&j&&at===d[(i-1)*w+j-1]+1){parts.push({kind:'wrong',expected:a[--i],actual:b[--j]});wrong++;}
+  else if(i&&at===d[(i-1)*w+j]+1){parts.push({kind:'missing',expected:a[--i],actual:''});missing++;}
+  else{parts.push({kind:'extra',expected:'',actual:b[--j]});extra++;}
+ }
+ return {parts:parts.reverse(),correct,wrong,missing,extra,total:n,typed:m,score:n?Math.max(0,Math.round(100*(1-d[n*w+m]/n))):0};
+}
+function typingBlock(r){
+ const id=r.id,k=typingKey('draft',id),strict=value(typingKey('strict',id))===true;
+ return '<section class="reading-copy" data-copy-card="'+id+'" aria-labelledby="copy-title-'+id+'">'+
+ '<div class="copy-head"><div><h4 id="copy-title-'+id+'">Luy\u1ec7n g\u00f5 l\u1ea1i b\u00e0i kh\u00f3a '+id+'</h4><p>G\u00f5 n\u1ed9i dung ph\u00eda tr\u00ean, kh\u00f4ng c\u1ea7n t\u00ean nh\u00e2n v\u1eadt.</p></div>'+
+ '<button type="button" class="btn tiny subtle" data-copy-action="original" aria-controls="transcript-'+id+'" aria-expanded="true">\u1ea8n b\u00e0i m\u1eabu</button></div>'+
+ '<label class="copy-input-label" for="copy-input-'+id+'">B\u1ea3n g\u00f5 c\u1ee7a b\u1ea1n</label>'+
+ '<textarea id="copy-input-'+id+'" class="copy-input" data-copy-input="'+id+'" data-field="'+k+'" rows="5" maxlength="10000" lang="zh-CN" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="copy-help-'+id+'" placeholder="G\u00f5 l\u1ea1i b\u00e0i kh\u00f3a b\u1eb1ng ch\u1eef H\u00e1n...">'+esc(value(k))+'</textarea>'+
+ '<div class="copy-options"><label><input type="checkbox" data-copy-strict="'+id+'" data-field="'+typingKey('strict',id)+'" '+(strict?'checked':'')+'> T\u00ednh c\u1ea3 d\u1ea5u c\u00e2u</label><span id="copy-help-'+id+'">Ctrl + Enter / Cmd + Enter \u0111\u1ec3 ch\u1ea5m \u00b7 T\u1ef1 l\u01b0u b\u00e0i g\u00f5</span></div>'+
+ '<div class="copy-toolbar"><div class="copy-stats"><span>\u0110\u00e3 g\u00f5: <strong data-copy-chars>0</strong> k\u00fd t\u1ef1</span><span>Ti\u1ebfn \u0111\u1ed9: <strong data-copy-progress>0%</strong></span><span>L\u1ea7n ch\u1ea5m cu\u1ed1i: <strong data-copy-score>\u2014</strong></span></div>'+
+ '<div class="copy-buttons"><button type="button" class="btn tiny" data-copy-action="clear">X\u00f3a b\u1ea3n g\u00f5</button><button type="button" class="btn tiny primary" data-copy-action="check">Ch\u1ea5m b\u00e0i g\u00f5</button></div></div>'+
+ '<div class="copy-result" data-copy-result role="status" aria-live="polite" hidden></div></section>';
+}
+function typingSetOriginal(id,hidden,persist=true){
+ if(persist)save(typingKey('hidden',id),hidden);
+ const original=$('#transcript-'+id);if(original)original.hidden=hidden;
+ const article=$('#reading-'+id);if(!article)return;
+ article.querySelectorAll('[data-act="toggle-text"],[data-copy-action="original"]').forEach(b=>{
+  b.setAttribute('aria-expanded',String(!hidden));
+  b.textContent=b.dataset.copyAction?(hidden?'Hi\u1ec7n b\u00e0i m\u1eabu':'\u1ea8n b\u00e0i m\u1eabu'):(hidden?'Hi\u1ec7n b\u00e0i \u0111\u1ecdc':'\u1ea8n b\u00e0i \u0111\u1ecdc');
+ });
+}
+function typingReadResult(id){
+ try{const r=JSON.parse(value(typingKey('result',id))||'null');return r&&r.schema===1&&typeof r.answer==='string'&&r.answer.length<=10000&&typeof r.reference==='string'&&r.reference.length<10000?r:null;}catch(_){return null;}
+}
+function typingResultHTML(r){
+ const wrongLabel='Sai',missingLabel='Thi\u1ebfu',extraLabel='Th\u1eeba';
+ return '<div class="copy-result-summary"><strong>'+r.score+'%</strong><span>\u0110\u00fang '+r.correct+'/'+r.total+' \u00b7 '+wrongLabel+' '+r.wrong+' \u00b7 '+missingLabel+' '+r.missing+' \u00b7 '+extraLabel+' '+r.extra+'</span></div>'+
+ '<div class="copy-legend"><span class="copy-correct">\u0110\u00fang</span><span class="copy-wrong">Sai: b\u1ea3n g\u00f5 \u2192 m\u1eabu</span><span class="copy-missing">Thi\u1ebfu</span><span class="copy-extra">Th\u1eeba</span></div>'+
+ '<div class="copy-diff" lang="zh-CN">'+r.parts.map(p=>{
+  if(p.kind==='correct')return '<span class="copy-correct">'+esc(p.expected)+'</span>';
+  if(p.kind==='wrong')return '<span class="copy-wrong" title="Sai: '+esc(p.actual)+' \u2192 '+esc(p.expected)+'"><del>'+esc(p.actual)+'</del><span aria-hidden="true">\u2192</span><ins>'+esc(p.expected)+'</ins></span>';
+  if(p.kind==='missing')return '<ins class="copy-missing" title="C\u1ea7n g\u00f5 th\u00eam: '+esc(p.expected)+'">'+esc(p.expected)+'</ins>';
+  return '<del class="copy-extra" title="G\u00f5 th\u1eeba: '+esc(p.actual)+'">'+esc(p.actual)+'</del>';
+ }).join('')+'</div><p class="copy-rule">'+(r.strict?'Ch\u1ea5m c\u1ea3 d\u1ea5u c\u00e2u; b\u1ecf qua kho\u1ea3ng tr\u1eafng v\u00e0 xu\u1ed1ng d\u00f2ng.':'B\u1ecf qua d\u1ea5u c\u00e2u, kho\u1ea3ng tr\u1eafng v\u00e0 xu\u1ed1ng d\u00f2ng khi ch\u1ea5m.')+' \u0110\u1ed1i chi\u1ebfu tr\u1ef1c ti\u1ebfp v\u1edbi b\u00e0i m\u1eabu, kh\u00f4ng g\u1ecdi AI.</p>';
+}
+function typingRefresh(card,force=false){
+ if(!card)return;const id=card.dataset.copyCard,input=card.querySelector('[data-copy-input]');if(!input)return;
+ const strict=card.querySelector('[data-copy-strict]').checked,reference=typingNormalize(typingReference(id),strict),answer=typingNormalize(input.value,strict);
+ const total=Array.from(reference).length,typed=Array.from(answer).length;
+ card.querySelector('[data-copy-chars]').textContent=String(typed);
+ card.querySelector('[data-copy-progress]').textContent=(total?Math.min(100,Math.round(typed/total*100)):0)+'%';
+ const record=typingReadResult(id),result=card.querySelector('[data-copy-result]');
+ if(record){
+  const stale=record.answer!==input.value||record.strict!==strict||record.reference!==reference;
+  card.querySelector('[data-copy-score]').textContent=Number(record.score||0)+'%'+(stale?' \u00b7 \u0111\u00e3 s\u1eeda':'');
+  const signature=String(record.at)+'|'+String(stale);
+  if(force||result.dataset.signature!==signature){
+   result.hidden=false;result.dataset.signature=signature;
+   if(stale)result.innerHTML='<p class="copy-stale">B\u1ea3n g\u00f5 ho\u1eb7c ch\u1ebf \u0111\u1ed9 ch\u1ea5m \u0111\u00e3 thay \u0111\u1ed5i. Nh\u1ea5n <b>Ch\u1ea5m b\u00e0i g\u00f5</b> \u0111\u1ec3 c\u1eadp nh\u1eadt k\u1ebft qu\u1ea3.</p>';
+   else result.innerHTML=typingResultHTML({...typingAlign(record.reference,typingNormalize(record.answer,record.strict)),strict:record.strict});
+  }
+ }else{card.querySelector('[data-copy-score]').textContent='\u2014';if(force||result.dataset.signature){result.hidden=true;result.innerHTML='';delete result.dataset.signature;}}
+}
+function typingRefreshAll(){
+ if(!root||edition!=='3.0')return;
+ $$('[data-copy-card]').forEach(card=>{typingSetOriginal(card.dataset.copyCard,value(typingKey('hidden',card.dataset.copyCard))===true,false);typingRefresh(card);});
+}
+function typingCheck(card){
+ if(!card||currentUser()!==userId){accountChanged();return;}
+ const input=card.querySelector('[data-copy-input]');
+ if(input.dataset.saveUser!==userId||Number(input.dataset.saveLesson)!==lessonId)return;
+ const id=card.dataset.copyCard,strict=card.querySelector('[data-copy-strict]').checked;
+ const reference=typingNormalize(typingReference(id),strict),answer=typingNormalize(input.value,strict),box=card.querySelector('[data-copy-result]');
+ if(!answer){box.hidden=false;box.textContent='H\u00e3y g\u00f5 b\u00e0i tr\u01b0\u1edbc khi ch\u1ea5m.';input.focus({preventScroll:true});return;}
+ if(!reference)return;
+ save(typingKey('draft',id),input.value);save(typingKey('strict',id),strict);
+ const r=typingAlign(reference,answer);
+ save(typingKey('result',id),JSON.stringify({schema:1,answer:input.value,reference,strict,at:new Date().toISOString(),score:r.score,correct:r.correct,wrong:r.wrong,missing:r.missing,extra:r.extra,total:r.total}));
+ typingRefresh(card,true);syncStudyDock();
+}
+function installTypingEvents(){
+ root.addEventListener('input',e=>{if(e.target.matches('[data-copy-input]')&&!e.isComposing)typingRefresh(e.target.closest('[data-copy-card]'));});
+ root.addEventListener('compositionend',e=>{if(e.target.matches('[data-copy-input]'))typingRefresh(e.target.closest('[data-copy-card]'));});
+ root.addEventListener('change',e=>{if(e.target.matches('[data-copy-strict]'))typingRefresh(e.target.closest('[data-copy-card]'));});
+ root.addEventListener('keydown',e=>{
+  if(e.target.matches('[data-copy-input]')&&(e.ctrlKey||e.metaKey)&&e.key==='Enter'&&!e.isComposing&&e.keyCode!==229&&!e.repeat){e.preventDefault();typingCheck(e.target.closest('[data-copy-card]'));}
+ });
+ root.addEventListener('click',e=>{
+  const b=e.target.closest('[data-copy-action]');if(!b)return;
+  if(currentUser()!==userId){accountChanged();return;}
+  const card=b.closest('[data-copy-card]'),input=card?.querySelector('[data-copy-input]');if(!input||input.dataset.saveUser!==userId||Number(input.dataset.saveLesson)!==lessonId)return;
+  const id=card.dataset.copyCard;
+  if(b.dataset.copyAction==='check')typingCheck(card);
+  else if(b.dataset.copyAction==='original')typingSetOriginal(id,!$('#transcript-'+id)?.hidden);
+  else if(b.dataset.copyAction==='clear'){
+   if((input.value||typingReadResult(id))&&!window.confirm('X\u00f3a b\u1ea3n g\u00f5 v\u00e0 k\u1ebft qu\u1ea3 c\u1ee7a b\u00e0i kh\u00f3a '+id+'? C\u00e1c b\u00e0i kh\u00f3a kh\u00e1c v\u1eabn \u0111\u01b0\u1ee3c gi\u1eef nguy\u00ean.'))return;
+   input.value='';save(typingKey('draft',id),'');save(typingKey('result',id),'');typingRefresh(card,true);input.focus({preventScroll:true});
+  }
+ });
+}
+
 window.AlbertHSK30={build:'2026-10-13.1-user-assessment',setEdition,openLesson:goLesson,getCounts:()=>({lessons:DATA.length,texts:DATA.reduce((a,l)=>a+l.texts.length,0),grammar:DATA.reduce((a,l)=>a+l.grammar.length,0),vocab:DATA.reduce((a,l)=>a+l.vocab.length,0),tracks:120,workbookTracks:16,totalTracks:136}),getUiVersion:()=>({grammarGuides:45,grammarExamplePairs:90,grammarPinyin:true,dictionaryToggle:true,gradeButtonLabel:'AI chấm',textbookSections:5,textbookTabs:5,stickyStudyTabs:true,groupGrading:true,lessonTabs:5,perUserAssessment:true,assessmentCourseIsolation:true,assessmentAI:true,assessmentHistory:true,workbookQuestions:510,workbookVocabularyFills:45,workbookOpenQuestions:30,workbookTranscriptQuestions:175,workbookTranscriptTab:true,workbookOriginalAudioOnly:true,workbookVerifiedRecordings:16,workbookStickyAudio:true,workbookPlaybackMemory:true,workbookAudioContinuesInTranscript:true,sharedLessonWorkspace:true,lessonScopedMaterials:true,perLessonSectionMemory:true,originalAudioIntegrated:true,driveGateway:true,driveSetupRequired:true,liveDriveVerified:false,questionCount:240,inlineVocabulary:true,inlineComprehension:true,originalExerciseComparison:false,pictureCards:60,iconSet:"Microsoft Fluent UI System Icons Regular"}),getLocation:()=>({edition,view,lessonId,tab,sectionTab,workbookSection:wbSection,textId,userId}),openAssessment:a30Open,getLearningAssessment:(selection,source)=>{accountChanged();const a=a30Analyze(a30Selection(selection),a30Source(source));return JSON.parse(JSON.stringify({course:'hsk2',edition:'3.0',user:userId,selection:a.selection,source:a.source,score:a.score,total:a.total,answered:a.answered,graded:a.graded,pending:a.pending,stale:a.stale,skills:a.skills,lessons:a.lessons.map(l=>({lesson:l.lesson,score:l.score,total:l.total,answered:l.answered,graded:l.graded})),groups:a.groups.map(g=>({key:g.key,id:g.id,lesson:g.lesson,mock:g.mock,score:g.score,graded:g.graded,answered:g.answered,stale:g.stale,items:g.items.map(t=>({id:t.id,label:t.label,score:t.score,answered:t.answered,stale:t.stale,method:t.method}))}))}));},getWorkbookAudioManifest:()=>JSON.parse(JSON.stringify(WB_RECORDINGS)),getWorkbookData:()=>WB,openWorkbookMock:goWorkbookMock,getSourceData:()=>DATA,getGrammarGuides:()=>GRAMMAR_GUIDES,getGradeGroups:n=>buildGradeGroups(Number(n)||lessonId).map(g=>({id:g.id,title:g.title,items:g.items})),selectSection};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
@@ -37408,6 +37575,54 @@ textarea.note,[data-field="review-next"],[data-field="activity-reflection"],[dat
  .grammar-legacy>summary{font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){.grammar-topic-choice{transition:none}}
+
+/* 2026-10-14: content-sized Textbook/Workbook subtabs, both in-page and pinned. */
+.study-tab-row.study-navigation .study-subrow,
+#study-dock .study-tab-row.study-navigation .study-subrow{padding:3px 10px;min-height:0}
+.study-tab-row.study-navigation .study-subrow .textbook-tabs,
+#study-dock .study-tab-row.study-navigation .study-subrow .textbook-tabs{
+ align-items:center;justify-content:flex-start;gap:4px;min-height:34px;height:auto;padding:0;width:100%;flex:1 1 auto
+}
+.study-tab-row.study-navigation .study-subrow .textbook-tabs button,
+#study-dock .study-tab-row.study-navigation .study-subrow .textbook-tabs button{
+ flex:0 0 auto;width:auto;min-width:0;max-width:none;min-height:32px;height:auto;
+ margin:0;padding:6px 11px;border-radius:5px;font-size:13px;line-height:1.4;white-space:nowrap
+}
+.reading-copy{margin:20px 0;border:1px solid var(--line);border-radius:7px;padding:16px;background:#fafbfc;min-width:0}
+.copy-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.copy-head h4{font:600 15px/1.5 var(--font-ui);color:var(--navy);margin:0}
+.copy-head p,.copy-rule{font:12px/1.65 var(--font-ui);color:var(--muted);margin:4px 0 0}
+.copy-input-label{display:block;font-size:12px;font-weight:600;margin:0 0 6px}
+textarea.copy-input{display:block;width:100%;max-width:100%;min-height:150px;resize:vertical;padding:12px;border:1px solid #ccd4df;border-radius:5px;background:#fff;color:var(--navy);font:17px/1.9 var(--font-zh),var(--font-ui);box-sizing:border-box}
+textarea.copy-input::placeholder{font:12px/1.8 var(--font-ui);color:var(--muted)}
+.copy-options{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;margin:10px 0;color:var(--muted);font-size:11px}
+.copy-options label{display:inline-flex;align-items:center;gap:7px;font-size:12px;cursor:pointer}
+.copy-options input{width:16px;height:16px;margin:0;accent-color:var(--teal)}
+.copy-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}
+.copy-stats{display:flex;gap:7px 15px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.copy-stats strong{font-weight:600;color:var(--navy)}
+.copy-buttons{display:flex;gap:6px;flex-wrap:wrap}
+.copy-result{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;min-width:0}
+.copy-result-summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.copy-result-summary>strong{font-size:23px;font-weight:700;color:var(--teal)}
+.copy-legend{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0;font-size:11px}
+.copy-legend>span{padding:2px 6px;border-radius:3px}
+.copy-diff{font:18px/2.1 var(--font-zh),var(--font-ui);white-space:pre-wrap;overflow-wrap:anywhere;background:#fff;border:1px solid var(--line);border-radius:5px;padding:10px}
+.copy-correct{color:#12674a}
+.copy-wrong{color:#a4262c;background:#fce8e8;border-radius:3px}
+.copy-wrong del{opacity:.8}
+.copy-wrong ins{text-decoration:none;font-weight:600}
+.copy-missing{color:#8a5700;background:#fff3ce;text-decoration:underline;text-decoration-style:dotted;border-radius:3px}
+.copy-extra{color:#a4262c;background:#fce8e8;border-radius:3px}
+.copy-stale{margin:0;font-size:12px;line-height:1.8;color:#785500}
+@media(max-width:600px){
+ .study-tab-row.study-navigation .study-subrow,
+ #study-dock .study-tab-row.study-navigation .study-subrow{padding:3px 6px}
+ .reading-copy{padding:12px;margin:16px 0}
+ .copy-head h4{font-size:14px}
+ .copy-buttons{margin-left:auto}
+ textarea.copy-input{font-size:16px;min-height:140px}
+}
 </script>
 <script id="hsk303-module">
 
@@ -37448,7 +37663,7 @@ function save(key,v,n=lessonId){if(currentUser()!==userId){accountChanged();retu
 function pendingCount(n=lessonId){return Object.values(lstore(n).values).filter(x=>x.dirty).length;}
 function statusText(){if(persistError)return persistError;if(userId==='guest')return cloudStatus||'Đã lưu trên trình duyệt này · Chế độ khách';if(cloudStatus)return cloudStatus;return pendingCount()?'Đã lưu trên máy · Đang chờ đồng bộ':'Đã lưu trên máy · Tách riêng theo tài khoản';}
 function updateProgress(){const node=$('#save-status');if(node)node.textContent=statusText();const c=$('#filled-count');if(c)c.textContent=filled(lessonId)+' ô đã điền';$$('[data-group-count]').forEach(el=>{const p=el.dataset.groupCount;const vals=lstore().values;el.textContent=Object.keys(vals).filter(k=>k.startsWith(p)&&String(vals[k].value).trim()).length+' ô đã điền';});}
-function filled(n){return Object.entries(lstore(n).values).filter(([k,r])=>!/^(done-|known-|listen-|goal-|grade:|wbcheck:|assessment:)/.test(k)&&typeof r.value==='string'&&r.value.trim()).length;}
+function filled(n){return Object.entries(lstore(n).values).filter(([k,r])=>!/^(done-|known-|listen-|goal-|grade:|wbcheck:|assessment:|typing:result:)/.test(k)&&typeof r.value==='string'&&r.value.trim()).length;}
 function completed(n){const known=DATA[n-1].vocab.every((_,i)=>value('known-'+i,n)===true);return ['texts','grammar','practice'].filter(s=>value('done-'+s,n)===true).length+((known||value('done-vocab',n)===true)?1:0);}
 function scheduleSync(n){clearTimeout(cloudTimer);if(userId!=='guest')cloudTimer=setTimeout(()=>syncLesson(n),900);}
 async function syncLesson(n=lessonId){
@@ -37486,7 +37701,7 @@ function readCloud(n){
     writeStore();
     if(lessonId===n&&edition==='3.0'){
      $$('[data-field]').forEach(el=>{if(root.activeElement===el)return;const v=value(el.dataset.field);if(el.type==='checkbox')el.checked=v===true;else if(el.type==='radio')el.checked=el.value===String(v);else el.value=String(v);});
-     updateProgress();refreshGradeControls();
+     updateProgress();refreshGradeControls();typingRefreshAll();
     }
     a30ScheduleRefresh();
    }
@@ -37653,7 +37868,7 @@ function textsTab(){
  audio(r.track,'Nghe bài khóa '+r.id,'reading')+
  '<section class="qblock" aria-labelledby="listen-title-'+r.id+'"><h4 class="question-heading" id="listen-title-'+r.id+'">Nghe & trả lời <span class="meta">2 câu</span></h4><div class="question-body"><p class="zh instruction">'+(r.id===4?'听两遍课文，判断正误。':'听两遍对话，选择正确答案。')+'</p>'+r.listenQuestions.map((q,i)=>nativeQuestion(q,'text-'+r.id+'-listen-'+(i+1),i+1)).join('')+checkbox('listen-'+r.id,'Tôi đã nghe đoạn này.')+gradeControls('text-'+r.id+'-listen')+'</div></section>'+
  '<div class="reading-actions">'+btn('Ẩn bài đọc','toggle-text','aria-expanded="true" aria-controls="transcript-'+r.id+'"','tiny subtle')+'<span class="small muted">Đọc theo vai</span></div>'+
- '<div class="textbody" id="transcript-'+r.id+'"><div class="dialogue '+(r.id===4?'narrative':'')+'">'+r.lines.map(x=>'<div class="speech"><div class="speaker">'+esc(x.speaker)+'</div><div class="zh">'+esc(x.zh)+'</div></div>').join('')+'</div></div>'+
+ '<div class="textbody" id="transcript-'+r.id+'"><div class="dialogue '+(r.id===4?'narrative':'')+'">'+r.lines.map(x=>'<div class="speech"><div class="speaker">'+esc(x.speaker)+'</div><div class="zh">'+esc(x.zh)+'</div></div>').join('')+'</div></div>'+typingBlock(r)+
  '<section class="qblock" aria-labelledby="comprehension-title-'+r.id+'"><h4 class="question-heading" id="comprehension-title-'+r.id+'">Đọc hiểu <span class="meta">2 câu</span></h4><div class="question-body"><p class="zh instruction">'+(r.id===4?'朗读课文，读后选择正确答案。':'分角色朗读对话，读后回答问题。')+'</p>'+r.afterQuestions.map((q,i)=>nativeQuestion(q,'text-'+r.id+'-after-'+(i+1),i+1)).join('')+gradeControls('text-'+r.id+'-after')+'</div></section></article>').join('')+
  '<p class="small muted gap">Bài làm được tự lưu. Bấm “AI chấm” sau mỗi phần nghe hoặc đọc hiểu; hệ thống chấm dựa trên bài khóa tương ứng.</p>'+
  stageDone('texts','Tôi đã nghe, đọc và trả lời câu hỏi của cả 4 bài khóa.');
@@ -37738,7 +37953,7 @@ function renderHSK303Core(){
    studyResizeObserver.disconnect();studyResizeObserver.observe(studyDock);studyResizeObserver.observe(app);
    $$('.tb-audio-slot .audio').forEach(box=>studyResizeObserver.observe(box));
  }
- hydrate();decorateSummaries();updateProgress();refreshGradeControls();refreshDictionaryToggles();wbInitializeAudio();syncStudyDock();a30AfterRender();
+ hydrate();decorateSummaries();updateProgress();refreshGradeControls();refreshDictionaryToggles();wbInitializeAudio();syncStudyDock();a30AfterRender();typingRefreshAll();
 }
 
 function studyScrollElement(){
@@ -37806,6 +38021,7 @@ function handleInput(e){
  if(t.matches('[data-audio-progress]')){const a=t.closest('.audio').querySelector('audio');if(Number.isFinite(a.duration))a.currentTime=Number(t.value)/1000*a.duration;}
 }
 function installEvents(){
+ installTypingEvents();
  installSimpleEvents();root.addEventListener('input',handleInput);root.addEventListener('focusin',e=>{if(e.target.matches('.inline[data-field]'))activeBlank=e.target;});
  root.addEventListener('change',e=>{if(renderBusy)return;const t=e.target;handleInput(e);if(t.matches('[data-lesson-select]'))goLesson(t.value,tab);if(t.matches('[data-audio-lesson]')){audioLessonId=Math.min(18,Math.max(1,Number(t.value)||1));render();scrollTop();}if(t.matches('[data-audio-rate]'))t.closest('.audio').querySelector('audio').playbackRate=Number(t.value);if(t.matches('[data-audio-loop]')){const box=t.closest('.audio'),a=box.querySelector('audio');a.loop=t.checked;if(t.checked){delete a.dataset.abOn;delete a.dataset.abA;delete a.dataset.abB;box.querySelector('.ab-label').textContent='A-B';}}
  
@@ -37842,7 +38058,7 @@ function installEvents(){
  else if(act==='zoom')$('.dialogscroll',modalRoot).classList.toggle('zoom');
  else if(act==='book-prev'){bookPage--;render();scrollTop();}
  else if(act==='book-next'){bookPage++;render();scrollTop();}
- else if(act==='toggle-text'){const x=b.closest('.textpanel').querySelector('.textbody');x.hidden=!x.hidden;b.setAttribute('aria-expanded',String(!x.hidden));b.textContent=x.hidden?'Hiện bài đọc':'Ẩn bài đọc';}
+ else if(act==='toggle-text'){const x=b.closest('.textpanel').querySelector('.textbody');typingSetOriginal(x.id.replace('transcript-',''),!x.hidden);}
  else if(act==='insert-word'){const lo=Number(b.dataset.from||1),hi=Number(b.dataset.to||10),valid=x=>x?.isConnected&&x.dataset.field?.startsWith('comp-')&&Number(x.dataset.field.split('-')[1])>=lo&&Number(x.dataset.field.split('-')[1])<=hi;let target=activeBlank;if(!valid(target)){const candidates=$$('.inline').filter(valid);target=candidates.find(x=>!x.value)||candidates[0];}if(target){target.value=b.dataset.value;save(target.dataset.field,target.value);target.focus();}}
  else if(act==='check-word'){const i=Number(b.dataset.word),got=String(value('type-'+i)).trim(),expected=lesson().vocab[i].zh;const feedback=$('[data-feedback-word="'+i+'"]');feedback.textContent=!got?'Bạn chưa nhập chữ Hán.':got===expected?'Khớp từ gốc: '+expected:'Chưa khớp. Từ trong tài liệu: '+expected;}
  else if(act==='export')exportData();
@@ -39267,7 +39483,7 @@ function textsTab(){
  return '<p class="small muted reading-help">'+(hasAudio?'Loa phát MP3 gốc được nhúng trong PowerPoint. Có thể ẩn bài đọc để luyện nghe trước.':'Tài liệu đính kèm chưa có MP3 cho bài này. Bài khóa và toàn bộ câu hỏi vẫn có đủ; có thể làm câu hỏi bằng cách đọc văn bản, nhưng đó không phải bài kiểm tra nghe.')+'</p>'+
  l.texts.map(r=>'<article class="reading-card textpanel" id="reading-'+r.id+'" aria-labelledby="reading-title-'+r.id+'"><div class="reading-top"><h3 id="reading-title-'+r.id+'">课文 '+r.id+' <span class="muted">/ Bài khóa '+r.id+'</span></h3>'+sourceButton(r.page,'Trang '+r.page)+'</div>'+audio(r.track,'Nghe bài khóa '+r.id,'reading')+
  '<section class="qblock"><h4 class="question-heading">Nghe & trả lời <span class="meta">'+r.listenQuestions.length+' câu</span></h4><div class="question-body"><p class="zh instruction">听两遍'+(r.id===4?'课文':'对话')+'，选择正确答案。</p>'+r.listenQuestions.map((q,i)=>nativeQuestion(q,'text-'+r.id+'-listen-'+(i+1),i+1)).join('')+(hasAudio?checkbox('listen-'+r.id,'Tôi đã nghe đoạn này.'):'<p class="small muted">Chưa có audio nguồn cho phần nghe này.</p>')+gradeControls('text-'+r.id+'-listen')+'</div></section>'+
- '<div class="reading-actions">'+btn('Ẩn bài đọc','toggle-text','aria-expanded="true" aria-controls="transcript-'+r.id+'"','tiny subtle')+'<span class="small muted">'+(r.id===4?'Đọc bài văn':'Đọc theo vai')+'</span></div><div class="textbody" id="transcript-'+r.id+'"><div class="dialogue '+(r.id===4?'narrative':'')+'">'+r.lines.map(x=>'<div class="speech"><div class="speaker">'+esc(x.speaker)+'</div><div class="zh">'+esc(x.zh)+'</div></div>').join('')+'</div></div>'+
+ '<div class="reading-actions">'+btn('Ẩn bài đọc','toggle-text','aria-expanded="true" aria-controls="transcript-'+r.id+'"','tiny subtle')+'<span class="small muted">'+(r.id===4?'Đọc bài văn':'Đọc theo vai')+'</span></div><div class="textbody" id="transcript-'+r.id+'"><div class="dialogue '+(r.id===4?'narrative':'')+'">'+r.lines.map(x=>'<div class="speech"><div class="speaker">'+esc(x.speaker)+'</div><div class="zh">'+esc(x.zh)+'</div></div>').join('')+'</div></div>'+typingBlock(r)+
  '<section class="qblock"><h4 class="question-heading">Đọc hiểu <span class="meta">'+r.afterQuestions.length+' câu</span></h4><div class="question-body"><p class="zh instruction">'+(r.id===4?'朗读课文。':'分角色朗读对话，读后回答问题。')+'</p>'+r.afterQuestions.map((q,i)=>nativeQuestion(q,'text-'+r.id+'-after-'+(i+1),i+1)).join('')+gradeControls('text-'+r.id+'-after')+'</div></section></article>').join('')+stageDone('texts','Tôi đã đọc và trả lời các câu hỏi của 4 bài khóa.');
 }
 function grammarFocusHTML(text){return String(text).split(/([\u3400-\u9fff]+)/).map(x=>/[\u3400-\u9fff]/.test(x)?'<span class="zh">'+esc(x)+'</span>':esc(x)).join('');}
@@ -39341,6 +39557,124 @@ let renderBusy=false;
 function render(){if(renderBusy)return;renderBusy=true;try{return renderHSK303Core();}finally{renderBusy=false;}}
 
 
+/* Reading-copy practice. Private to this edition/level module.
+   Uses the existing per-account store, backup and cloud queue. */
+function typingKey(kind,id){return 'typing:'+kind+':'+id;}
+function typingReference(id){const r=lesson().texts.find(x=>String(x.id)===String(id));return r?r.lines.map(x=>String(x.zh||'')).join('\n'):'';}
+function typingNormalize(text,strict){
+ const s=String(text||'').normalize('NFKC').replace(/\s+/gu,'');
+ return strict?s:s.replace(/\p{P}/gu,'');
+}
+function typingAlign(reference,answer){
+ const a=Array.from(reference),b=Array.from(answer),n=a.length,m=b.length,w=m+1;
+ // Full edit-distance alignment: one missing character does not shift all later text.
+ const d=new Uint16Array((n+1)*w);
+ for(let i=0;i<=n;i++)d[i*w]=i;
+ for(let j=0;j<=m;j++)d[j]=j;
+ for(let i=1;i<=n;i++)for(let j=1;j<=m;j++){
+  d[i*w+j]=Math.min(d[(i-1)*w+j-1]+(a[i-1]===b[j-1]?0:1),d[(i-1)*w+j]+1,d[i*w+j-1]+1);
+ }
+ let i=n,j=m,correct=0,wrong=0,missing=0,extra=0;const parts=[];
+ while(i||j){
+  const at=d[i*w+j];
+  if(i&&j&&a[i-1]===b[j-1]&&at===d[(i-1)*w+j-1]){parts.push({kind:'correct',expected:a[--i],actual:b[--j]});correct++;}
+  else if(i&&j&&at===d[(i-1)*w+j-1]+1){parts.push({kind:'wrong',expected:a[--i],actual:b[--j]});wrong++;}
+  else if(i&&at===d[(i-1)*w+j]+1){parts.push({kind:'missing',expected:a[--i],actual:''});missing++;}
+  else{parts.push({kind:'extra',expected:'',actual:b[--j]});extra++;}
+ }
+ return {parts:parts.reverse(),correct,wrong,missing,extra,total:n,typed:m,score:n?Math.max(0,Math.round(100*(1-d[n*w+m]/n))):0};
+}
+function typingBlock(r){
+ const id=r.id,k=typingKey('draft',id),strict=value(typingKey('strict',id))===true;
+ return '<section class="reading-copy" data-copy-card="'+id+'" aria-labelledby="copy-title-'+id+'">'+
+ '<div class="copy-head"><div><h4 id="copy-title-'+id+'">Luy\u1ec7n g\u00f5 l\u1ea1i b\u00e0i kh\u00f3a '+id+'</h4><p>G\u00f5 n\u1ed9i dung ph\u00eda tr\u00ean, kh\u00f4ng c\u1ea7n t\u00ean nh\u00e2n v\u1eadt.</p></div>'+
+ '<button type="button" class="btn tiny subtle" data-copy-action="original" aria-controls="transcript-'+id+'" aria-expanded="true">\u1ea8n b\u00e0i m\u1eabu</button></div>'+
+ '<label class="copy-input-label" for="copy-input-'+id+'">B\u1ea3n g\u00f5 c\u1ee7a b\u1ea1n</label>'+
+ '<textarea id="copy-input-'+id+'" class="copy-input" data-copy-input="'+id+'" data-field="'+k+'" rows="5" maxlength="10000" lang="zh-CN" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="copy-help-'+id+'" placeholder="G\u00f5 l\u1ea1i b\u00e0i kh\u00f3a b\u1eb1ng ch\u1eef H\u00e1n...">'+esc(value(k))+'</textarea>'+
+ '<div class="copy-options"><label><input type="checkbox" data-copy-strict="'+id+'" data-field="'+typingKey('strict',id)+'" '+(strict?'checked':'')+'> T\u00ednh c\u1ea3 d\u1ea5u c\u00e2u</label><span id="copy-help-'+id+'">Ctrl + Enter / Cmd + Enter \u0111\u1ec3 ch\u1ea5m \u00b7 T\u1ef1 l\u01b0u b\u00e0i g\u00f5</span></div>'+
+ '<div class="copy-toolbar"><div class="copy-stats"><span>\u0110\u00e3 g\u00f5: <strong data-copy-chars>0</strong> k\u00fd t\u1ef1</span><span>Ti\u1ebfn \u0111\u1ed9: <strong data-copy-progress>0%</strong></span><span>L\u1ea7n ch\u1ea5m cu\u1ed1i: <strong data-copy-score>\u2014</strong></span></div>'+
+ '<div class="copy-buttons"><button type="button" class="btn tiny" data-copy-action="clear">X\u00f3a b\u1ea3n g\u00f5</button><button type="button" class="btn tiny primary" data-copy-action="check">Ch\u1ea5m b\u00e0i g\u00f5</button></div></div>'+
+ '<div class="copy-result" data-copy-result role="status" aria-live="polite" hidden></div></section>';
+}
+function typingSetOriginal(id,hidden,persist=true){
+ if(persist)save(typingKey('hidden',id),hidden);
+ const original=$('#transcript-'+id);if(original)original.hidden=hidden;
+ const article=$('#reading-'+id);if(!article)return;
+ article.querySelectorAll('[data-act="toggle-text"],[data-copy-action="original"]').forEach(b=>{
+  b.setAttribute('aria-expanded',String(!hidden));
+  b.textContent=b.dataset.copyAction?(hidden?'Hi\u1ec7n b\u00e0i m\u1eabu':'\u1ea8n b\u00e0i m\u1eabu'):(hidden?'Hi\u1ec7n b\u00e0i \u0111\u1ecdc':'\u1ea8n b\u00e0i \u0111\u1ecdc');
+ });
+}
+function typingReadResult(id){
+ try{const r=JSON.parse(value(typingKey('result',id))||'null');return r&&r.schema===1&&typeof r.answer==='string'&&r.answer.length<=10000&&typeof r.reference==='string'&&r.reference.length<10000?r:null;}catch(_){return null;}
+}
+function typingResultHTML(r){
+ const wrongLabel='Sai',missingLabel='Thi\u1ebfu',extraLabel='Th\u1eeba';
+ return '<div class="copy-result-summary"><strong>'+r.score+'%</strong><span>\u0110\u00fang '+r.correct+'/'+r.total+' \u00b7 '+wrongLabel+' '+r.wrong+' \u00b7 '+missingLabel+' '+r.missing+' \u00b7 '+extraLabel+' '+r.extra+'</span></div>'+
+ '<div class="copy-legend"><span class="copy-correct">\u0110\u00fang</span><span class="copy-wrong">Sai: b\u1ea3n g\u00f5 \u2192 m\u1eabu</span><span class="copy-missing">Thi\u1ebfu</span><span class="copy-extra">Th\u1eeba</span></div>'+
+ '<div class="copy-diff" lang="zh-CN">'+r.parts.map(p=>{
+  if(p.kind==='correct')return '<span class="copy-correct">'+esc(p.expected)+'</span>';
+  if(p.kind==='wrong')return '<span class="copy-wrong" title="Sai: '+esc(p.actual)+' \u2192 '+esc(p.expected)+'"><del>'+esc(p.actual)+'</del><span aria-hidden="true">\u2192</span><ins>'+esc(p.expected)+'</ins></span>';
+  if(p.kind==='missing')return '<ins class="copy-missing" title="C\u1ea7n g\u00f5 th\u00eam: '+esc(p.expected)+'">'+esc(p.expected)+'</ins>';
+  return '<del class="copy-extra" title="G\u00f5 th\u1eeba: '+esc(p.actual)+'">'+esc(p.actual)+'</del>';
+ }).join('')+'</div><p class="copy-rule">'+(r.strict?'Ch\u1ea5m c\u1ea3 d\u1ea5u c\u00e2u; b\u1ecf qua kho\u1ea3ng tr\u1eafng v\u00e0 xu\u1ed1ng d\u00f2ng.':'B\u1ecf qua d\u1ea5u c\u00e2u, kho\u1ea3ng tr\u1eafng v\u00e0 xu\u1ed1ng d\u00f2ng khi ch\u1ea5m.')+' \u0110\u1ed1i chi\u1ebfu tr\u1ef1c ti\u1ebfp v\u1edbi b\u00e0i m\u1eabu, kh\u00f4ng g\u1ecdi AI.</p>';
+}
+function typingRefresh(card,force=false){
+ if(!card)return;const id=card.dataset.copyCard,input=card.querySelector('[data-copy-input]');if(!input)return;
+ const strict=card.querySelector('[data-copy-strict]').checked,reference=typingNormalize(typingReference(id),strict),answer=typingNormalize(input.value,strict);
+ const total=Array.from(reference).length,typed=Array.from(answer).length;
+ card.querySelector('[data-copy-chars]').textContent=String(typed);
+ card.querySelector('[data-copy-progress]').textContent=(total?Math.min(100,Math.round(typed/total*100)):0)+'%';
+ const record=typingReadResult(id),result=card.querySelector('[data-copy-result]');
+ if(record){
+  const stale=record.answer!==input.value||record.strict!==strict||record.reference!==reference;
+  card.querySelector('[data-copy-score]').textContent=Number(record.score||0)+'%'+(stale?' \u00b7 \u0111\u00e3 s\u1eeda':'');
+  const signature=String(record.at)+'|'+String(stale);
+  if(force||result.dataset.signature!==signature){
+   result.hidden=false;result.dataset.signature=signature;
+   if(stale)result.innerHTML='<p class="copy-stale">B\u1ea3n g\u00f5 ho\u1eb7c ch\u1ebf \u0111\u1ed9 ch\u1ea5m \u0111\u00e3 thay \u0111\u1ed5i. Nh\u1ea5n <b>Ch\u1ea5m b\u00e0i g\u00f5</b> \u0111\u1ec3 c\u1eadp nh\u1eadt k\u1ebft qu\u1ea3.</p>';
+   else result.innerHTML=typingResultHTML({...typingAlign(record.reference,typingNormalize(record.answer,record.strict)),strict:record.strict});
+  }
+ }else{card.querySelector('[data-copy-score]').textContent='\u2014';if(force||result.dataset.signature){result.hidden=true;result.innerHTML='';delete result.dataset.signature;}}
+}
+function typingRefreshAll(){
+ if(!root||edition!=='3.0')return;
+ $$('[data-copy-card]').forEach(card=>{typingSetOriginal(card.dataset.copyCard,value(typingKey('hidden',card.dataset.copyCard))===true,false);typingRefresh(card);});
+}
+function typingCheck(card){
+ if(!card||currentUser()!==userId){accountChanged();return;}
+ const input=card.querySelector('[data-copy-input]');
+ if(input.dataset.saveUser!==userId||Number(input.dataset.saveLesson)!==lessonId)return;
+ const id=card.dataset.copyCard,strict=card.querySelector('[data-copy-strict]').checked;
+ const reference=typingNormalize(typingReference(id),strict),answer=typingNormalize(input.value,strict),box=card.querySelector('[data-copy-result]');
+ if(!answer){box.hidden=false;box.textContent='H\u00e3y g\u00f5 b\u00e0i tr\u01b0\u1edbc khi ch\u1ea5m.';input.focus({preventScroll:true});return;}
+ if(!reference)return;
+ save(typingKey('draft',id),input.value);save(typingKey('strict',id),strict);
+ const r=typingAlign(reference,answer);
+ save(typingKey('result',id),JSON.stringify({schema:1,answer:input.value,reference,strict,at:new Date().toISOString(),score:r.score,correct:r.correct,wrong:r.wrong,missing:r.missing,extra:r.extra,total:r.total}));
+ typingRefresh(card,true);syncStudyDock();
+}
+function installTypingEvents(){
+ root.addEventListener('input',e=>{if(e.target.matches('[data-copy-input]')&&!e.isComposing)typingRefresh(e.target.closest('[data-copy-card]'));});
+ root.addEventListener('compositionend',e=>{if(e.target.matches('[data-copy-input]'))typingRefresh(e.target.closest('[data-copy-card]'));});
+ root.addEventListener('change',e=>{if(e.target.matches('[data-copy-strict]'))typingRefresh(e.target.closest('[data-copy-card]'));});
+ root.addEventListener('keydown',e=>{
+  if(e.target.matches('[data-copy-input]')&&(e.ctrlKey||e.metaKey)&&e.key==='Enter'&&!e.isComposing&&e.keyCode!==229&&!e.repeat){e.preventDefault();typingCheck(e.target.closest('[data-copy-card]'));}
+ });
+ root.addEventListener('click',e=>{
+  const b=e.target.closest('[data-copy-action]');if(!b)return;
+  if(currentUser()!==userId){accountChanged();return;}
+  const card=b.closest('[data-copy-card]'),input=card?.querySelector('[data-copy-input]');if(!input||input.dataset.saveUser!==userId||Number(input.dataset.saveLesson)!==lessonId)return;
+  const id=card.dataset.copyCard;
+  if(b.dataset.copyAction==='check')typingCheck(card);
+  else if(b.dataset.copyAction==='original')typingSetOriginal(id,!$('#transcript-'+id)?.hidden);
+  else if(b.dataset.copyAction==='clear'){
+   if((input.value||typingReadResult(id))&&!window.confirm('X\u00f3a b\u1ea3n g\u00f5 v\u00e0 k\u1ebft qu\u1ea3 c\u1ee7a b\u00e0i kh\u00f3a '+id+'? C\u00e1c b\u00e0i kh\u00f3a kh\u00e1c v\u1eabn \u0111\u01b0\u1ee3c gi\u1eef nguy\u00ean.'))return;
+   input.value='';save(typingKey('draft',id),'');save(typingKey('result',id),'');typingRefresh(card,true);input.focus({preventScroll:true});
+  }
+ });
+}
+
 window.AlbertHSK303={
  build:'2026-10-13.hsk3-textbook.2-grammar-audio',setEdition,openLesson:goLesson,openView:goCourseView,
  getCounts:()=>({lessons:DATA.length,texts:DATA.reduce((a,l)=>a+l.texts.length,0),grammar:DATA.reduce((a,l)=>a+l.grammar.length,0),vocab:DATA.reduce((a,l)=>a+l.vocab.length,0),tracks:DATA.reduce((a,l)=>a+l.availableTracks.length,0),textbookSections:5,pictures:54}),
@@ -39373,7 +39707,18 @@ function refresh(){
  if(side){side.hidden=!newOn;side.querySelector('select').value='3';}
  const appbar=document.getElementById('albert-menu-appbar');let select=document.getElementById('hsk303-level-switch');
  if(appbar&&!select){select=document.createElement('select');select.id='hsk303-level-switch';select.setAttribute('aria-label','C\u1ea5p HSK 3.0');select.innerHTML='<option value="2">HSK 2</option><option value="3">HSK 3</option>';appbar.appendChild(select);}
- if(select){select.hidden=!on;select.value=String(active);}
+ if(select){
+  const legacy=document.getElementById('course-selector');
+  const options=on?[{value:'2',text:'HSK 2'},{value:'3',text:'HSK 3'}]:
+   Array.from(legacy?.options||[]).filter(o=>/^hsk\d+$/.test(o.value)&&!o.disabled)
+   .sort((a,b)=>Number(a.value.replace('hsk',''))-Number(b.value.replace('hsk','')))
+   .map(o=>({value:o.value,text:'HSK '+o.value.replace('hsk','')}));
+  const signature=(on?'3.0:':'2.0:')+options.map(o=>o.value).join(',');
+  if(select.dataset.courseOptions!==signature){select.replaceChildren(...options.map(o=>new Option(o.text,o.value)));select.dataset.courseOptions=signature;}
+  select.hidden=options.length===0;
+  select.setAttribute('aria-label',on?'Ch\u1ecdn c\u1ea5p HSK 3.0':'Ch\u1ecdn c\u1ea5p HSK 2.0');
+  select.value=on?String(active):String(window.CURRENT_COURSE||legacy?.value||'hsk5');
+ }
  if(newOn)document.querySelectorAll('[data-hsk-edition]').forEach(b=>{const yes=b.dataset.hskEdition==='3.0';b.setAttribute('aria-pressed',String(yes));b.classList.toggle('selected',yes);});
 }
 function choose(level,remember=true){
@@ -39406,7 +39751,17 @@ document.addEventListener('click',e=>{
  }
  const nav=e.target.closest('[data-hsk303-nav]');if(nav){window.AlbertHSK303.openView(nav.dataset.hsk303Nav);window.albertCloseMenu?.();}
 },true);
-document.addEventListener('change',e=>{if(e.target.matches('#hsk30-side select,[data-hsk303-level],#hsk303-level-switch'))choose(e.target.value);},true);
+document.addEventListener('change',e=>{
+ const target=e.target;if(!(target instanceof Element))return;
+ if(target.id==='hsk303-level-switch'){
+  if(edition3()){choose(target.value);return;}
+  const legacy=document.getElementById('course-selector');
+  if(!legacy||!Array.from(legacy.options).some(o=>o.value===target.value&&!o.disabled)){refresh();return;}
+  legacy.value=target.value;legacy.dispatchEvent(new Event('change',{bubbles:true}));
+  refresh();setTimeout(refresh,80);window.albertCloseMenu?.();return;
+ }
+ if(target.matches('#hsk30-side select,[data-hsk303-level]'))choose(target.value);
+},true);
 window.AlbertHSK30Courses={choose,refresh};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
