@@ -40371,7 +40371,7 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
   if (!isTouchDevice) return;
   window.__albertAppUi = true;
 
-  var UI_VERSION = '8';   // tăng mỗi lần đổi giao diện; hiện ở cuối bảng "Thêm"
+  var UI_VERSION = '10';   // tăng mỗi lần đổi giao diện; hiện ở cuối bảng "Thêm"
   window.ALBERT_UI_VERSION = UI_VERSION;
   var LS_ONBOARDED = 'albertApp.onboarded.v1';
   var LS_MODE = 'albertWeb.uiMode';   // 'app' = giao diện giống app, 'web' = giao diện web
@@ -40448,6 +40448,7 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
     check: { l: '<path d="M5.25 12.75l4.25 4.25 9.25-9.75"/>', lw: 2 },
     aiChat: { f: '<path d="M5.75 4.25h12.5a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2H11l-4.1 3.3a.6.6 0 0 1-.98-.47v-2.83h-.17a2 2 0 0 1-2-2v-8.5a2 2 0 0 1 2-2z"/>',
       d: '<path d="M12 6.9l1.02 2.48 2.48 1.02-2.48 1.02L12 13.9l-1.02-2.48-2.48-1.02 2.48-1.02z"/>' },
+    bell: { f: '<path d="M12 3.5a5.5 5.5 0 0 0-5.5 5.5v3.6l-1.45 2.9a.75.75 0 0 0 .67 1.08h12.56a.75.75 0 0 0 .67-1.08L17.5 12.6V9A5.5 5.5 0 0 0 12 3.5z"/>', l: '<path d="M9.75 19a2.25 2.25 0 0 0 4.5 0"/>' },
     play: { s: '<path d="M8 5.55v12.9a1 1 0 0 0 1.53.85l10.15-6.45a1 1 0 0 0 0-1.7L9.53 4.7A1 1 0 0 0 8 5.55z"/>' },
     pause: { s: '<rect x="6.25" y="4.75" width="4" height="14.5" rx="1.3"/><rect x="13.75" y="4.75" width="4" height="14.5" rx="1.3"/>' },
     rewind: { l: '<path d="M5.1 9.4A7.5 7.5 0 1 1 4.5 12"/><path d="M4.5 4.75V9.5h4.75"/>' },
@@ -40668,6 +40669,9 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
       '#albert-sheet .secgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#fff;border:1px solid var(--albert-stroke);border-radius:8px;padding:6px;--albert-cut:#fff}',
       '#albert-sheet .secgrid.cols-2{grid-template-columns:repeat(2,1fr)}#albert-sheet .secgrid.cols-4{grid-template-columns:repeat(4,1fr)}',
       '#albert-sheet .foot{text-align:center;color:#9a958a;font-size:12px;margin-top:18px}',
+      '#albert-sheet .hint{font-size:14px;color:var(--albert-fg3);margin:4px 4px 0;line-height:1.45}',
+      '#albert-sheet .seg.wrap4{display:grid;grid-template-columns:repeat(4,1fr)}',
+      '#albert-sheet .row[aria-pressed="true"],#albert-sheet .row[aria-pressed="true"] .fi{color:var(--albert-brand)}',
 
       /* hướng dẫn lần đầu */
       '#albert-onb{position:fixed;inset:0;z-index:1000020;background:var(--albert-bg);color:var(--albert-fg1);display:flex;flex-direction:column;',
@@ -41624,6 +41628,231 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
     }, 30);
   }
 
+  /* ================================================================== widget + nhắc từ vựng
+   * Gửi từ vựng của giáo trình đang học sang app (widget màn hình chính + thông báo mỗi ngày).
+   * HSK 2.0: lấy từ dữ liệu bài (LESSONS) và tiến độ (STATE: bài đang học, bài đã xong).
+   * HSK 3.0: từ vựng tải theo từng bài → thu thập từ những bài đã mở mục Từ vựng. */
+  var harvest = { at: 0, sig: {} };
+  var CJK = /[\u3400-\u9fff]/, TONE = /[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/i, LATIN = /[a-zà-ỹ]/i;
+
+  function sendPool(key, title, words, learned) {
+    var NA = window.AlbertNative;
+    if (!NA || !NA.saveWordPool) return;
+    var sig = words.length + ':' + learned.join(',');
+    if (harvest.sig[key] === sig) return;
+    harvest.sig[key] = sig;
+    try { NA.saveWordPool(key, title, JSON.stringify(words), JSON.stringify(learned)); } catch (e) { /* ignore */ }
+  }
+
+  function sendGrammar(key, title, items, learned) {
+    var NA = window.AlbertNative;
+    if (!NA || !NA.saveGrammarPool || !items.length) return;
+    var sig = 'g' + items.length + ':' + learned.join(',');
+    if (harvest.sig['g:' + key] === sig) return;
+    harvest.sig['g:' + key] = sig;
+    try { NA.saveGrammarPool(key, title, JSON.stringify(items), JSON.stringify(learned)); } catch (e) { /* ignore */ }
+  }
+
+  // Đọc ngữ pháp từ các thẻ đang hiển thị (HSK 4 và HSK 3.0 không có sẵn dữ liệu ngữ pháp dạng danh sách).
+  function scrapeGrammar(root, lesson) {
+    var out = [], seen = {};
+    var cards = $all('[class*="point"], [class*="grammar-card"], [class*="gp-card"], [class*="grammar-item"]', root)
+      .filter(function (e) { return e.getClientRects().length && e.textContent.length > 20 && e.textContent.length < 2500; });
+    cards = cards.filter(function (e) { return !cards.some(function (o) { return o !== e && o.contains(e); }); });
+    cards.forEach(function (c) {
+      var head = $all('h2, h3, h4, b, strong, [class*="title"], [class*="head"], [class*="pattern"]', c)
+        .filter(function (e) { return CJK.test(e.textContent) && e.textContent.trim().length <= 40; })[0];
+      if (!head) return;
+      var t = head.textContent.replace(/\s+/g, ' ').replace(/^\s*\d+[.)]?\s*/, '').trim();
+      if (!t || seen[t]) return;
+      var leaves = $all('*', c).filter(function (e) { return e.children.length === 0 && !head.contains(e); })
+        .map(function (e) { return e.textContent.replace(/\s+/g, ' ').trim(); }).filter(Boolean);
+      var m = leaves.filter(function (x) { return LATIN.test(x) && !CJK.test(x) && x.length > 8; })[0] || '';
+      var exI = -1;
+      leaves.forEach(function (x, i) { if (exI < 0 && CJK.test(x) && /[。！？!?]$/.test(x) && x.length >= 4) exI = i; });
+      var ex = exI >= 0 ? leaves[exI] : '';
+      var exv = exI >= 0 && leaves[exI + 1] && LATIN.test(leaves[exI + 1]) && !CJK.test(leaves[exI + 1]) ? leaves[exI + 1] : '';
+      if (!m && !ex) return;
+      seen[t] = 1;
+      out.push({ t: t, m: m, ex: ex, exv: exv, l: lesson });
+    });
+    return out;
+  }
+
+  function mergeGrammar(lsKey, items, lesson) {
+    var data;
+    try { data = JSON.parse(store(lsKey) || '{}'); } catch (e) { data = {}; }
+    data.g = data.g || {};
+    data.l = data.l || [];
+    items.forEach(function (it) { data.g[it.t] = it; });
+    if (lesson && items.length && data.l.indexOf(lesson) < 0) data.l.push(lesson);
+    store(lsKey, JSON.stringify(data));
+    return { items: Object.keys(data.g).map(function (k) { return data.g[k]; }), learned: data.l };
+  }
+
+  function harvestWords(force) {
+    var NA = window.AlbertNative;
+    if (!NA || !NA.saveWordPool) return;
+    var now = Date.now();
+    if (!force && now - harvest.at < 8000) return;
+    harvest.at = now;
+    try { if (host30()) harvest30(); else harvest20(); } catch (e) { /* ignore */ }
+  }
+
+  function harvest20() {
+    var L = (typeof LESSONS !== 'undefined') ? LESSONS : null;   // eslint-disable-line no-undef
+    var sel = $('#course-selector');
+    var course = sel ? sel.value : '';
+    if (!L || !L.length || !course) return;
+    var st = (typeof STATE !== 'undefined' && STATE) ? STATE : {};   // eslint-disable-line no-undef
+    var cur = parseInt(st.currentLesson, 10) || 1;
+    var done = (st.completedLessons || []).map(function (x) { return parseInt(x, 10); });
+    var words = [], learned = [];
+    L.forEach(function (l) {
+      var id = parseInt(l.id, 10);
+      if (id <= cur || done.indexOf(id) >= 0) learned.push(id);
+      (l.vocab || []).forEach(function (w) {
+        if (w && w.zh) words.push({ zh: String(w.zh), py: String(w.py || ''), vi: String(w.vi || ''), l: id });
+      });
+    });
+    var title20 = course.replace(/hsk\s*/i, 'HSK ') + ' · bản 2.0';
+    sendPool('2.0:' + course, title20, words, learned);
+    var gram = [];
+    L.forEach(function (l) {
+      var id = parseInt(l.id, 10);
+      (l.grammarDetail || []).forEach(function (g) {
+        if (!g || !g.pattern) return;
+        var ex = null;
+        (g.senses || []).some(function (s) { return (s.examples || []).some(function (x) { if (x && x.zh) { ex = x; return true; } return false; }); });
+        gram.push({ t: String(g.full || g.pattern), m: String(g.explanation || ''), ex: ex ? String(ex.zh) : '', exv: ex ? String(ex.vi || '') : '', l: id });
+      });
+    });
+    if (gram.length) { sendGrammar('2.0:' + course, title20, gram, learned); return; }
+    var view = $('#lesson-detail-view');
+    if (view && shown(view)) {
+      var sel2 = $('#lesson-selector');
+      var lesson = sel2 ? (parseInt(sel2.value, 10) || 0) : 0;
+      var found = scrapeGrammar(view, lesson);
+      if (found.length) {
+        var merged = mergeGrammar('albertGrammar:2.0:' + course, found, lesson);
+        sendGrammar('2.0:' + course, title20, merged.items, merged.learned);
+      }
+    }
+  }
+
+  function harvest30() {
+    var h = host30(), sr = h && h.shadowRoot;
+    if (!sr) return;
+    var lvSel = level30Select();
+    var lv = lvSel ? lvSel.value : (h.id === 'hsk303-host' ? '3' : '2');
+    var key = '3.0:hsk' + lv, lsKey = 'albertWords:' + key;
+    var data;
+    try { data = JSON.parse(store(lsKey) || '{}'); } catch (e) { data = {}; }
+    data.w = data.w || {};
+    data.l = data.l || [];
+    var lessonSel = $all('select', sr).filter(function (x) {
+      var o = x.options[x.selectedIndex];
+      return x.getClientRects().length && o && /Bài/.test(o.text);
+    })[0];
+    var lesson = lessonSel ? (parseInt(lessonSel.value, 10) || 0) : 0;
+    var rows = $all('.vrow', sr), added = 0;
+    rows.forEach(function (r) {
+      var parts = $all('*', r).filter(function (e) { return e.children.length === 0; })
+        .map(function (e) { return e.textContent.replace(/\s+/g, ' ').trim(); }).filter(Boolean);
+      var zh = parts.filter(function (t) { return CJK.test(t) && t.length <= 12 && !LATIN.test(t); })[0];
+      if (!zh) return;
+      var py = parts.filter(function (t) { return TONE.test(t) && !CJK.test(t); })[0] || '';
+      var vi = parts.filter(function (t) { return t !== zh && t !== py && !CJK.test(t) && LATIN.test(t) && t.length > 1; })[0] || '';
+      if (!data.w[zh]) added++;
+      data.w[zh] = { py: py, vi: vi, l: lesson };
+    });
+    if (lesson && rows.length && data.l.indexOf(lesson) < 0) { data.l.push(lesson); added++; }
+    if (added || !harvest.sig[key]) store(lsKey, JSON.stringify(data));
+    var words = Object.keys(data.w).map(function (zh) { var x = data.w[zh]; return { zh: zh, py: x.py, vi: x.vi, l: x.l }; });
+    if (words.length) sendPool(key, 'HSK ' + lv + ' · bản 3.0', words, data.l);
+    var g30 = scrapeGrammar(sr, lesson);
+    if (g30.length) {
+      var merged = mergeGrammar('albertGrammar:' + key, g30, lesson);
+      sendGrammar(key, 'HSK ' + lv + ' · bản 3.0', merged.items, merged.learned);
+    }
+  }
+
+  var EVERY = [['off', 'Tắt'], ['30', '30 phút'], ['60', '1 giờ'], ['120', '2 giờ'], ['180', '3 giờ'], ['360', '6 giờ'], ['720', '12 giờ'], ['1440', '1 ngày']];
+
+  function openWordSheet() {
+    var NA = window.AlbertNative;
+    if (!NA || !NA.wordState) return;
+    harvestWords(true);
+    var st;
+    try { st = JSON.parse(NA.wordState()); } catch (e) { st = {}; }
+    var s = st.settings || {}, pools = st.pools || {}, keys = Object.keys(pools).sort();
+    function save(o) { try { NA.setWordSettings(JSON.stringify(o)); } catch (e) { /* ignore */ } }
+    function seg(opts, cur, onPick) {
+      var g = el('div', { 'class': 'seg', role: 'group' });
+      opts.forEach(function (o) {
+        var b = el('button', { type: 'button', 'aria-pressed': String(o[0] === cur) }, o[1]);
+        b.addEventListener('click', function () {
+          $all('button', g).forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+          b.setAttribute('aria-pressed', 'true');
+          onPick(o[0]);
+        });
+        g.appendChild(b);
+      });
+      return g;
+    }
+    makeSheet('Widget và nhắc học', function (sheet) {
+      sheet.appendChild(el('h3', null, 'Lấy nội dung từ'));
+      if (!keys.length) {
+        sheet.appendChild(el('p', { 'class': 'hint' }, 'Chưa có dữ liệu. Hãy mở một bài học (với HSK 4 và HSK 3.0: mở mục Từ vựng và Ngữ pháp của bài) để app tải về.'));
+      } else {
+        var cur = s.pool && pools[s.pool] ? s.pool : keys[0];
+        var g = el('div', { 'class': 'group' });
+        keys.forEach(function (k) {
+          var m = pools[k];
+          var b = el('button', { type: 'button', 'class': 'row', 'aria-pressed': String(k === cur) },
+            '<span class="ic">' + icon(k === cur ? 'check' : 'book', false) + '</span><span class="lbl">' + m.title +
+            '<br><span class="sub">' + m.count + ' từ, ' + (m.grammarCount || 0) + ' mẫu ngữ pháp, ' + m.learnedCount + ' bài đã học</span></span>');
+          b.addEventListener('click', function () {
+            save({ pool: k });
+            $all('.row', g).forEach(function (x) {
+              var on = x === b;
+              x.setAttribute('aria-pressed', String(on));
+              $('.ic', x).innerHTML = icon(on ? 'check' : 'book', false);
+            });
+          });
+          g.appendChild(b);
+        });
+        sheet.appendChild(g);
+      }
+      sheet.appendChild(el('h3', null, 'Phạm vi'));
+      sheet.appendChild(seg([['learned', 'Các bài đã học'], ['all', 'Cả giáo trình']], s.scope || 'learned', function (v) { save({ scope: v }); }));
+      sheet.appendChild(el('h3', null, 'Thông báo nhắc'));
+      sheet.appendChild(seg([['word', 'Từ vựng'], ['grammar', 'Ngữ pháp'], ['mix', 'Xen kẽ']], s.kind || 'word', function (v) { save({ kind: v }); }));
+      sheet.appendChild(el('h3', null, 'Bao lâu nhắc một lần'));
+      var everyCur = s.notify === false ? 'off' : String(s.interval || 120);
+      var eg = seg(EVERY, everyCur, function (v) {
+        if (v === 'off') save({ notify: false }); else save({ notify: true, interval: parseInt(v, 10) });
+      });
+      eg.classList.add('wrap4');
+      sheet.appendChild(eg);
+      sheet.appendChild(el('h3', null, 'Không nhắc ban đêm (22:00 – 7:00)'));
+      sheet.appendChild(seg([['on', 'Bật'], ['off', 'Tắt']], s.quiet === false ? 'off' : 'on', function (v) { save({ quiet: v === 'on' }); }));
+      if (s.notify !== false && st.canNotify === false) {
+        sheet.appendChild(el('p', { 'class': 'hint' }, 'Cần cho phép thông báo: bấm "Gửi thử một thông báo" rồi chọn Cho phép.'));
+      }
+      sheet.appendChild(el('h3', null, 'Thử và thêm widget'));
+      var g2 = el('div', { 'class': 'group' });
+      g2.appendChild(row('bell', 'Gửi thử một thông báo', null, function () { try { NA.testWordNotification(); } catch (e) { /* ignore */ } }));
+      g2.appendChild(row('cards', 'Thêm widget từ vựng',
+        st.canPin ? 'Một từ mỗi lần, chạm "Từ khác" để đổi' : 'Nhấn giữ màn hình chính → Widget → HSK Albert',
+        function () { try { NA.pinWidget(); } catch (e) { /* ignore */ } }));
+      g2.appendChild(row('grammar', 'Thêm widget ngữ pháp',
+        st.canPin ? 'Một mẫu mỗi lần, chạm "Mẫu khác" để đổi' : 'Nhấn giữ màn hình chính → Widget → HSK Albert',
+        function () { try { NA.pinGrammarWidget(); } catch (e) { /* ignore */ } }));
+      sheet.appendChild(g2);
+    });
+  }
+
   /* ================================================================== bảng trượt */
   var sheetWrap = null;
 
@@ -41714,6 +41943,12 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
         sheet.appendChild(g1);
       }
 
+      if (window.AlbertNative && window.AlbertNative.wordState) {
+        sheet.appendChild(el('h3', null, 'Widget và nhắc nhở'));
+        var gw = el('div', { 'class': 'group' });
+        gw.appendChild(row('bell', 'Widget và nhắc học', 'Từ vựng, ngữ pháp, giáo trình, bao lâu nhắc một lần', function () { openWordSheet(); }));
+        sheet.appendChild(gw);
+      }
       sheet.appendChild(el('h3', null, 'Tài khoản'));
       var g2 = el('div', { 'class': 'group' });
       g2.appendChild(row('person', 'Đăng nhập và đồng bộ', 'Lưu tiến độ trên mọi thiết bị', function () { closeSheet(); closeAI(); openAccount(); }));
@@ -41839,12 +42074,46 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
   };
 
   /* ================================================================== chế độ web gốc */
+  var RESTORE_LABEL = 'Giao diện giống app';
+  function restoreClick() { store(LS_MODE, 'app'); location.reload(); }
+  // Đặt mục chuyển giao diện ở menu của cả HSK 2.0 (danh sách mục) và HSK 3.0 (khu #hsk30-side / #hsk303-side).
   function addRestoreItem() {
-    var anchor = navItem('vocab') || $('.sidebar .nav-item');
-    if (!anchor || $('#albert-restore-ui')) return;
-    var item = el('div', { 'class': 'nav-item', id: 'albert-restore-ui' }, '<span class="nav-icon">📱</span> Giao diện giống app');
-    item.addEventListener('click', function () { store(LS_MODE, 'app'); location.reload(); });
-    anchor.parentNode.insertBefore(item, anchor.nextSibling);
+    function ensure() {
+      var targets = [];
+      var anchor = navItem('vocab') || $('.sidebar .nav-item');
+      if (anchor && anchor.parentNode) targets.push({ parent: anchor.parentNode, before: anchor.nextSibling, id: 'albert-restore-ui' });
+      $all('.sidebar [id$="-side"]').forEach(function (sec, i) {
+        targets.push({ parent: sec, before: sec.firstChild, id: 'albert-restore-ui-' + (sec.id || i) });
+      });
+      targets.forEach(function (t) {
+        if (document.getElementById(t.id)) return;
+        var item = el('div', { 'class': 'nav-item albert-restore-ui', id: t.id, role: 'button', tabindex: '0' },
+          '<span class="nav-icon">📱</span> ' + RESTORE_LABEL);
+        t.parent.insertBefore(item, t.before);
+      });
+    }
+    ensure();
+    // Bắt cú chạm ở cấp trang: web (HSK 3.0) có thể sao chép lại menu, bản sao không mang theo sự kiện.
+    if (!document.__albertRestoreClick) {
+      document.__albertRestoreClick = true;
+      document.addEventListener('click', function (e) {
+        var t = e.target && e.target.closest && e.target.closest('.albert-restore-ui');
+        if (!t) return;
+        e.preventDefault();
+        e.stopPropagation();
+        restoreClick();
+      }, true);
+    }
+    var sb = $('.sidebar');
+    if (sb && !sb.__albertRestoreObs) {
+      sb.__albertRestoreObs = true;
+      var q = false;
+      new MutationObserver(function () {
+        if (q) return;
+        q = true;
+        setTimeout(function () { q = false; ensure(); }, 250);
+      }).observe(sb, { childList: true, subtree: true });
+    }
   }
 
   /* ================================================================== hộp chọn giao diện (web trên điện thoại / iPad) */
@@ -41889,6 +42158,7 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
       try { syncTabbar(); } catch (e) { /* ignore */ }
       try { syncSections(); } catch (e) { /* ignore */ }
       try { syncDock(); } catch (e) { /* ignore */ }
+      try { harvestWords(); } catch (e) { /* ignore */ }
     });
   }
 
