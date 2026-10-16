@@ -73667,6 +73667,18 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
     return t;
   }
 
+  // Nút từ điển: nút riêng của HSK 3.0 (nếu có), nếu không thì nút từ điển chung của web (#dict-toggle-btn).
+  function dictBtn30(sr) {
+    return sr.querySelector('[data-act="toggle-dictionary"], [data-act*="dict"], [data-action*="dict"], [id*="dict-toggle"]') ||
+      $all('button', sr).filter(function (b) { return /Từ điển|Tra từ/.test(b.textContent) && !b.closest('#albert-s30'); })[0] ||
+      document.getElementById('dict-toggle-btn');
+  }
+  function dictOn(b) {
+    if (b && (b.getAttribute('aria-pressed') === 'true' || b.classList.contains('dict-on'))) return true;
+    if (b && /bật|on\b/i.test(b.textContent)) return true;
+    return !b && !!window.DICT_ENABLED;
+  }
+
   function sync30() {
     var h = host30();
     var sr = h && h.shadowRoot;
@@ -73716,11 +73728,14 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
         subs.forEach(function (b) { r2.appendChild(tile30(b, true)); });
         g.appendChild(r2);
       }
-      var dict = sr.querySelector('[data-act="toggle-dictionary"]');
-      if (dict) {
+      if (dictBtn30(sr) || typeof window.toggleDict === 'function') {
         var tools = el('div', { 'class': 'tools' });
         var db = el('button', { type: 'button', 'class': 'dict', 'aria-pressed': 'false' }, icon('search') + '<span>Tra từ</span>');
-        db.addEventListener('click', function () { var d = sr.querySelector('[data-act="toggle-dictionary"]'); if (d) d.click(); setTimeout(sync, 60); });
+        db.addEventListener('click', function () {
+          var d = dictBtn30(sr);
+          if (d) d.click(); else if (typeof window.toggleDict === 'function') window.toggleDict();
+          setTimeout(sync, 60);
+        });
         tools.appendChild(db);
         g.appendChild(tools);
       }
@@ -73741,8 +73756,8 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
       var v = String(k === key30(activeTab) || (activeSub && k === key30(activeSub)) || false);
       if (t.getAttribute('aria-selected') !== v) t.setAttribute('aria-selected', v);
     });
-    var dbtn = $('.dict', s30.grid), d0 = sr.querySelector('[data-act="toggle-dictionary"]');
-    if (dbtn && d0) dbtn.setAttribute('aria-pressed', String(/bật|on\b/i.test(d0.textContent)));
+    var dbtn = $('.dict', s30.grid), d0 = dictBtn30(sr);
+    if (dbtn) dbtn.setAttribute('aria-pressed', String(dictOn(d0)));
 
     // Trình tự học: mục con của tab đang mở, rồi các tab còn lại.
     var items = [];
