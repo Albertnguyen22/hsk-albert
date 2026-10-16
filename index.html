@@ -42398,5 +42398,116 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
 })();
 
 </script>
+<!-- HSK Albert: sửa lỗi nút loa, tín hiệu hoạt động, bảng Hoạt động người dùng (admin) -->
+<script id="albert-web-activity">
+/* HSK Albert — (1) sửa lỗi bấm loa bị nhảy sang bài khác; (2) gửi tín hiệu hoạt động 5 phút/lần;
+ * (3) mục "Hoạt động người dùng" trong bảng Quản trị thành viên (chỉ admin; máy chủ tự kiểm tra quyền). */
+(function () {
+  'use strict';
+  try { if (window.top !== window) return; } catch (e) { return; }
+  if (window.__albertActivity) return;
+  window.__albertActivity = true;
+  var IN_APP = !!(window.ALBERT_ANDROID_APP || /HSKAlbertAndroid/.test(navigator.userAgent || ''));
+
+  // (1) Nút loa có lệnh riêng (onclick): sau khi phát âm, giữ cú chạm lại trong nút, không để lan ra hàng/khung
+  //     bên ngoài (hàng "mở bài", đổi trạng thái từ…), bất kể khung đó gắn lệnh theo cách nào.
+  document.addEventListener('click', function (e) {
+    var path = e.composedPath ? e.composedPath() : [e.target];
+    var t = path[0];
+    var btn = t && t.closest && t.closest('.speak-btn, .albert-ico-speak, button[class*="speak"], button[title*="Nghe"], button[title*="Đọc"], button[aria-label*="Nghe"]');
+    if (!btn || !btn.hasAttribute('onclick')) return;
+    btn.addEventListener('click', function stop(ev) { ev.stopPropagation(); }, { once: true });
+  }, true);
+
+  // (2) Tín hiệu hoạt động.
+  var platform = IN_APP ? 'app' : (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '') || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent || '')) ? 'web-mobile' : 'web');
+  var lastPing = 0;
+  function ping() {
+    var sb = window.hskSupabase;
+    if (!sb || typeof sb.rpc !== 'function' || !window.hskCurrentUser || document.hidden || navigator.onLine === false) return;
+    if (Date.now() - lastPing < 4.5 * 60000) return;
+    lastPing = Date.now();
+    try { sb.rpc('albert_ping', { p_platform: platform }).then(function () {}, function () {}); } catch (e) { /* ignore */ }
+  }
+  setInterval(ping, 30000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) ping(); });
+
+  // (3) Bảng hoạt động trong khung Quản trị thành viên.
+  function ago(ts) {
+    if (!ts) return 'Chưa từng';
+    var m = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
+    if (m < 2) return 'Vừa xong';
+    if (m < 60) return m + ' phút trước';
+    var h = Math.round(m / 60);
+    if (h < 24) return h + ' giờ trước';
+    return Math.round(h / 24) + ' ngày trước';
+  }
+  function level(r) {
+    if (!r.last_seen) return ['never', 'Chưa từng dùng'];
+    if (r.days_7 >= 4) return ['high', 'Thường xuyên'];
+    if (r.days_7 >= 1) return ['mid', 'Thỉnh thoảng'];
+    return ['low', 'Không hoạt động'];
+  }
+  var CSS = '#albert-act{margin-top:14px;font-family:system-ui,-apple-system,Roboto,"Segoe UI",sans-serif;color:#1a1a2e}' +
+    '#albert-act h3{margin:0 0 10px;font-size:16px}#albert-act .sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}' +
+    '#albert-act .sum div{background:#faf8f3;border:1px solid #e2ddd2;border-radius:8px;padding:8px}#albert-act .sum b{display:block;font-size:20px}' +
+    '#albert-act .sum span{font-size:12px;color:#7a7568}#albert-act .flt{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}' +
+    '#albert-act .flt button{border:1px solid #e2ddd2;background:#fff;border-radius:999px;padding:5px 10px;font-weight:600;font-size:12.5px;cursor:pointer}' +
+    '#albert-act .flt button.on{background:#c0392b;border-color:#c0392b;color:#fff}' +
+    '#albert-act .row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid #eee8dc}' +
+    '#albert-act .row .e{flex:1;min-width:0}#albert-act .row .e b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+    '#albert-act .row .e span{font-size:12px;color:#7a7568}#albert-act .tag{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}' +
+    '#albert-act .high{background:#e3f4ee;color:#0f7b6c}#albert-act .mid{background:#fff4dc;color:#a46a00}#albert-act .low{background:#fbeeec;color:#c0392b}#albert-act .never{background:#efefef;color:#666}' +
+    '#albert-act .note{font-size:12.5px;color:#7a7568;margin-top:8px}';
+  function render(box, rows, filter) {
+    var now = Date.now(), today = rows.filter(function (r) { return r.last_seen && now - new Date(r.last_seen) < 864e5; }).length;
+    var week = rows.filter(function (r) { return r.days_7 > 0; }).length, freq = rows.filter(function (r) { return r.days_7 >= 4; }).length;
+    var shown = rows.filter(function (r) { return filter === 'all' || level(r)[0] === filter; });
+    box.innerHTML = '<h3>📊 Hoạt động người dùng</h3><div class="sum"><div><b>' + rows.length + '</b><span>Thành viên</span></div>' +
+      '<div><b>' + today + '</b><span>Hoạt động 24 giờ qua</span></div><div><b>' + week + '</b><span>Hoạt động 7 ngày</span></div>' +
+      '<div><b>' + freq + '</b><span>Thường xuyên</span></div></div><div class="flt">' +
+      [['all', 'Tất cả'], ['high', 'Thường xuyên'], ['mid', 'Thỉnh thoảng'], ['low', 'Không hoạt động'], ['never', 'Chưa từng dùng']].map(function (f) {
+        return '<button type="button" data-f="' + f[0] + '" class="' + (f[0] === filter ? 'on' : '') + '">' + f[1] + '</button>';
+      }).join('') + '</div>' +
+      (shown.map(function (r) {
+        var lv = level(r);
+        var esc = String(r.email || '(không có email)').replace(/[<>&]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]; });
+        return '<div class="row"><div class="e"><b>' + esc + '</b><span>Lần cuối: ' + ago(r.last_seen) + (r.last_platform ? ' (' + r.last_platform + ')' : '') +
+          ' · ' + r.days_7 + '/7 ngày · ' + r.days_30 + '/30 ngày · ' + r.minutes_7 + ' phút tuần này · ' + r.session_count + ' phiên</span></div>' +
+          '<span class="tag ' + lv[0] + '">' + lv[1] + '</span></div>';
+      }).join('') || '<div class="note">Không có thành viên nào trong nhóm này.</div>') +
+      '<div class="note">"Thường xuyên": dùng ít nhất 4 ngày trong 7 ngày qua. Số phút ước tính theo tín hiệu 5 phút/lần khi đang mở web/app.</div>';
+    Array.prototype.forEach.call(box.querySelectorAll('.flt button'), function (b) {
+      b.addEventListener('click', function () { render(box, rows, b.getAttribute('data-f')); });
+    });
+  }
+  async function loadActivity() {
+    var panel = document.getElementById('admin-panel'), list = document.getElementById('admin-list');
+    var sb = window.hskSupabase;
+    if (!panel || !list || !sb) return;
+    if (!document.getElementById('albert-act-style')) { var st = document.createElement('style'); st.id = 'albert-act-style'; st.textContent = CSS; document.head.appendChild(st); }
+    var box = document.getElementById('albert-act');
+    if (!box) { box = document.createElement('div'); box.id = 'albert-act'; list.parentNode.insertBefore(box, list.nextSibling); }
+    box.innerHTML = '<h3>📊 Hoạt động người dùng</h3><div class="note">Đang tải…</div>';
+    var r = await sb.rpc('albert_activity_overview');
+    if (r.error) {
+      box.innerHTML = '<h3>📊 Hoạt động người dùng</h3><div class="note">Chưa xem được: ' + String(r.error.message || r.error).replace(/[<>&]/g, '') +
+        '. Nếu chưa cài, hãy chạy file supabase-hoat-dong.sql trong Supabase → SQL Editor.</div>';
+      return;
+    }
+    render(box, r.data || [], 'all');
+  }
+  function hook() {
+    if (typeof window.openAdminPanel !== 'function' || window.openAdminPanel.__albertHooked) return;
+    var orig = window.openAdminPanel;
+    var wrapped = async function () { var res = await orig.apply(this, arguments); try { await loadActivity(); } catch (e) { /* ignore */ } return res; };
+    wrapped.__albertHooked = true;
+    window.openAdminPanel = wrapped;
+  }
+  setInterval(hook, 1500);
+  if (document.readyState !== 'loading') hook(); else document.addEventListener('DOMContentLoaded', hook);
+})();
+
+</script>
 </body>
 </html>
