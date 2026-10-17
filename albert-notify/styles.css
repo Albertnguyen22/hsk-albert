@@ -1,0 +1,72 @@
+/* Uses the existing Android / Windows Fluent palette. */
+#albert-reminders{--rn-brand:#c0392b;--rn-bg:#faf8f3;--rn-line:#e2ddd2;--rn-muted:#7a7568;box-sizing:border-box;border:1px solid var(--rn-line);border-radius:12px;padding:0;width:min(960px,calc(100vw - 32px));max-height:calc(100dvh - 40px);color:#1a1a2e;background:var(--rn-bg);box-shadow:0 24px 72px #0003;font:14px/1.6 'Segoe UI Variable','Segoe UI','Be Vietnam Pro',sans-serif}
+#albert-reminders::backdrop{background:#1a1a2e66;backdrop-filter:blur(3px)}
+#albert-reminders *{box-sizing:border-box}
+#albert-reminders .rn-head{display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--rn-line);background:#fff;position:sticky;top:0;z-index:2}
+#albert-reminders h2{font-size:20px;line-height:1.35;font-weight:600;margin:0}
+#albert-reminders .rn-head>div{flex:1}
+#albert-reminders .rn-head small{color:var(--rn-muted)}
+#albert-reminders .rn-body{padding:20px 22px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px}
+#albert-reminders .rn-main,#albert-reminders .rn-side{min-width:0}
+#albert-reminders .rn-section{margin:0 0 22px}
+#albert-reminders h3{font-size:13px;font-weight:650;letter-spacing:.01em;margin:0 0 9px;display:flex;align-items:center;gap:8px}
+#albert-reminders .rn-icon{width:20px;height:20px;display:inline-flex;flex:none;align-items:center;justify-content:center;color:inherit}
+#albert-reminders .rn-icon svg{width:100%;height:100%;display:block;fill:currentColor}
+#albert-reminders .rn-head>.rn-icon{width:28px;height:28px;color:var(--rn-brand)}
+#albert-reminders .rn-muted{font-size:12px;color:var(--rn-muted);line-height:1.6;margin:7px 0}
+#albert-reminders button{font-family:inherit;cursor:pointer;touch-action:manipulation;border:1px solid var(--rn-line);background:#fff;color:#4a4754;border-radius:6px;min-height:36px;padding:7px 11px;font-size:12px;font-weight:550;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+#albert-reminders button:hover{background:#f5f2ec}
+#albert-reminders button:disabled{opacity:.5;cursor:wait}
+#albert-reminders button.rn-close{border:0;padding:8px;width:36px;height:36px;background:transparent}
+#albert-reminders .rn-primary{background:var(--rn-brand);border-color:var(--rn-brand);color:#fff}
+#albert-reminders .rn-primary:hover{background:#a93226}
+#albert-reminders .rn-seg{display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1fr));gap:5px;background:#f0ede6;padding:4px;border-radius:8px}
+#albert-reminders .rn-seg button{background:transparent;border-color:transparent;min-width:0;line-height:1.35}
+#albert-reminders .rn-seg button[aria-pressed=true]{background:#fff;color:var(--rn-brand);border-color:#e7c9c4;box-shadow:0 1px 3px #0001}
+#albert-reminders .rn-interval{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+#albert-reminders .rn-interval button[aria-pressed=true]{background:#fbeeec;border-color:var(--rn-brand);color:var(--rn-brand)}
+#albert-reminders select{font-size:13px;font-family:inherit;color:#1a1a2e;background-color:#fff;border:1px solid var(--rn-line);border-radius:6px;padding:10px 32px 10px 12px;min-height:42px;width:100%;max-width:100%}
+#albert-reminders .rn-status{border:1px solid var(--rn-line);background:#fff;border-radius:8px;padding:14px;margin-bottom:16px}
+#albert-reminders .rn-status b{display:flex;align-items:center;gap:8px;font-size:14px}
+#albert-reminders .rn-status p{font-size:12px;color:#4a4754;margin:7px 0}
+#albert-reminders .rn-status[data-status=on]{border-color:#bfd4ca;background:#f3faf6}
+#albert-reminders .rn-status[data-status=on] b{color:#12644c}
+#albert-reminders .rn-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+#albert-reminders .rn-card{background:#fff;border:1px solid var(--rn-line);border-radius:9px;padding:17px;margin-bottom:12px;min-width:0}
+#albert-reminders .rn-card-kicker{display:flex;align-items:center;gap:6px;color:var(--rn-muted);font-size:11px;margin:0 0 12px}
+#albert-reminders .rn-front{font-family:'Noto Serif SC','Microsoft YaHei',serif;font-size:26px;line-height:1.6;overflow-wrap:anywhere;margin:0 0 4px;font-weight:600}
+#albert-reminders .rn-py{color:#0f7b6c;font-size:13px;margin:0 0 9px;overflow-wrap:anywhere}
+#albert-reminders .rn-meaning{font-size:14px;white-space:pre-line;overflow-wrap:anywhere}
+#albert-reminders .rn-example{margin-top:12px;padding:10px 11px;border-left:2px solid #d6a49d;background:#faf8f3;font-size:15px;white-space:pre-line;overflow-wrap:anywhere}
+#albert-reminders .rn-example small{display:block;color:#70695f;font-size:12px;line-height:1.6;margin-top:4px}
+#albert-reminders .rn-source{font-size:11px;color:var(--rn-muted);border-top:1px solid #eee8de;padding-top:10px;margin-top:12px}
+#albert-reminders .rn-warning{background:#fff7e8;color:#785018;border:1px solid #eedcba;border-radius:7px;padding:10px 12px;font-size:12px;line-height:1.6}
+#albert-reminders .rn-note{background:#f1eee7;border-radius:7px;padding:12px;font-size:12px;line-height:1.65;color:#4a4754}
+#albert-reminders .rn-section details{margin-top:10px}
+#albert-reminders summary{cursor:pointer;font-weight:550;font-size:12px}
+#albert-reminders .rn-lesson-list{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:10px;max-height:180px;overflow:auto;padding:2px}
+#albert-reminders .rn-lesson-list button[aria-pressed=true]{background:#fbeeec;color:var(--rn-brand);border-color:#cc9f98}
+#albert-reminders .rn-history{max-height:250px;overflow:auto}
+#albert-reminders .rn-history button{display:flex;text-align:left;justify-content:flex-start;width:100%;margin:6px 0;overflow-wrap:anywhere}
+#albert-reminders .rn-footer{grid-column:1/-1;border-top:1px solid var(--rn-line);padding-top:13px;margin-top:0;color:var(--rn-muted);font-size:11px}
+#albert-reminders .rn-full{grid-column:1/-1;max-width:760px;width:100%;margin:auto}
+#albert-reminders .rn-full .rn-front{font-size:30px}
+#albert-reminders .rn-inline-error{font-size:12px;color:#a93226;white-space:pre-line}
+#albert-reminders a{color:#a93226;text-underline-offset:3px}
+#albert-reminders button:focus-visible,#albert-reminders select:focus-visible,#albert-reminders summary:focus-visible{outline:2px solid var(--rn-brand);outline-offset:2px}
+#adw-reminder-launcher{border-left:3px solid transparent!important}
+#adw-reminder-launcher[data-on=true]{color:#c0392b!important;background:#fbeeec!important;border-left-color:#c0392b!important}
+#adw-reminder-launcher .rn-icon{width:20px;height:20px;flex:none;display:inline-flex}
+#adw-reminder-launcher .rn-icon svg{width:20px;height:20px;fill:currentColor}
+@media(max-width:760px){#albert-reminders{width:calc(100vw - 16px);max-height:calc(100dvh - 24px);border-radius:12px}#albert-reminders .rn-head{padding:15px 16px}#albert-reminders h2{font-size:18px}#albert-reminders .rn-body{padding:16px;grid-template-columns:1fr;gap:10px}#albert-reminders button{min-height:42px}#albert-reminders .rn-interval{grid-template-columns:repeat(4,minmax(0,1fr))}#albert-reminders .rn-side{border-top:1px solid var(--rn-line);padding-top:18px}#albert-reminders .rn-lesson-list{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){#albert-reminders,#albert-reminders *{scroll-behavior:auto!important;transition:none!important}}
+
+/* Explicit dialog centering: the older app has a global margin reset. */
+#albert-reminders{position:fixed;inset:0;margin:auto!important;overflow-y:auto;overscroll-behavior:contain}
+#albert-reminders .rn-close{flex:0 0 auto}
+#albert-reminders summary{list-style:none;display:flex;align-items:center;gap:6px}
+#albert-reminders summary::-webkit-details-marker{display:none}
+#albert-reminders summary::marker{content:''}
+#albert-reminders summary::before{content:'';display:inline-block;flex:0 0 14px;width:14px;height:14px;background:currentColor;mask:var(--adw-i-chevron) center/contain no-repeat;-webkit-mask:var(--adw-i-chevron) center/contain no-repeat;transform:rotate(-90deg)}
+#albert-reminders details[open]>summary::before{transform:none}
+@media(max-width:760px){html body #albert-reminders{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important;max-height:calc(100dvh - 24px)!important}}
