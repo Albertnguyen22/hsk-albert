@@ -74089,7 +74089,7 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
 
   function onTab(page) {
     if (page === '__more') { openMoreSheet(); return; }
-    if (page === 'review' && typeof window.__albertOpenToday === 'function' && !host30()) { closeAI(); window.__albertOpenToday(); sync(); return; }
+    if (page === 'review' && typeof window.__albertOpenToday === 'function') { closeAI(); window.__albertOpenToday(); sync(); return; }
     if (page === '__ai') { openAI(); return; }
     var h30 = host30();
     if (h30 && page === 'lessons') {           // chế độ HSK 3.0: giao diện bài học riêng
@@ -74122,10 +74122,11 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
         var on = page === '__ai' ? cur === '__ai' : (cur && !inTabs);
         if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
         if (page === '__ai') b.hidden = !$('.ai-panel');
+        if (page === 'streak') b.hidden = false;
         return;
       }
       var item = navItem(page);
-      b.hidden = h30 ? page !== 'lessons' : (page === 'mock' ? !(window.__albertHasMock && window.__albertHasMock()) : !item);   // Thi thử: chỉ HSK 5
+      b.hidden = page === 'mock' ? !(window.__albertHasMock && window.__albertHasMock()) : (h30 ? false : !item);   // giống nhau ở HSK 2.0 và 3.0; Thi thử chỉ HSK 5
       if (cur === page) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
       var badge = $('.badge', b);
       if (badge) {
@@ -75505,11 +75506,45 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
   function $all(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
   function curCourse() { var s = $('#course-selector'); return s ? s.value : ''; }
   function is30() { return $all('#hsk30-host, #hsk303-host').some(function (h) { return h.getClientRects().length; }); }
-  function hasMock() { return curCourse() === 'hsk5' && !is30(); }
+  function in30() { return document.body && document.body.classList.contains('hsk30-edition'); }
+  function hasMock() { return curCourse() === 'hsk5' && !in30(); }
+  // HSK 3.0 (phương án a): Ôn tập/Hôm nay, Streak & Lịch, AI dùng chung trang của web; Bài học quay về HSK 3.0.
+  var forced = [];
+  function hide20() {
+    forced.forEach(function (f) { if (f[1]) f[0].style.display = f[1]; else f[0].style.removeProperty('display'); });
+    forced = [];
+    document.documentElement.classList.remove('albert-show20');
+  }
+  function show20(pageId) {
+    hide20();
+    if (!in30()) return;
+    var pg = document.getElementById(pageId);
+    if (!pg) return;
+    document.documentElement.classList.add('albert-show20');
+    $all('#hsk30-host, #hsk303-host').forEach(function (h) { forced.push([h, h.style.display]); h.style.setProperty('display', 'none', 'important'); });
+    for (var n = pg; n && n !== document.body; n = n.parentElement) {
+      if (getComputedStyle(n).display === 'none') { forced.push([n, n.style.display]); n.style.setProperty('display', 'block', 'important'); }
+    }
+  }
+  var SHARED = { today: 'page-today', review: 'page-review', streak: 'page-streak' };
+  function wrapShowPage() {
+    var f = window.showPage;
+    if (typeof f !== 'function' || f.__albert20) return;
+    var w = function (page) {
+      var r = f.apply(this, arguments);
+      if (SHARED[page] && in30()) show20(SHARED[page]); else hide20();
+      return r;
+    };
+    w.__albert20 = true;
+    window.showPage = w;
+  }
   window.__albertHasMock = hasMock;
 
   var CSS = 'html[data-albert-mode="today"] #page-today .ai-panel{display:none!important}' +
     'html[data-albert-mode="ai"] #page-today > :not(.topbar):not(.ai-panel){display:none!important}' +
+    'html[data-albert-mode="ai"] #page-today{display:block!important;grid-template-columns:1fr!important}' +
+    'html[data-albert-mode="ai"] #page-today .ai-panel{grid-column:1/-1!important;width:auto!important;max-width:none!important;margin:0!important;position:relative!important;top:auto!important;left:auto!important;right:auto!important;height:calc(100vh - 140px)!important;min-height:420px}' +
+    'html[data-albert-mode="ai"] #page-today .ai-panel #chat-body{flex:1 1 auto!important;max-height:none!important}' +
     '#albert-today-bar{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}' +
     '.albert-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #e2ddd2;background:#fff;border-radius:999px;padding:8px 14px;font:600 13.5px system-ui,-apple-system,Roboto,sans-serif;color:#4a4754;cursor:pointer}' +
     '.albert-chip svg{width:16px;height:16px}.albert-chip.on{background:#1a1a2e;border-color:#1a1a2e;color:#fff}';
@@ -75620,6 +75655,7 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
   ['pointerdown', 'keydown', 'touchstart'].forEach(function (t) { document.addEventListener(t, function () { touched = true; }, true); });
   function tick() {
     if (!document.getElementById('albert-sync-style')) { var st = document.createElement('style'); st.id = 'albert-sync-style'; st.textContent = CSS; document.head.appendChild(st); }
+    try { wrapShowPage(); } catch (e) { /* ignore */ }
     try { fixNav(); } catch (e) { /* ignore */ }
     try { fixDone(); } catch (e) { /* ignore */ }
     try { ensureReviewChip(); } catch (e) { /* ignore */ }
