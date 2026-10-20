@@ -2,7 +2,7 @@
  * It does not replace the app's caching/authentication service worker.
  * Local schedules are woken by an open tab; closed-tab schedules require Web Push. */
 'use strict';
-importScripts('./core.js');
+importScripts('./core.js?v=1.1.0');
 const C=AlbertReminderCore;
 const BASE=new URL('../',self.location.href).href;
 const DB=C.store(C.databaseName(BASE));
@@ -19,7 +19,8 @@ async function snapshot() {
   const raw=await DB.read(['config','runtime','poolKeys','history']);
   return {...raw,config:C.config(raw.config),runtime:raw.runtime||{},poolKeys:raw.poolKeys||[],history:raw.history||[]};
 }
-async function deliver(reason,options={}) {
+function deliver(reason,options={}) {return C.withDeliveryLease(DB,()=>deliverOne(reason,options));}
+async function deliverOne(reason,options={}) {
   const now=Date.now(),s=await snapshot(),cfg=s.config,r=s.runtime;
   const manual=reason==='test'||reason==='next';
   if(!manual&&!cfg.enabled)return {ok:false,code:'OFF'};
@@ -42,7 +43,7 @@ async function deliver(reason,options={}) {
   if(manual&&latest.owner!==cfg.owner)return {ok:false,code:'CHANGED'};
   await self.registration.showNotification(msg.title,{body:msg.body,icon:new URL('icon-192.png',self.location.href).href,
     badge:new URL('badge-96.png',self.location.href).href,lang:'vi',dir:'auto',tag:TAG,renotify:true,
-    requireInteraction:false,data,actions});
+    requireInteraction:manual,data,actions});
   await DB.mutate(['config','runtime','history'],rows=>{
     const active=C.config(rows.config),old=rows.runtime||{};
     if(active.owner!==cfg.owner)return {};
@@ -53,7 +54,7 @@ async function deliver(reason,options={}) {
     return {write:{runtime:next,history}};
   });
   await notifyPages({type:'ALBERT_REMINDER_CHANGED'});
-  return {ok:true,id,item};
+  return {ok:true,id,item,delivery:'service-worker',browserAccepted:true};
 }
 async function stop() {
   await DB.mutate(['config','runtime'],r=>({write:{config:{...C.config(r.config),enabled:false,mode:'local',updatedAt:Date.now()},runtime:{...(r.runtime||{}),nextAt:0}}}));
@@ -69,10 +70,22 @@ async function openCard(id,owner) {
   if(windows.length){await windows[0].focus();windows[0].postMessage({type:'ALBERT_REMINDER_OPEN',id});}
   else {const url=new URL('index.html',BASE);url.searchParams.set('albertNotice',id);await self.clients.openWindow(url.href);}
 }
+async function probe(){
+ if(Notification.permission!=='granted')return {ok:false,code:'PERMISSION'};
+ const tag='albert-probe:'+Date.now();
+ await self.registration.showNotification('HSK Albert \u00b7 Ki\u1ec3m tra th\u00f4ng b\u00e1o',{
+  body:'Th\u00f4ng b\u00e1o th\u1eed t\u1eeb trang h\u1ecdc HSK. B\u1ea5m \u0111\u1ec3 m\u1edf Nh\u1eafc h\u1ecdc.',lang:'vi',
+  tag,icon:new URL('icon-192.png',self.location.href).href,requireInteraction:true,
+  data:{albertProbe:1,base:BASE}
+ });
+ let registered=null;try{registered=(await self.registration.getNotifications({tag})).length>0;}catch(_){}
+ return {ok:true,delivery:'service-worker',browserAccepted:true,registered,version:C.VERSION};
+}
 self.addEventListener('message',event=>{
   const m=event.data||{},source=event.source;
   if(!source?.url?.startsWith(BASE)||!String(m.type||'').startsWith('ALBERT_REMINDER_'))return;
   const job=serial(async()=>{
+    if(m.type==='ALBERT_REMINDER_PROBE')return probe();
     if(m.type==='ALBERT_REMINDER_TICK')return deliver('local');
     if(m.type==='ALBERT_REMINDER_TEST')return deliver('test',{kind:['word','grammar','mix'].includes(m.kind)?m.kind:undefined});
     if(m.type==='ALBERT_REMINDER_NEXT')return deliver('next',{kind:['word','grammar','mix'].includes(m.kind)?m.kind:undefined});
@@ -105,7 +118,9 @@ self.addEventListener('push',event=>{
   }));
 });
 self.addEventListener('notificationclick',event=>{
-  const data=event.notification.data||{};if(data.albertReminder!==1||data.base!==BASE)return;
+  const data=event.notification.data||{};
+  if(data.albertProbe===1&&data.base===BASE){event.notification.close();event.waitUntil(self.clients.openWindow(new URL('../index.html?albertReminders=1',self.location.href).href));return;}
+  if(data.albertReminder!==1||data.base!==BASE)return;
   event.notification.close();
   event.waitUntil(serial(async()=>{
     const cfg=C.config((await DB.read(['config'])).config);if(cfg.owner!==data.owner)return;

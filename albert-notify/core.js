@@ -2,7 +2,7 @@
  * This module never reads credentials, calls translation APIs or edits course data. */
 (function (root) {
   'use strict';
-  const VERSION = '1.0.0';
+  const VERSION = '1.1.0';
   const INTERVALS = [5,10,15,30,60,120,180,360,720,1440];
   const DEFAULTS = {enabled:false,interval:5,quiet:true,scope:'learned',kind:'word',mode:'local',pool:'',owner:'guest',timezone:'Asia/Ho_Chi_Minh',updatedAt:0};
   const clean = (x,n=4000) => String(x == null ? '' : x).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'').trim().slice(0,n);
@@ -61,7 +61,7 @@
   function notification(item) {
     const head=item.kind==='grammar'?'Ng\u1eef ph\u00e1p':'T\u1eeb v\u1ef1ng';
     return {title:short(item.front,78)+' \u00b7 '+head,
-      body:[item.py?short(item.py,90):'',short(item.meaning,160),item.example?short(item.example,95):'',item.courseTitle+' \u00b7 B\u00e0i '+item.lesson].filter(Boolean).join('\n')};
+      body:[item.py?short(item.py,90):'',short(item.meaning,160),item.example?short(item.example,95):'',item.courseTitle+' \u00b7 B\u00e0i '+(item.lessonDisplay||item.lesson)].filter(Boolean).join('\n')};
   }
   function databaseName(base) {return 'albert-reminders-v1:'+new URL(base).pathname;}
   function store(name) {
@@ -97,7 +97,16 @@
     const set=(key,value)=>mutate([],()=>({write:{[key]:value},result:value}));
     return {read,mutate,set};
   }
-  const api={VERSION,INTERVALS,DEFAULTS,clean,config,clock,quiet,afterQuiet,nextDue,eligible,pick,notification,short,databaseName,store};
+  async function withDeliveryLease(db,fn){
+    const token=Date.now()+':'+Math.random().toString(36).slice(2),now=Date.now();
+    const acquired=await db.mutate(['delivery-lease'],r=>{
+      const old=r['delivery-lease'];if(old&&old.until>now)return {result:false};
+      return {write:{'delivery-lease':{token,until:now+35000}},result:true};
+    });
+    if(!acquired)return {ok:false,code:'BUSY'};
+    try{return await fn();}finally{await db.mutate(['delivery-lease'],r=>r['delivery-lease']?.token===token?{remove:['delivery-lease']}:{}).catch(()=>{});}
+  }
+  const api={withDeliveryLease,VERSION,INTERVALS,DEFAULTS,clean,config,clock,quiet,afterQuiet,nextDue,eligible,pick,notification,short,databaseName,store};
   root.AlbertReminderCore=Object.freeze(api);
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(globalThis);

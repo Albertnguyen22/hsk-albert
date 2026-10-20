@@ -70,3 +70,12 @@
 #albert-reminders summary::before{content:'';display:inline-block;flex:0 0 14px;width:14px;height:14px;background:currentColor;mask:var(--adw-i-chevron) center/contain no-repeat;-webkit-mask:var(--adw-i-chevron) center/contain no-repeat;transform:rotate(-90deg)}
 #albert-reminders details[open]>summary::before{transform:none}
 @media(max-width:760px){html body #albert-reminders{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important;max-height:calc(100dvh - 24px)!important}}
+
+/* Reminder diagnosis, scoped to avoid changing lesson controls. */
+#albert-reminders .rn-diagnostics{background:#fff;border:1px solid #e2ddd2;border-radius:8px;padding:16px}
+#albert-reminders .rn-diagnostics dl{display:grid;grid-template-columns:minmax(110px,.7fr) minmax(0,1.3fr);gap:8px 16px;margin:12px 0 16px;font-size:13px;line-height:1.5}
+#albert-reminders .rn-diagnostics dt{color:#7a7568;font-weight:500}
+#albert-reminders .rn-diagnostics dd{margin:0;overflow-wrap:anywhere;color:#1a1a2e}
+#albert-reminders .rn-warning{overflow-wrap:anywhere}
+#albert-reminders [data-rn-probe],#albert-reminders [data-rn-diagnose]{min-height:40px}
+@media(max-width:540px){#albert-reminders .rn-diagnostics{padding:12px}#albert-reminders .rn-diagnostics dl{grid-template-columns:1fr;gap:4px}#albert-reminders .rn-diagnostics dd{margin-bottom:8px}}
