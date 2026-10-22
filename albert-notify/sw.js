@@ -2,7 +2,7 @@
  * It does not replace the app's caching/authentication service worker.
  * Local schedules are woken by an open tab; closed-tab schedules require Web Push. */
 'use strict';
-importScripts('./core.js?v=1.1.0');
+importScripts('./core.js?v=1.2.0');
 const C=AlbertReminderCore;
 const BASE=new URL('../',self.location.href).href;
 const DB=C.store(C.databaseName(BASE));
@@ -27,7 +27,7 @@ async function deliverOne(reason,options={}) {
   if(!manual&&((reason==='local'&&cfg.mode!=='local')||(reason==='push'&&cfg.mode!=='push')))return {ok:false,code:'OTHER_MODE'};
   if(!manual&&C.quiet(now,cfg))return {ok:false,code:'QUIET'};
   if(!manual&&reason==='local'&&(!r.nextAt||now<r.nextAt))return {ok:false,code:'NOT_DUE'};
-  if(reason==='push'&&options.id&&options.id===r.lastPushId)return {ok:false,code:'DUPLICATE'};
+  if(options.id&&(options.id===r.lastPushId||(r.deliveredPushIds||[]).includes(options.id)))return {ok:false,code:'DUPLICATE'};
   if(reason==='push'&&options.expiresAt&&now>Number(options.expiresAt))return {ok:false,code:'EXPIRED'};
   if(Notification.permission!=='granted')return {ok:false,code:'PERMISSION'};
   const got=await DB.read(['pool:'+cfg.pool]);
@@ -39,7 +39,7 @@ async function deliverOne(reason,options={}) {
   const actions=[{action:'open',title:'Xem chi ti\u1ebft'},{action:'next',title:'M\u1ee5c kh\u00e1c'}];
   // Re-check preferences after async storage reads, before showing a scheduled toast.
   const latest=C.config((await DB.read(['config'])).config);
-  if(!manual&&(latest.updatedAt!==cfg.updatedAt||!latest.enabled))return {ok:false,code:'CHANGED'};
+  if(latest.updatedAt!==cfg.updatedAt||(!manual&&!latest.enabled))return {ok:false,code:'CHANGED'};
   if(manual&&latest.owner!==cfg.owner)return {ok:false,code:'CHANGED'};
   await self.registration.showNotification(msg.title,{body:msg.body,icon:new URL('icon-192.png',self.location.href).href,
     badge:new URL('badge-96.png',self.location.href).href,lang:'vi',dir:'auto',tag:TAG,renotify:true,
@@ -48,7 +48,8 @@ async function deliverOne(reason,options={}) {
     const active=C.config(rows.config),old=rows.runtime||{};
     if(active.owner!==cfg.owner)return {};
     const history=[item,...(rows.history||[])].slice(0,40);
-    const next={...old,cursors:choice.runtime.cursors,lastKind:choice.runtime.lastKind,lastSentAt:now,lastError:''};
+    const next={...C.commitPick(old,choice),lastSentAt:now,lastError:''};
+    if(options.id){next.lastPushId=options.id;next.deliveredPushIds=[options.id,...(old.deliveredPushIds||[])].filter((id,i,a)=>a.indexOf(id)===i).slice(0,128);}
     // A test is not opt-in and never changes the user's schedule.
     if(!manual){next.nextAt=C.nextDue(now,active);next.lastPushId=options.id||old.lastPushId;}
     return {write:{runtime:next,history}};
@@ -85,6 +86,7 @@ self.addEventListener('message',event=>{
   const m=event.data||{},source=event.source;
   if(!source?.url?.startsWith(BASE)||!String(m.type||'').startsWith('ALBERT_REMINDER_'))return;
   const job=serial(async()=>{
+    if(m.version&&m.version!==C.VERSION)return {ok:false,code:'VERSION_MISMATCH',version:C.VERSION};
     if(m.type==='ALBERT_REMINDER_PROBE')return probe();
     if(m.type==='ALBERT_REMINDER_TICK')return deliver('local');
     if(m.type==='ALBERT_REMINDER_TEST')return deliver('test',{kind:['word','grammar','mix'].includes(m.kind)?m.kind:undefined});

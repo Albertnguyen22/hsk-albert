@@ -1,3 +1,4 @@
+
 /* Albert web reminders. Optional Web Push uses the user's existing Supabase project.
  * No permission prompt at startup. No hidden audio, wake-lock or timer keepalive hacks. */
 (function(){
@@ -31,9 +32,23 @@ function courseTitle(key){return 'HSK '+key.split('hsk')[1]+' \u00b7 b\u1ea3n '+
 function permission(){return 'Notification'in window?Notification.permission:'unsupported';}
 function gateBlocking(){return ['albert-wgate','approval-gate','albert-gate'].some(id=>{const e=D.getElementById(id);return e&&e.getClientRects().length&&getComputedStyle(e).display!=='none';});}
 function currentLesson(){try{const c=currentCourse();if(c.startsWith('3.0')){const a=c.endsWith('hsk3')?window.AlbertHSK303:window.AlbertHSK30;const x=a?.getLocation?.();return x&&x.view!=='home'&&x.view!=='lessons'?Number(x.lessonId)||0:0;}const detail=D.getElementById('lesson-detail-view');if(detail&&detail.getClientRects().length){return Number(D.getElementById('lesson-selector')?.value)||0;}}catch(_){}return 0;}
-function oneExample(g){let ex=(g.examples||[]).find(x=>typeof x==='object'&&x?.zh);if(!ex)for(const s of g.senses||[]){ex=(s.examples||[]).find(x=>x?.zh);if(ex)break;}return ex||{};}
-function word(w,l){if(!w?.zh||!w.vi)return null;const e=(w.examples||[])[0];return {kind:'word',front:plain(w.zh),py:plain(w.py||w.pinyin||'').replace(/\u0261/g,'g'),meaning:plain(w.vi),lesson:Number(l.id),lessonDisplay:Number(l.disp)||Number(l.id),lessonTitle:plain(l.vi||l.titleVi||l.zh||l.title),example:plain(typeof e==='string'?e:e?.zh||w.example||''),exampleVi:plain(e?.vi||''),examplePy:plain(e?.py||'')};}
-function grammar(g,l,guide){if(!g||typeof g==='string')return null;const ex=oneExample(guide||g),front=plain(g.pattern||g.title||g.full||''),meaning=plain(guide?.meaning||g.explainVi||g.explanation||g.note||g.vi||'');if(!front||!meaning)return null;const fromTitle=/[\uff08(]([a-z\u00c0-\u024f\u01cd-\u01dc\s]+)[)\uff09]/i.exec(g.full||'');return {kind:'grammar',front,py:plain(guide?.titlePy||g.py||fromTitle?.[1]||''),meaning,lesson:Number(l.id),lessonDisplay:Number(l.disp)||Number(l.id),lessonTitle:plain(l.vi||l.titleVi||l.zh||l.title),formula:plain(g.formula||(guide?.formulas||[]).join('\n')),example:plain(ex.zh||''),exampleVi:plain(ex.vi||''),examplePy:plain(ex.py||'')};}
+function readJSON(key,fallback={}){try{return JSON.parse(localStorage.getItem(key)||'null')||fallback;}catch(_){return fallback;}}
+function exampleList(sources){const out=[],seen=new Set();for(const source of sources){for(const x of source||[]){const e=typeof x==='string'?{zh:plain(x)}:{zh:plain(x?.zh||x?.example),vi:plain(x?.vi||x?.translation),py:plain(x?.py||x?.pinyin)};if(!e.zh)continue;const k=e.zh+'|'+(e.vi||'');if(seen.has(k))continue;seen.add(k);out.push(e);}}return out;}
+function displayLesson(l){return Number(l.disp)||Number(l.lessonDisplay)||Number(l.id);}
+function lessonTitle(l){return plain(l.vi||l.titleVi||l.zh||l.titleZh||l.title||'');}
+function word(w,l){
+ if(!w?.zh||!w.vi)return null;
+ const examples=exampleList([w.examples,w.example?[w.example]:[]]),e=examples[0]||{};
+ return {kind:'word',front:plain(w.zh),py:plain(w.py||w.pinyin||'').replace(/\u0261/g,'g'),meaning:plain(w.vi),lesson:Number(l.id),lessonDisplay:displayLesson(l),lessonTitle:lessonTitle(l),example:e.zh||'',exampleVi:e.vi||'',examplePy:e.py||'',examples};
+}
+function grammar(g,l,guide){
+ if(!g||typeof g==='string')return null;
+ const examples=exampleList([guide?.examples,g.examples,...(g.senses||[]).map(s=>s.examples)]),ex=examples[0]||{};
+ const front=plain(g.pattern||g.title||g.full||''),meaning=plain(guide?.meaning||g.explainVi||g.explanation||g.note||g.vi||'');
+ if(!front||!meaning)return null;
+ const fromTitle=/[\uff08(]([a-z\u00c0-\u024f\u01cd-\u01dc\s]+)[)\uff09]/i.exec(g.full||'');
+ return {kind:'grammar',front,py:plain(guide?.titlePy||g.py||fromTitle?.[1]||''),meaning,lesson:Number(l.id),lessonDisplay:displayLesson(l),lessonTitle:lessonTitle(l),formula:plain(g.formula||(guide?.formulas||[]).join('\n')),example:ex.zh||'',exampleVi:ex.vi||'',examplePy:ex.py||'',examples};
+}
 function getSources(){
  const s=window.HSKDictionaryLessonSources||{},out=[];
  if(Array.isArray(s.hsk1))out.push(['2.0:hsk1',s.hsk1]);
@@ -43,39 +58,88 @@ function getSources(){
  for(const [key,a]of [['3.0:hsk2',window.AlbertHSK30],['3.0:hsk3',window.AlbertHSK303]]){const list=a?.getSourceData?.();if(Array.isArray(list))out.push([key,list,a.getGrammarGuides?.()||{}]);}
  return out;
 }
+function storedLearned(key,lessons,who){
+ const valid=new Set(lessons.map(l=>Number(l.id))),out=new Set();
+ const add=n=>{n=Number(n);if(valid.has(n))out.add(n);};
+ if(key.startsWith('2.0:')){
+  const course=key.split(':')[1],saved=readJSON(course==='hsk4'?'hsk_albert_course_state_v4_hsk4':'hsk_albert_course_state_v3_'+course);
+  for(const n of saved.completedLessons||[])add(n);
+  if(course==='hsk5')for(const n of readJSON('hsk5_app_v2').completedLessons||[])add(n);
+  // The current in-memory course may have just changed; only read its own state.
+  if(currentCourse()===key)try{if(typeof STATE!=='undefined')for(const n of STATE.completedLessons||[])add(n);}catch(_){}
+ }else{
+  const prefix=key==='3.0:hsk3'?'albert_hsk303_hsk3_v1__':'albert_hsk30_hsk2_v1__';
+  const saved=readJSON(prefix+who);
+  for(const [n,record]of Object.entries(saved.lessons||{})){
+   const values=record.values||{};
+   const studied=Object.entries(values).some(([k,r])=>{
+    const value=r?.value;
+    if(/^(done-|known-|listen-)/.test(k))return value===true;
+    if(/^(goal-|grade:|assessment:|wbcheck:)/.test(k))return false;
+    return typeof value==='string'&&value.trim().length>0;
+   });
+   if(studied)add(n);
+  }
+ }
+ return [...out];
+}
+function buildCatalog(key,lessons,guides){
+ const words=[],grams=[],lessonList=[],missing=[];
+ for(const l of lessons){if(!(Number(l.id)>0))continue;
+  const stat={id:Number(l.id),display:displayLesson(l),title:lessonTitle(l),words:0,grammar:0};lessonList.push(stat);
+  for(const w of l.vocab||[]){const it=word(w,l);if(it){words.push(it);stat.words++;}else missing.push({lesson:stat.id,kind:'word',front:plain(w?.zh),reason:'missing-front-or-meaning'});}
+  const gs=key==='2.0:hsk3'&&window.HSK3_OFFICIAL_GRAMMAR?.[l.id]?.points|| (l.grammarDetail?.length?l.grammarDetail:l.grammar||[]);
+  for(let i=0;i<gs.length;i++){const g=gs[i],it=grammar(g,l,guides?.[l.id+'-'+(g.id||i+1)]);if(it){grams.push(it);stat.grammar++;}else missing.push({lesson:stat.id,kind:'grammar',front:plain(typeof g==='string'?g:g?.pattern||g?.title),reason:'missing-front-or-meaning'});}
+ }
+ lessonList.sort((a,b)=>a.display-b.display||a.id-b.id);
+ return {key,title:courseTitle(key),words,grammar:grams,lessons:lessonList,missing,catalogVersion:2};
+}
 async function collect(force=false){
- if(collecting)return collecting;if(!force&&Date.now()-collectedAt<12000)return;
+ if(collecting){await collecting;if(!force)return;}
+ if(!force&&Date.now()-collectedAt<12000)return;
+ const who=owner();
  collecting=(async()=>{
-  const active=currentCourse(),opened=currentLesson();
-  const raw=await db.read(['config','poolKeys']);const cfg=C.config(raw.config),who=owner();
-  // Owner changes are handled before collecting; no previous user's learned markers are inherited.
+  const active=currentCourse(),opened=currentLesson(),raw=await db.read(['config','poolKeys']),cfg=C.config(raw.config);
   const keys=[];
-  for(const [key,lessons,guides] of getSources()){
-   const words=[],grams=[],lessonList=[];
-   for(const l of lessons){if(!Number(l.id))continue;lessonList.push({id:Number(l.id),display:Number(l.disp)||Number(l.id),title:plain(l.vi||l.titleVi||l.zh||l.title||'')});
-    for(const w of l.vocab||[]){const it=word(w,l);if(it)words.push(it);}
-    let gs=l.grammarDetail?.length?l.grammarDetail:l.grammar||[];
-    if(key==='2.0:hsk3'&&window.HSK3_OFFICIAL_GRAMMAR?.[l.id]?.points)gs=window.HSK3_OFFICIAL_GRAMMAR[l.id].points;
-    for(let i=0;i<gs.length;i++){const g=gs[i],it=grammar(g,l,guides?.[l.id+'-'+(g.id||i+1)]);if(it)grams.push(it);}
-   }
-   const canonical={key,title:courseTitle(key),words,grammar:grams,lessons:lessonList};
+  for(const [key,lessons,guides]of getSources()){
+   if(who!==owner())return;
+   const canonical=buildCatalog(key,lessons,guides),valid=new Set(canonical.lessons.map(l=>l.id)),automatic=storedLearned(key,lessons,who);
    const sig=JSON.stringify(canonical);keys.push(key);
    await db.mutate(['pool:'+key],r=>{
-    const old=r['pool:'+key],learned=new Set(old?.owner===who?(old.learned||[]):[]),excluded=old?.owner===who?(old.excluded||[]):[];
-    if(key===active){try{if(key.startsWith('2.0')&&typeof STATE!=='undefined')for(const n of STATE.completedLessons||[])if(Number(n)&&!excluded.includes(Number(n)))learned.add(Number(n));}catch(_){}
-      if(opened&&!gateBlocking()&&!excluded.includes(opened))learned.add(opened);
-    }
-    const list=[...learned].sort((a,b)=>a-b);
-    if(fingerprints.get(key)===sig&&old?.owner===who&&JSON.stringify(old.learned)===JSON.stringify(list))return {};
-    fingerprints.set(key,sig);return {write:{['pool:'+key]:{...canonical,learned:list,excluded,owner:who}}};
+    if(who!==owner())return {};
+    const old=r['pool:'+key],owned=old?.owner===who;
+    const included=owned?(old.included||[]):[],excluded=owned?(old.excluded||[]):[];
+    // Preserve old explicit choices/opened lessons. Never infer "all before current".
+    const visited=new Set(owned?(old.visited||old.learned||[]):[]);
+    if(key===active&&opened&&!gateBlocking())visited.add(opened);
+    const learned=new Set([...visited,...included,...automatic].map(Number).filter(n=>valid.has(n)&&!excluded.includes(n)));
+    const list=[...learned].sort((a,b)=>a-b),vis=[...visited].filter(n=>valid.has(Number(n))).sort((a,b)=>a-b);
+    if(fingerprints.get(key)===sig&&owned&&JSON.stringify(old.learned)===JSON.stringify(list)&&JSON.stringify(old.visited)===JSON.stringify(vis))return {};
+    return {write:{['pool:'+key]:{...canonical,learned:list,visited:vis,included,excluded,owner:who}},result:true};
    });
+   fingerprints.set(key,sig);
   }
+  if(who!==owner())return;
   await db.set('poolKeys',keys);
   if(!cfg.pool&&keys.length)await db.mutate(['config'],r=>({write:{config:{...C.config(r.config),pool:keys.includes(active)?active:keys[0],owner:who,timezone:zone(),updatedAt:Date.now()}}}));
+  await db.mutate(['runtime','history'],r=>{
+   const rt=r.runtime||{};if(rt.rotationVersion===2)return {};
+   const recentItems=(r.history||[]).filter(x=>x.owner===who);
+   return {write:{runtime:{...rt,rotationVersion:2,cycles:rt.cycles||{},recentItems}}};
+  });
   collectedAt=Date.now();
  })().finally(()=>{collecting=null;});return collecting;
 }
-async function state(){const r=await db.read(['config','runtime','poolKeys','history']);const keys=r.poolKeys||[];const p=await db.read(keys.map(k=>'pool:'+k));return {config:C.config(r.config),runtime:r.runtime||{},pools:keys.map(k=>p['pool:'+k]).filter(Boolean),history:(r.history||[]).filter(x=>x.owner===owner())};}
+async function toggleLearned(poolKey,lesson){
+ await db.mutate(['pool:'+poolKey],r=>{
+  const p=r['pool:'+poolKey];if(!p||p.owner!==owner())return {};
+  const learned=new Set(p.learned||[]),included=new Set(p.included||[]),excluded=new Set(p.excluded||[]);
+  if(learned.has(lesson)){learned.delete(lesson);included.delete(lesson);excluded.add(lesson);}
+  else{learned.add(lesson);included.add(lesson);excluded.delete(lesson);}
+  return {write:{['pool:'+poolKey]:{...p,learned:[...learned].sort((a,b)=>a-b),included:[...included],excluded:[...excluded]}}};
+ });
+}
+async function state(){const r=await db.read(['config','runtime','previewRuntime','poolKeys','history']);const keys=r.poolKeys||[];const p=await db.read(keys.map(k=>'pool:'+k));return {config:C.config(r.config),runtime:r.runtime||{},previewRuntime:r.previewRuntime||{},pools:keys.map(k=>p['pool:'+k]).filter(Boolean),history:(r.history||[]).filter(x=>x.owner===owner())};}
 let workerProblem='',workerRetryAt=0,lastProbe=null,diagnosticBusy=false;
 function timeout(p,ms,message){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error(message)),ms);Promise.resolve(p).then(v=>{clearTimeout(timer);resolve(v);},e=>{clearTimeout(timer);reject(e);});});}
 async function ensureWorker(force=false){
@@ -86,7 +150,7 @@ async function ensureWorker(force=false){
  if(Date.now()<workerRetryAt)throw new Error(workerProblem);
  registering=(async()=>{
   try{
-   const url=new URL('sw.js?v=1.1.0',ASSETS).href;
+   const url=new URL('sw.js?v=1.2.0',ASSETS).href;
    const r=await timeout(navigator.serviceWorker.register(url,{scope:ASSETS.href,updateViaCache:'none'}),12000,'Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c albert-notify/sw.js. Ki\u1ec3m tra th\u01b0 m\u1ee5c \u0111\u00e3 \u0111\u01b0\u1ee3c \u0111\u0103ng l\u00ean GitHub.');
    await new Promise((resolve,reject)=>{
     let done=false;const watched=new Set();let timer=0;
@@ -98,6 +162,13 @@ async function ensureWorker(force=false){
     }
     timer=setTimeout(()=>finish(new Error('Ch\u01b0a k\u00edch ho\u1ea1t \u0111\u01b0\u1ee3c b\u1ed9 g\u1eedi m\u1edbi. H\u00e3y c\u1eadp nh\u1eadt to\u00e0n b\u1ed9 th\u01b0 m\u1ee5c albert-notify.')),12000);
     r.addEventListener('updatefound',inspect);inspect();
+   });
+   await new Promise((resolve,reject)=>{
+    const channel=new MessageChannel();let done=false;
+    const finish=err=>{if(done)return;done=true;clearTimeout(timer);channel.port1.close();err?reject(err):resolve();};
+    const timer=setTimeout(()=>finish(new Error('B\u1ed9 nh\u1eafc h\u1ecdc ch\u01b0a ph\u1ea3n h\u1ed3i phi\u00ean b\u1ea3n. C\u1eadp nh\u1eadt th\u01b0 m\u1ee5c albert-notify.')),6000);
+    channel.port1.onmessage=e=>finish(e.data?.ok&&e.data.version===C.VERSION?null:new Error('B\u1ed9 nh\u1eafc h\u1ecdc n\u1ec1n c\u00f2n c\u0169. C\u1eadp nh\u1eadt c\u1ea3 index.html v\u00e0 th\u01b0 m\u1ee5c albert-notify l\u00ean c\u00f9ng phi\u00ean b\u1ea3n '+C.VERSION+'.'));
+    try{r.active.postMessage({type:'ALBERT_REMINDER_PING'},[channel.port2]);}catch(e){finish(e);}
    });
    registration=r;workerProblem='';workerRetryAt=0;return r;
   }catch(e){workerProblem=String(e.message||e);workerRetryAt=Date.now()+60000;throw e;}
@@ -128,11 +199,11 @@ async function pageDeliver(action,extra={}){
   const choice=C.pick(s.pools.find(p=>p.key===cfg.pool),cfg,r,extra.kind);if(!choice)return {ok:false,code:'EMPTY'};
   const id=crypto.randomUUID?.()||Date.now()+'-'+Math.random().toString(36).slice(2),item={...choice.item,id,owner:cfg.owner,createdAt:now,reason:manual?'test':'local'};
   const latest=C.config((await db.read(['config'])).config);
-  if(latest.owner!==cfg.owner||(!manual&&(latest.updatedAt!==cfg.updatedAt||!latest.enabled)))return {ok:false,code:'CHANGED'};
+  if(latest.owner!==cfg.owner||latest.updatedAt!==cfg.updatedAt||(!manual&&!latest.enabled))return {ok:false,code:'CHANGED'};
   const msg=C.notification(item);const result=await showPageNotification(msg.title,{body:msg.body,tag:'albert-study:'+new URL(BASE).pathname,renotify:true,requireInteraction:manual,icon:D.querySelector('link[rel=icon]')?.href,lang:'vi',data:{id}});
   await db.mutate(['config','runtime','history'],rows=>{
    if(C.config(rows.config).owner!==cfg.owner)return {};
-   const next={...(rows.runtime||{}),cursors:choice.runtime.cursors,lastKind:choice.runtime.lastKind,lastSentAt:now,lastError:'',delivery:'page'};
+   const next={...C.commitPick(rows.runtime||{},choice),lastSentAt:now,lastError:'',delivery:'page'};
    if(!manual)next.nextAt=C.nextDue(now,cfg);
    return {write:{runtime:next,history:[item,...(rows.history||[])].slice(0,40)}};
   });
@@ -152,10 +223,10 @@ async function rpc(action,extra={}){
   const done=(error,value)=>{if(settled)return;settled=true;clearTimeout(timer);channel.port1.close();error?reject(error):resolve(value);};
   const timer=setTimeout(()=>done(new Error('B\u1ed9 g\u1eedi kh\u00f4ng ph\u1ea3n h\u1ed3i. C\u1eadp nh\u1eadt th\u01b0 m\u1ee5c albert-notify r\u1ed3i t\u1ea3i l\u1ea1i trang.')),15000);
   channel.port1.onmessage=e=>done(null,e.data);channel.port1.onmessageerror=()=>done(new Error('Ph\u1ea3n h\u1ed3i th\u00f4ng b\u00e1o kh\u00f4ng h\u1ee3p l\u1ec7.'));
-  try{r.active.postMessage({type:'ALBERT_REMINDER_'+action,...extra},[channel.port2]);}catch(e){done(e);}
+  try{r.active.postMessage({type:'ALBERT_REMINDER_'+action,version:C.VERSION,...extra},[channel.port2]);}catch(e){done(e);}
  });
 }
-function reminderError(result){const m={UNKNOWN:'B\u1ed9 th\u00f4ng b\u00e1o tr\u00ean web c\u00f2n c\u0169. C\u1eadp nh\u1eadt to\u00e0n b\u1ed9 th\u01b0 m\u1ee5c albert-notify r\u1ed3i t\u1ea3i l\u1ea1i.',EMPTY:T.empty,PERMISSION:'Ch\u01b0a \u0111\u01b0\u1ee3c c\u1ea5p quy\u1ec1n th\u00f4ng b\u00e1o.',BUSY:'M\u1ed9t tab kh\u00e1c \u0111ang g\u1eedi. Ch\u1edd v\u00e0i gi\u00e2y r\u1ed3i th\u1eed l\u1ea1i.',CHANGED:'C\u00e0i \u0111\u1eb7t ho\u1eb7c t\u00e0i kho\u1ea3n v\u1eeba thay \u0111\u1ed5i. Th\u1eed l\u1ea1i.'};return m[result?.code]||result?.message||result?.code||'Kh\u00f4ng g\u1eedi \u0111\u01b0\u1ee3c th\u00f4ng b\u00e1o.';}
+function reminderError(result){const m={VERSION_MISMATCH:'C\u1eadp nh\u1eadt index.html v\u00e0 albert-notify c\u00f9ng phi\u00ean b\u1ea3n.',UNKNOWN:'B\u1ed9 th\u00f4ng b\u00e1o tr\u00ean web c\u00f2n c\u0169. C\u1eadp nh\u1eadt to\u00e0n b\u1ed9 th\u01b0 m\u1ee5c albert-notify r\u1ed3i t\u1ea3i l\u1ea1i.',EMPTY:T.empty,PERMISSION:'Ch\u01b0a \u0111\u01b0\u1ee3c c\u1ea5p quy\u1ec1n th\u00f4ng b\u00e1o.',BUSY:'M\u1ed9t tab kh\u00e1c \u0111ang g\u1eedi. Ch\u1edd v\u00e0i gi\u00e2y r\u1ed3i th\u1eed l\u1ea1i.',CHANGED:'C\u00e0i \u0111\u1eb7t ho\u1eb7c t\u00e0i kho\u1ea3n v\u1eeba thay \u0111\u1ed5i. Th\u1eed l\u1ea1i.'};return m[result?.code]||result?.message||result?.code||'Kh\u00f4ng g\u1eedi \u0111\u01b0\u1ee3c th\u00f4ng b\u00e1o.';}
 async function rememberError(e){const message=String(e?.message||e);await db.mutate(['runtime'],r=>({write:{runtime:{...(r.runtime||{}),lastError:message,lastErrorAt:Date.now()}}})).catch(()=>{});return message;}
 function probeWindows(){
  if(busy)return;const req=requestPermission();lastProbe=null;
@@ -208,7 +279,7 @@ async function remote(action,body={}){
 }
 function serverSettings(c){return {enabled:c.enabled,interval:c.interval,quiet:c.quiet,timezone:c.timezone};}
 async function commit(patch){
- const current=C.config((await db.read(['config'])).config),next=C.config({...current,...patch,owner:owner(),timezone:zone(),updatedAt:Date.now()});
+ await collect(true);const current=C.config((await db.read(['config'])).config),next=C.config({...current,...patch,owner:owner(),timezone:zone(),updatedAt:Date.now()});
  if(next.enabled){const p=(await db.read(['pool:'+next.pool]))['pool:'+next.pool];if(!C.pick(p,next))throw new Error(T.empty);if(permission()!=='granted')throw new Error('Ch\u01b0a c\u00f3 quy\u1ec1n th\u00f4ng b\u00e1o.');}
  if(next.mode==='push'&&next.enabled){const p=(await db.read(['pool:'+next.pool]))['pool:'+next.pool];if(!C.pick(p,next))throw new Error(T.empty);const reg=await ensureWorker(),sub=await reg.pushManager.getSubscription();if(!sub)throw new Error('K\u1ebft n\u1ed1i Push \u0111\u00e3 h\u1ebft h\u1ea1n. B\u1ea5m K\u1ebft n\u1ed1i Web Push l\u1ea1i.');await remote('subscribe',{subscription:sub.toJSON(),settings:serverSettings(next)});}
  await db.mutate(['runtime'],r=>({write:{config:next,runtime:{...(r.runtime||{}),nextAt:next.enabled?(!current.enabled||current.interval!==next.interval||current.mode!==next.mode?C.nextDue(Date.now(),next):(r.runtime?.nextAt||C.nextDue(Date.now(),next))):0,lastError:''}}}));
@@ -248,7 +319,7 @@ async function localMode(){let reg;try{reg=await ensureWorker();}catch(_){}const
 let scheduling=false;
 async function schedule(){
  clearTimeout(heartbeat);if(scheduling)return;scheduling=true;
- try{await reconcileOwner();const raw=await db.read(['config']);const cfg=C.config(raw.config);updateLauncher(cfg);
+ try{await reconcileOwner();await collect();const raw=await db.read(['config']);const cfg=C.config(raw.config);updateLauncher(cfg);
   if(cfg.enabled&&cfg.mode==='local'&&permission()==='granted'){
    const r=await rpc('TICK');
    if(!r?.ok&&!['OFF','OTHER_MODE','QUIET','NOT_DUE','CHANGED','BUSY'].includes(r?.code))throw new Error(reminderError(r));
@@ -266,7 +337,7 @@ function updateLauncher(cfg){const b=D.getElementById('adw-reminder-launcher');i
 function close(){if(panel?.open)panel.close();if(lastFocus?.isConnected)lastFocus.focus({preventScroll:true});}
 function shell(title=T.title){
  if(!panel){panel=node('dialog',{id:'albert-reminders','aria-labelledby':'rn-title'});D.body.appendChild(panel);panel.addEventListener('click',e=>{if(e.target===panel){const r=panel.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close();}});panel.addEventListener('close',()=>{if(lastFocus?.isConnected)lastFocus.focus({preventScroll:true});});}
- panel.innerHTML='<div class="rn-head">'+icon('bell')+'<div><h2 id="rn-title">'+esc(title)+'</h2><small>HSK Albert \u00b7 Windows / tr\u00ecnh duy\u1ec7t</small></div></div><div class="rn-body"></div>';
+ panel.innerHTML='<div class="rn-head">'+icon('bell')+'<div><h2 id="rn-title">'+esc(title)+'</h2><small>HSK Albert \u00b7 Nh\u1eafc h\u1ecdc 1.2.0 \u00b7 Windows / tr\u00ecnh duy\u1ec7t</small></div></div><div class="rn-body"></div>';
  const b=button(T.close,close,'close');b.className='rn-close';b.setAttribute('aria-label',T.close);b.querySelector('span:last-child').hidden=true;panel.querySelector('.rn-head').appendChild(b);
  if(!panel.open){lastFocus=D.activeElement;D.querySelector('#adw-modal[open]')?.close();D.getElementById('af-drawer-scrim')?.click();panel.showModal();}
  return panel.querySelector('.rn-body');
@@ -275,7 +346,7 @@ function section(parent,label,name){const e=node('section',{class:'rn-section'})
 function note(parent,text,cls='rn-muted'){parent.appendChild(node('p',{class:cls},text));}
 function segment(parent,label,opts,selected,onPick,columns){const wrap=node('div',{class:'rn-seg',role:'group','aria-label':label,style:'--cols:'+(columns||opts.length)});for(const [v,t,i]of opts){wrap.appendChild(button(t,()=>onPick(v),i,false,{'aria-pressed':String(v===selected),'data-rn-value':v}));}parent.appendChild(wrap);}
 function itemCard(item){const e=node('article',{class:'rn-card'});if(!item){note(e,T.empty);return e;}
- e.innerHTML='<div class="rn-card-kicker">'+icon(item.kind==='grammar'?'grammar':'cards')+esc(item.kind==='grammar'?T.grammar:T.word)+'</div><div class="rn-front" lang="zh-CN">'+esc(item.front)+'</div>'+(item.py?'<p class="rn-py" lang="zh-Latn">'+esc(item.py)+'</p>':'')+'<div class="rn-meaning">'+esc(item.meaning)+'</div>'+(item.formula?'<p class="rn-muted">'+esc(item.formula)+'</p>':'')+(item.example?'<div class="rn-example"><span lang="zh-CN">'+esc(item.example)+'</span>'+(item.examplePy?'<small lang="zh-Latn">'+esc(item.examplePy)+'</small>':'')+(item.exampleVi?'<small>'+esc(item.exampleVi)+'</small>':'')+'</div>':'')+'<div class="rn-source">'+esc(item.courseTitle||courseTitle(item.course))+' \u00b7 B\u00e0i '+(item.lessonDisplay||item.lesson)+'</div>';return e;}
+ e.innerHTML='<div class="rn-card-kicker">'+icon(item.kind==='grammar'?'grammar':'cards')+esc(item.kind==='grammar'?T.grammar:T.word)+'</div><div class="rn-front" lang="zh-CN">'+esc(item.front)+'</div>'+(item.py?'<p class="rn-py" lang="zh-Latn">'+esc(item.py)+'</p>':'')+'<div class="rn-meaning">'+esc(item.meaning)+'</div>'+(item.formula?'<p class="rn-muted">'+esc(item.formula)+'</p>':'')+(item.example?'<div class="rn-example"><span lang="zh-CN">'+esc(item.example)+'</span>'+(item.examplePy?'<small lang="zh-Latn">'+esc(item.examplePy)+'</small>':'')+(item.exampleVi?'<small>'+esc(item.exampleVi)+'</small>':'')+'</div>':'')+'<div class="rn-source">'+esc(item.courseTitle||courseTitle(item.course))+' \u00b7 B\u00e0i '+(item.lessonRefs?.length>1?item.lessonRefs.map(l=>l.display).join(', '):(item.lessonDisplay||item.lesson))+'</div>';return e;}
 function dateLabel(ms){return ms?new Date(ms).toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}):'';}
 function render(s){
  viewMode='settings';const active=D.activeElement,focusId=active?.id,focusKey=active?.dataset?.rnValue,focusInterval=active?.dataset?.rnInterval,focusGroup=active?.parentElement?.getAttribute('aria-label');
@@ -291,11 +362,20 @@ function render(s){
  let sec=section(left,T.source,'book');const sel=node('select',{'aria-label':T.source,id:'rn-course'});for(const p of s.pools){const o=node('option',{value:p.key},p.title);o.selected=p.key===cfg.pool;sel.appendChild(o);}sel.onchange=()=>change({pool:sel.value});sec.appendChild(sel);
  if(pool)note(sec,pool.words.length+' t\u1eeb \u00b7 '+pool.grammar.length+' m\u1eabu ng\u1eef ph\u00e1p \u00b7 '+pool.learned.length+' b\u00e0i trong ph\u1ea1m vi \u0111\u00e3 h\u1ecdc.');
  sec=section(left,T.scope,'filter');segment(sec,T.scope,[['learned',T.learned],['all',T.all]],cfg.scope,v=>change({scope:v}));
- note(sec,'B\u00e0i \u0111\u00e3 m\u1edf ho\u1eb7c \u0111\u00e3 \u0111\u00e1nh d\u1ea5u ho\u00e0n th\u00e0nh. Kh\u00f4ng t\u1ef1 coi m\u1ecdi b\u00e0i tr\u01b0\u1edbc b\u00e0i hi\u1ec7n t\u1ea1i l\u00e0 \u0111\u00e3 h\u1ecdc.');
- if(pool){const d=node('details'),summary=node('summary',{},'Ch\u1ecdn th\u00eam b\u00e0i d\u00f9ng \u0111\u1ec3 nh\u1eafc');d.appendChild(summary);const list=node('div',{class:'rn-lesson-list'});for(const l of pool.lessons){const selected=pool.learned.includes(l.id);list.appendChild(button('B\u00e0i '+(l.display||l.id),()=>run(async()=>{await db.mutate(['pool:'+pool.key],r=>{const p=r['pool:'+pool.key],learned=new Set(p.learned);if(learned.has(l.id))learned.delete(l.id);else learned.add(l.id);return{write:{['pool:'+pool.key]:{...p,learned:[...learned].sort((a,b)=>a-b),excluded:learned.has(l.id)?(p.excluded||[]).filter(x=>x!==l.id):[...new Set([...(p.excluded||[]),l.id])]}}};});await refresh();panel.querySelector('.rn-section details').open=true;}),null,false,{'aria-pressed':String(selected),title:l.title}));}d.appendChild(list);note(d,'L\u1ef1a ch\u1ecdn n\u00e0y ch\u1ec9 \u0111\u1ed5i ph\u1ea1m vi nh\u1eafc, kh\u00f4ng s\u1eeda \u0111i\u1ec3m hay ti\u1ebfn \u0111\u1ed9 b\u00e0i h\u1ecdc.');sec.appendChild(d);}
+ note(sec,'L\u1ea5y ti\u1ebfn \u0111\u1ed9 \u0111\u00e3 l\u01b0u c\u1ee7a gi\u00e1o tr\u00ecnh \u0111\u01b0\u1ee3c ch\u1ecdn, k\u1ec3 c\u1ea3 khi b\u1ea1n \u0111ang m\u1edf gi\u00e1o tr\u00ecnh kh\u00e1c. Bao g\u1ed3m b\u00e0i \u0111\u00e3 ho\u00e0n th\u00e0nh, b\u00e0i \u0111\u00e3 m\u1edf/l\u00e0m v\u00e0 c\u00e1c b\u00e0i b\u1ea1n ch\u1ecdn th\u00eam. C\u1ea3 gi\u00e1o tr\u00ecnh kh\u00f4ng y\u00eau c\u1ea7u m\u1edf t\u1eebng b\u00e0i.');
+ if(pool){const d=node('details'),summary=node('summary',{},'Ch\u1ecdn th\u00eam b\u00e0i d\u00f9ng \u0111\u1ec3 nh\u1eafc');d.appendChild(summary);const list=node('div',{class:'rn-lesson-list'});for(const l of pool.lessons){const selected=pool.learned.includes(l.id);list.appendChild(button('B\u00e0i '+(l.display||l.id),()=>run(async()=>{await toggleLearned(pool.key,l.id);await refresh();panel.querySelector('.rn-section details').open=true;}),null,false,{'aria-pressed':String(selected),title:l.title}));}d.appendChild(list);note(d,'L\u1ef1a ch\u1ecdn n\u00e0y ch\u1ec9 \u0111\u1ed5i ph\u1ea1m vi nh\u1eafc, kh\u00f4ng s\u1eeda \u0111i\u1ec3m hay ti\u1ebfn \u0111\u1ed9 b\u00e0i h\u1ecdc.');sec.appendChild(d);}
  sec=section(left,T.kind,'grammar');segment(sec,T.kind,[['word',T.word,'cards'],['grammar',T.grammar,'grammar'],['mix',T.mix,'sync']],cfg.kind,v=>change({kind:v}));
  const counts={word:C.eligible(pool,cfg,'word').length,grammar:C.eligible(pool,cfg,'grammar').length};note(sec,counts.word+' t\u1eeb / '+counts.grammar+' m\u1eabu \u0111ang s\u1eb5n s\u00e0ng trong ph\u1ea1m vi ch\u1ecdn.');
  if(!(cfg.kind==='word'?counts.word:cfg.kind==='grammar'?counts.grammar:counts.word+counts.grammar))note(sec,T.empty,'rn-warning');
+ const progress=C.coverage(pool,cfg,s.runtime),meter=node('div',{class:'rn-coverage','data-rn-coverage':''});
+ meter.innerHTML='<div class="rn-coverage-head"><b>V\u00f2ng nh\u1eafc '+progress.cycle+'</b><span>'+progress.covered+' / '+progress.total+' m\u1ee5c</span></div><progress max="'+(progress.total||1)+'" value="'+progress.covered+'" aria-label="Ti\u1ebfn \u0111\u1ed9 ph\u1ee7 n\u1ed9i dung"></progress>';
+ note(meter,'\u0110\u00e3 nh\u1eafc '+progress.coveredWords+'/'+progress.words+' t\u1eeb v\u1ef1ng, '+progress.coveredGrammar+'/'+progress.grammar+' m\u1eabu ng\u1eef ph\u00e1p. C\u00f2n '+progress.remaining+' m\u1ee5c ch\u01b0a nh\u1eafc trong v\u00f2ng n\u00e0y.');
+ note(meter,'Lu\u00e2n phi\u00ean gi\u1eefa c\u00e1c b\u00e0i; nh\u1eafc h\u1ebft n\u1ed9i dung trong ph\u1ea1m vi r\u1ed3i m\u1edbi l\u1eb7p l\u1ea1i. Ch\u1ebf \u0111\u1ed9 Xen k\u1ebd kh\u00f4ng l\u1eb7p ng\u1eef ph\u00e1p \u0111\u00e3 nh\u1eafc khi v\u1eabn c\u00f2n t\u1eeb ch\u01b0a nh\u1eafc.');sec.appendChild(meter);
+ if(pool?.missing?.length)note(sec,pool.missing.length+' m\u1ee5c ngu\u1ed3n ch\u01b0a \u0111\u1ee7 n\u1ed9i dung/gi\u1ea3i ngh\u0129a; kh\u00f4ng t\u1ef1 sinh n\u1ed9i dung thay th\u1ebf.','rn-warning');
+ if(pool){const detail=node('details',{'data-rn-scope-detail':''});detail.appendChild(node('summary',{},'N\u1ed9i dung \u0111\u01b0\u1ee3c nh\u1eafc theo b\u00e0i'));const groups=node('div',{class:'rn-scope-summary'});
+  for(const l of pool.lessons.filter(l=>cfg.scope==='all'||pool.learned.includes(l.id)))note(groups,'B\u00e0i '+l.display+' \u00b7 '+l.words+' t\u1eeb \u00b7 '+l.grammar+' m\u1eabu');
+  detail.appendChild(groups);note(detail,'M\u1ee5c tr\u00f9ng n\u1ed9i dung gi\u1eefa nhi\u1ec1u b\u00e0i ch\u1ec9 nh\u1eafc m\u1ed9t l\u1ea7n trong m\u1ed7i v\u00f2ng, v\u1eabn gi\u1eef c\u00e1c b\u00e0i ngu\u1ed3n.');sec.appendChild(detail);}
+
  sec=section(left,T.interval,'clock');const every=node('div',{class:'rn-interval',role:'group','aria-label':T.interval});for(const n of [0,...C.INTERVALS]){const label=!n?T.off:n<60?n+T.minute:n<1440?(n/60)+T.hour:T.day;const pressed=cfg.enabled?n===cfg.interval:n===0;every.appendChild(button(label,()=>!n?run(disable):change({interval:n,enabled:true},true),null,false,{'aria-pressed':String(pressed),'data-rn-interval':n}));}sec.appendChild(every);
  sec=section(left,T.quiet,'clock');segment(sec,T.quiet,[['on',T.on],['off',T.off]],cfg.quiet?'on':'off',v=>change({quiet:v==='on'}));
  note(sec,'Theo m\u00fai gi\u1edd thi\u1ebft b\u1ecb: '+cfg.timezone+'. N\u00fat g\u1eedi th\u1eed v\u1eabn ho\u1ea1t \u0111\u1ed9ng trong gi\u1edd y\u00ean l\u1eb7ng.');
@@ -310,9 +390,9 @@ function render(s){
  advanced.appendChild(advActions);note(advanced,'\u0110\u00f3ng ho\u00e0n to\u00e0n tr\u00ecnh duy\u1ec7t, m\u1ea5t m\u1ea1ng, m\u00e1y ng\u1ee7/t\u1eaft ho\u1eb7c Kh\u00f4ng l\u00e0m phi\u1ec1n c\u00f3 th\u1ec3 l\u00e0m th\u00f4ng b\u00e1o tr\u1ec5/kh\u00f4ng hi\u1ec7n. Web kh\u00f4ng ph\u1ea3i b\u00e1o th\u1ee9c h\u1eb9n gi\u1edd ch\u00ednh x\u00e1c.');note(advanced,'M\u1edf l\u1ea1i app \u00edt nh\u1ea5t m\u1ed9t l\u1ea7n trong 30 ng\u00e0y \u0111\u1ec3 gia h\u1ea1n nh\u1eafc.');sec.appendChild(advanced);
  const er=node('p',{class:'rn-inline-error',role:'status','aria-live':'polite'});left.appendChild(er);
  if(s.runtime.lastError)er.textContent=s.runtime.lastError;
- sec=section(right,T.preview,'cards');const chosen=C.pick(pool,cfg,s.runtime),it=chosen?.item;sec.appendChild(itemCard(it));const pa=node('div',{class:'rn-actions'});
- if(it){pa.appendChild(button(T.next,()=>run(async()=>{await db.mutate(['runtime'],r=>({write:{runtime:{...(r.runtime||{}),cursors:chosen.runtime.cursors,lastKind:chosen.runtime.lastKind}}}));await refresh();}),'sync'));pa.appendChild(button('Nghe',()=>speak(it),'speaker'));}sec.appendChild(pa);
- note(sec,'Th\u1ebb trong app, kh\u00f4ng ph\u1ea3i widget ghim tr\u00ean Desktop. Th\u00f4ng b\u00e1o Windows ch\u1ec9 hi\u1ec7n b\u1ea3n ng\u1eafn; b\u1ea5m \u0111\u1ec3 xem \u0111\u1ea7y \u0111\u1ee7.');
+ sec=section(right,T.preview,'cards');const chosen=C.pick(pool,cfg,s.previewRuntime),it=chosen?.item;sec.appendChild(itemCard(it));const pa=node('div',{class:'rn-actions'});
+ if(it){pa.appendChild(button(T.next,()=>run(async()=>{await db.mutate(['previewRuntime'],r=>({write:{previewRuntime:C.commitPick(r.previewRuntime||{},chosen)}}));await refresh();}),'sync'));pa.appendChild(button('Nghe',()=>speak(it),'speaker'));}sec.appendChild(pa);
+ note(sec,'Xem th\u1ebb v\u00e0 b\u1ea5m M\u1ee5c kh\u00e1c kh\u00f4ng l\u00e0m b\u1ecf qua n\u1ed9i dung trong l\u1ecbch th\u00f4ng b\u00e1o. Th\u1ebb trong app, kh\u00f4ng ph\u1ea3i widget ghim tr\u00ean Desktop. Th\u00f4ng b\u00e1o Windows ch\u1ec9 hi\u1ec7n b\u1ea3n ng\u1eafn; b\u1ea5m \u0111\u1ec3 xem \u0111\u1ea7y \u0111\u1ee7.');
  sec=section(right,T.history,'clock');const hist=node('div',{class:'rn-history'});if(!s.history.length)note(hist,'Ch\u01b0a g\u1eedi th\u00f4ng b\u00e1o n\u00e0o.');for(const h of s.history.slice(0,8))hist.appendChild(button(h.front+' \u00b7 '+dateLabel(h.createdAt),()=>showCard(h.id),h.kind==='grammar'?'grammar':'cards'));sec.appendChild(hist);
  sec=section(right,'C\u00e0i app web','download');sec.appendChild(button('C\u00e0i HSK Albert',install,'download'));note(sec,'Kh\u00f4ng c\u1ea7n EXE, CMD hay PowerShell. C\u00e0i app web kh\u00f4ng t\u1ef1 b\u1eadt l\u1ecbch khi \u0111\u00f3ng tab.');
  const help=node('details');help.appendChild(node('summary',{},'Kh\u00f4ng nh\u1eadn \u0111\u01b0\u1ee3c th\u00f4ng b\u00e1o?'));note(help,'1. M\u1edf HTTPS, kh\u00f4ng m\u1edf file t\u1eeb m\u00e1y.\n2. Cho ph\u00e9p Th\u00f4ng b\u00e1o trong quy\u1ec1n c\u1ee7a trang.\n3. Windows: Settings > System > Notifications, b\u1eadt th\u00f4ng b\u00e1o cho Edge/Chrome/HSK Albert v\u00e0 ki\u1ec3m tra Do not disturb.\n4. Ch\u1ecdn gi\u00e1o tr\u00ecnh/ph\u1ea1m vi c\u00f3 d\u1eef li\u1ec7u.\n5. Ki\u1ec3m tra gi\u1edd y\u00ean l\u1eb7ng v\u00e0 chu k\u1ef3 nh\u1eafc.','rn-note');sec.appendChild(help);
@@ -331,8 +411,8 @@ function goLesson(it){close();if(it.course.startsWith('3.0')){const level=it.cou
 function install(){if(installEvent){const e=installEvent;installEvent=null;e.prompt();return;}notice('Edge/Chrome: m\u1edf menu tr\u00ecnh duy\u1ec7t > C\u00e0i \u0111\u1eb7t \u1ee9ng d\u1ee5ng / Install app. iPhone: Chia s\u1ebb > Th\u00eam v\u00e0o M\u00e0n h\u00ecnh ch\u00ednh.');}
 async function reconcileOwner(){watchAuth();const who=owner();if(who===seenOwner)return;const s=await db.read(['config','poolKeys']),cfg=C.config(s.config);if(cfg.owner!==who){
  if(cfg.enabled){try{await rpc('STOP');}catch(_){} }
- await db.mutate(['config','runtime','history'],()=>({write:{config:{...cfg,enabled:false,mode:'local',owner:who,updatedAt:Date.now()},runtime:{nextAt:0},history:[]}}));
- for(const key of s.poolKeys||[])await db.mutate(['pool:'+key],r=>{const p=r['pool:'+key];return p?{write:{['pool:'+key]:{...p,owner:who,learned:[],excluded:[]}}}:{};});
+ await db.mutate(['config','runtime','history'],()=>({write:{config:{...cfg,enabled:false,mode:'local',owner:who,updatedAt:Date.now()},runtime:{nextAt:0},previewRuntime:{},history:[]}}));
+ for(const key of s.poolKeys||[])await db.mutate(['pool:'+key],r=>{const p=r['pool:'+key];return p?{write:{['pool:'+key]:{...p,owner:who,learned:[],excluded:[],visited:[],included:[]}}}:{};});
  fingerprints.clear();collectedAt=0;
  }seenOwner=who;}
 function addLauncher(){const foot=D.getElementById('adw-side-foot');if(foot&&!D.getElementById('adw-reminder-launcher')){const b=button(T.shortTitle,open,'bell',false,{id:'adw-reminder-launcher',title:T.title,'aria-haspopup':'dialog','aria-label':T.title});foot.insertBefore(b,foot.firstChild);} }
@@ -342,6 +422,9 @@ async function init(){
  const queueCollect=()=>{clearTimeout(collectTimer);collectTimer=setTimeout(()=>collect(true).catch(()=>{}),1200);};
  D.addEventListener('click',e=>{if(!e.target.closest?.('#albert-reminders'))queueCollect();},true);
  D.addEventListener('change',e=>{if(!e.target.closest?.('#albert-reminders'))queueCollect();},true);
+ window.addEventListener('albert-sync-applied',queueCollect);
+ window.addEventListener('albert-lesson-completion',queueCollect);
+ window.addEventListener('storage',queueCollect);
  window.addEventListener('focus',()=>{reconcileOwner().then(()=>refresh()).catch(()=>{});schedule();});
  D.addEventListener('visibilitychange',()=>{if(!D.hidden){collect().catch(()=>{});schedule();}});
  watchAuth();
@@ -353,3 +436,4 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEven
 window.AlbertReminders=Object.freeze({version:C.VERSION,open,close,state,collect,showCard,ensureWorker,test:sendTest,probe:probeWindows,diagnose,tick:schedule,core:C,assetURL:ASSETS.href});
 if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>setTimeout(init,1200));else setTimeout(init,1200);
 })();
+

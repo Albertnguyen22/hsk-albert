@@ -79,3 +79,15 @@
 #albert-reminders .rn-warning{overflow-wrap:anywhere}
 #albert-reminders [data-rn-probe],#albert-reminders [data-rn-diagnose]{min-height:40px}
 @media(max-width:540px){#albert-reminders .rn-diagnostics{padding:12px}#albert-reminders .rn-diagnostics dl{grid-template-columns:1fr;gap:4px}#albert-reminders .rn-diagnostics dd{margin-bottom:8px}}
+
+/* Reminder scope coverage, Fluent color tokens inherited from the app. */
+.rn-coverage{margin:14px 0 4px;padding:14px;border:1px solid var(--border,#e2ddd2);border-radius:8px;background:var(--paper,#faf8f3)}
+.rn-coverage-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.rn-coverage progress{display:block;width:100%;height:8px;accent-color:#c0392b;margin:12px 0}
+.rn-coverage progress{appearance:none;border:0;border-radius:4px;overflow:hidden;background:#e2ddd2}
+.rn-coverage progress::-webkit-progress-bar{background:#e2ddd2;border-radius:4px}
+.rn-coverage progress::-webkit-progress-value{background:#c0392b;border-radius:4px}
+.rn-coverage progress::-moz-progress-bar{background:#c0392b;border-radius:4px}
+.rn-coverage p{font-size:13px;line-height:1.6;margin:8px 0 0}
+.rn-scope-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:4px 16px;max-height:260px;overflow-y:auto;margin-top:10px}
+.rn-scope-summary p{padding:8px 0;margin:0;border-bottom:1px solid #e2ddd2}
