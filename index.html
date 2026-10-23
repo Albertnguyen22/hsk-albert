@@ -2,6 +2,9 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<meta name="albert-desktop-compact-source" content="Albert_Flashcard_Fluent_On_Dinh/index.html; sha256=39cf253e3ba0d23ab3dc383b40d5e41afa87648834e5740539bacf97c894e762">
+<meta name="albert-stable-fluent-build" content="2026.10.23-cards-fluent-stable.1">
+<meta name="albert-desktop-flashcards-build" content="2026.10.23-desktop-compact.1">
 <meta name="albert-sync-build" content="2.0.0-auto-2026.10.23-glass-speaker">
 <meta name="albert-card-audio-build" content="2026.10.23-glass-card-speaker.1">
 <script id="albert-vocabulary-card-audio">
@@ -80,7 +83,7 @@
 
 <meta name="albert-mobile-cards-build" content="2026.10.23-index3-1-mobile-cards">
 <script id="albert-mobile-vocabulary-controls">
-/* Mobile vocabulary cards only. No change to the course, account or reminder stores. */
+/* Shared desktop/mobile vocabulary cards only. No change to the course, account or reminder stores. */
 (function (W, D) {
   'use strict';
   if (W.AlbertMobileCards) return;
@@ -107,7 +110,7 @@
   };
   D.addEventListener('click', function (ev) {
     var button = ev.target && ev.target.closest && ev.target.closest('[data-amfc-move]');
-    if (!button || !media.matches) return;
+    if (!button) return;
     ev.preventDefault();
     ev.stopImmediatePropagation();
     if (button.getAttribute('aria-disabled') === 'true') return;
@@ -115,7 +118,8 @@
     if (engine && engine.move) engine.move(Number(button.getAttribute('data-amfc-move')) < 0 ? -1 : 1);
   }, true);
   W.AlbertMobileCards = {
-    version: '2026.10.23-index3-1-mobile-cards',
+    version: '2026.10.23-desktop-mobile-glass.1',
+    isManual: function () { return true; },
     isMobile: function () { return media.matches; },
     sides: sides,
     register: function (name, controller) { engines[name] = controller; }
@@ -126,6 +130,128 @@
 })(window, document);
 
 </script>
+<script id="albert-desktop-compact-controls">
+/* Compact desktop flashcard controls. Uses the existing card engines and rating buttons.
+ * Does not write storage, start timers or observe/re-render the lesson DOM. */
+(function(W,D){
+'use strict';
+if(W.AlbertDesktopCards)return;
+const wide=W.matchMedia('(min-width:901px)');
+const selector='#page-review #flashcard,#page-review .h3-flashcard,#page-today .today-vocab-flashcard';
+function node(tag,cls,text){const e=D.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+function text(e,value){if(e&&e.textContent!==value)e.textContent=value;}
+function visible(e){return !!(e&&e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden');}
+function context(card){
+ if(!card)return null;
+ if(card.id==='flashcard'){const host=card.closest('.review-vocab-flash-host');return host?{card,host,panel:host,engine:'batch',actions:host.querySelector('#card-actions')}:null;}
+ if(card.classList.contains('h3-flashcard')){const host=card.closest('.h3-flash-wrap');return host?{card,host,panel:host,engine:'hsk3',actions:host.querySelector('.h3-fc-actions')}:null;}
+ const host=card.closest('.today-vocab-stage'),panel=host&&host.querySelector('.today-vocab-side');
+ return panel?{card,host,panel,engine:'quick',actions:panel.querySelector('.today-vocab-rate')}:null;
+}
+function isRevealed(card){return card.id==='flashcard'?!!card.querySelector('#card-answer.show'):card.classList.contains('flipped');}
+function makeButton(action,label,icon){const b=node('button','btn btn-outline af-fixed-control adfc-button');b.type='button';b.dataset.adfcAction=action;
+ b.innerHTML=W.AlbertUIIcons.html(icon);b.append(node('span','adfc-label',label));
+ const key={prev:'ArrowLeft',next:'ArrowRight',reveal:'Space',listen:'s'}[action];if(key)b.setAttribute('aria-keyshortcuts',key);
+ b.title=label+({prev:' (\u2190)',next:' (\u2192)',reveal:' (Space)',listen:' (S)'}[action]||'');return b;
+}
+function mount(card){
+ if(!wide.matches||!card?.isConnected)return;const c=context(card);if(!c||!c.actions)return;
+ c.host.dataset.adfcStage=c.engine;
+ if(c.engine==='batch'){
+  const info=card.previousElementSibling;if(info&&!info.classList.contains('fc-progress'))info.classList.add('adfc-counter');
+ }else if(c.engine==='hsk3'&&!c.host.querySelector(':scope > .adfc-counter')){
+  const info=node('div','adfc-counter adfc-generated');c.host.insertBefore(info,card);
+ }
+ if(!c.panel.querySelector(':scope > .adfc-tools')){
+  const tools=node('div','adfc-tools adfc-generated');tools.setAttribute('role','group');tools.setAttribute('aria-label','\u0110i\u1ec1u khi\u1ec3n th\u1ebb t\u1eeb v\u1ef1ng');
+  tools.append(makeButton('prev','Tr\u01b0\u1edbc','chevronL'),makeButton('next','Ti\u1ebfp','chevronR'),makeButton('reveal','Hi\u1ec7n ngh\u0129a','eye'),makeButton('listen','Nghe','speaker'));
+  c.panel.insertBefore(tools,c.actions);
+  const help=node('div','adfc-help adfc-generated');
+  help.innerHTML='<div><kbd>\u2190</kbd> <kbd>\u2192</kbd> Chuy\u1ec3n t\u1eeb <span>\u00b7</span> <kbd>Space</kbd> Xem ngh\u0129a</div><div><kbd>1</kbd> H\u1ecdc l\u1ea1i <span>\u00b7</span> <kbd>2</kbd> Thu\u1ed9c r\u1ed3i <span>\u00b7</span> <kbd>S</kbd> Nghe</div>';
+  c.actions.insertAdjacentElement('afterend',help);
+ }
+ update(card);
+}
+function update(card){
+ if(!wide.matches)return;const c=context(card);if(!c)return;
+ const tools=c.panel.querySelector(':scope > .adfc-tools');if(!tools){mount(card);return;}
+ for(const [a,dir] of [['prev',-1],['next',1]]){const edge=card.querySelector('[data-amfc-move="'+dir+'"]'),b=tools.querySelector('[data-adfc-action="'+a+'"]');const blocked=!edge||edge.getAttribute('aria-disabled')==='true';if(b.disabled!==blocked)b.disabled=blocked;}
+ const show=tools.querySelector('[data-adfc-action="reveal"]'),revealed=isRevealed(card);text(show.querySelector('.adfc-label'),revealed?'\u0110\u00e3 hi\u1ec7n':'Hi\u1ec7n ngh\u0129a');if(show.disabled!==revealed)show.disabled=revealed;
+ if(c.engine==='hsk3')text(c.host.querySelector(':scope > .adfc-counter'),(card.querySelector('.h3-fc-back>div:last-child')?.textContent||'').split('\u00b7')[0].trim());
+}
+function act(card,action){
+ if(!wide.matches||!visible(card))return;const c=context(card);if(!c)return;
+ if(action==='prev'||action==='next'){const edge=card.querySelector('[data-amfc-move="'+(action==='prev'?-1:1)+'"]');if(edge&&edge.getAttribute('aria-disabled')!=='true')edge.click();}
+ else if(action==='reveal'){if(!isRevealed(card))card.click();}
+ else if(action==='listen')card.querySelector('[data-avca-speak]')?.click();
+ else if(action==='again'||action==='known'){const target=[...c.actions.querySelectorAll('button')].find(b=>(b.getAttribute('onclick')||'').includes("'"+action+"'"));if(target&&!target.disabled)target.click();}
+ update(card);
+}
+D.addEventListener('click',function(e){const b=e.target?.closest?.('[data-adfc-action]');if(!b||!wide.matches)return;e.preventDefault();e.stopPropagation();if(b.disabled)return;
+ const host=b.closest('[data-adfc-stage]'),card=host?.querySelector('#flashcard,.h3-flashcard,.today-vocab-flashcard');act(card,b.dataset.adfcAction);
+});
+D.addEventListener('keydown',function(e){
+ if(!wide.matches||e.defaultPrevented||e.repeat||e.isComposing||e.ctrlKey||e.metaKey||e.altKey)return;
+ const path=e.composedPath?e.composedPath():[e.target];if(path.some(n=>n?.matches?.('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"]')))return;
+ if(D.querySelector('dialog[open],.adw-modal[open]')||[...D.querySelectorAll('[role="dialog"],.modal-overlay')].some(visible))return;
+ if(e.shiftKey)return;
+ const action={ArrowLeft:'prev',ArrowRight:'next',' ':'reveal','1':'again','2':'known',s:'listen',S:'listen'}[e.key];if(!action)return;
+ // Preserve normal Space/arrow behavior when a separate button has keyboard focus.
+ const focused=D.activeElement;if(focused?.matches?.('button,a,[role="button"]')&&!focused.closest('[data-adfc-stage]'))return;
+ const cards=[...D.querySelectorAll(selector)].filter(visible);if(cards.length!==1)return;
+ e.preventDefault();e.stopImmediatePropagation();act(cards[0],action);
+},true);
+function mountAll(){if(wide.matches)D.querySelectorAll(selector).forEach(mount);}
+W.AlbertDesktopCards=Object.freeze({version:'2026.10.23-desktop-compact.1',mount,update,mountAll});
+if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',mountAll,{once:true});else mountAll();
+if(wide.addEventListener)wide.addEventListener('change',()=>{mountAll();requestAnimationFrame(()=>W.AlbertStableCards?.holdCurrent());});else wide.addListener(mountAll);
+})(window,document);
+
+</script>
+<script id="albert-stable-card-view">
+/* Stable vocabulary-card DOM shared by desktop and mobile.
+ * Presentation only: callers retain the original rating and storage functions. */
+(function(W,D){
+'use strict';
+if(W.AlbertStableCards)return;
+function text(root,sel,value){const el=root.querySelector(sel),v=String(value==null?'':value);if(el&&el.textContent!==v)el.textContent=v;}
+function attr(el,name,value){if(el&&el.getAttribute(name)!==String(value))el.setAttribute(name,String(value));}
+function speaker(card,w){const b=card.querySelector('[data-avca-speak]');if(!b)return;attr(b,'data-avca-speak',w.zh||'');attr(b,'data-avca-pinyin',w.py||'');attr(b,'aria-label','Nghe ph\u00e1t \u00e2m: '+(w.zh||''));}
+function edges(card,index,length){for(const [dir,blocked] of [[-1,index<=0],[1,index>=length-1]]){const b=card.querySelector('[data-amfc-move="'+dir+'"]');if(b){attr(b,'aria-disabled',blocked);attr(b,'tabindex',blocked?'-1':'0');}}}
+function reserve(card){if(!card)return;const width=Math.round(card.getBoundingClientRect().width);if(card.__stableWidth!==width){card.__stableWidth=width;card.__stableHeight=0;card.style.removeProperty('--albert-card-height');}const h=Math.ceil(card.getBoundingClientRect().height);if(h>(card.__stableHeight||0)){card.__stableHeight=h;card.style.setProperty('--albert-card-height',h+'px');}}
+function hint(card,hidden){const n=card.querySelector('.card-hint,.today-card-hint,.h3-fc-hint');if(n){n.style.display='';n.style.visibility=hidden?'hidden':'';}}
+function batch(w,index,length,absolute,total){
+ const card=D.querySelector('#review-content #flashcard'),host=card?.closest('.review-vocab-flash-host');if(!card||!host||!card.querySelector('#card-answer'))return false;
+ text(card,'.card-zh',w.zh);text(card,'.card-py',w.py);text(card,'.card-vi',w.vi);text(card,'.card-example',w.type);
+ const note=card.querySelector('#card-answer>div:last-child');if(note)text(card,'#card-answer>div:last-child','B\u00e0i '+w.lessonId);
+ card.querySelector('#card-answer').classList.remove('show');hint(card,false);speaker(card,w);edges(card,index,length);
+ const bar=host.querySelector('.fc-progress');if(bar){text(bar,'span:first-child',index+'/'+length);text(bar,'span:last-child',Math.round(index/length*100)+'%');const fill=bar.querySelector('.fc-progress-fill');if(fill)fill.style.width=Math.round(index/length*100)+'%';}
+ const info=card.previousElementSibling;if(info&&!info.classList.contains('fc-progress')){const v='T\u1eeb s\u1ed1 '+absolute+'/'+total+' \u00b7 B\u00e0i '+w.lessonId;if(info.textContent!==v)info.textContent=v;}
+ reserve(card);W.AlbertDesktopCards.update(card);return true;
+}
+function quick(w,index,length,flipped,label){
+ const card=D.querySelector('#today-focus-root .today-vocab-flashcard');if(!card)return false;
+ const stage=card.closest('.today-vocab-stage');if(!stage)return false;
+ text(card,'.today-vocab-zh',w.zh);speaker(card,w);edges(card,index,length);
+ const meaning=card.querySelector('.today-vocab-meaning');if(!meaning)return false;
+ let py=meaning.querySelector('.today-vocab-py-back');if(!py){py=D.createElement('div');py.className='today-vocab-py-back';meaning.prepend(py);}text(card,'.today-vocab-py-back',w.py);
+ text(card,'.today-vocab-vi',w.vi||'\u2014');let type=meaning.querySelector('.today-vocab-type');if(!type){type=D.createElement('div');type.className='today-vocab-type';meaning.append(type);}text(card,'.today-vocab-type',w.type);
+ card.classList.toggle('flipped',!!flipped);hint(card,!!flipped);
+ const meta=stage.querySelector('.today-timer-row>div:last-child');if(meta){text(meta,'div:first-child','Th\u1ebb '+(index+1)+'/'+length);const detail=meta.children[1];if(detail){const first=[...detail.childNodes].find(n=>n.nodeType===3);if(first&&first.nodeValue!==label+' \u00b7 ')first.nodeValue=label+' \u00b7 ';const chip=detail.querySelector('.chip');if(chip){const names={new:'T\u1eeb m\u1edbi',again:'H\u1ecdc l\u1ea1i',hard:'Kh\u00f3',known:'\u0110\u00e3 thu\u1ed9c'};const v=names[w.status]||w.status;if(chip.textContent!==v)chip.textContent=v;chip.className='chip '+(w.status==='known'?'chip-teal':w.status==='hard'?'chip-gold':w.status==='again'?'chip-red':'chip-blue');}}}
+ reserve(card);W.AlbertDesktopCards.update(card);return true;
+}
+function hsk3(w,index,length,flipped){const card=D.querySelector('#review-content .h3-flashcard');if(!card||!D.querySelector('#review-content .h3-fc-actions'))return false;
+ text(card,'.h3-fc-zh',w.zh);text(card,'.h3-fc-py',w.py);text(card,'.h3-fc-vi',w.vi);text(card,'.h3-fc-back>div:last-child','B\u00e0i '+w.lessonId+' \u00b7 '+(w.type||''));speaker(card,w);edges(card,index,length);card.classList.toggle('flipped',!!flipped);hint(card,!!flipped);
+ const wrap=card.closest('.h3-flash-wrap');text(wrap,'.fc-progress>span',(index+1)+'/'+length);const fill=wrap.querySelector('.fc-progress-fill');if(fill)fill.style.width=Math.round(index/length*100)+'%';reserve(card);W.AlbertDesktopCards.update(card);return true;
+}
+function holdCurrent(){for(const c of D.querySelectorAll('#flashcard,.today-vocab-flashcard,.h3-flashcard'))if(c.getClientRects().length)reserve(c);}
+// One click must not move the reader's viewport when only a card value changes.
+W.addEventListener('click',function(e){const t=e.target?.closest?.('#flashcard,.today-vocab-flashcard,.h3-flashcard,#card-actions button,.today-vocab-rate button,.h3-fc-actions button');if(!t)return;const page=t.closest('#page-today,#page-review');if(!page)return;holdCurrent();const main=D.getElementById('main'),sx=W.scrollX,sy=W.scrollY,mx=main?.scrollLeft||0,my=main?.scrollTop||0;const restore=()=>{if(!page.isConnected||!page.getClientRects().length)return;holdCurrent();if(main&&(main.scrollTop!==my||main.scrollLeft!==mx)){main.scrollTop=my;main.scrollLeft=mx;}if(W.scrollX!==sx||W.scrollY!==sy)W.scrollTo({left:sx,top:sy,behavior:'instant'});};queueMicrotask(restore);requestAnimationFrame(restore);},true);
+W.AlbertStableCards=Object.freeze({version:'2026.10.23-stable.1',batch,quick,hsk3,reserve,holdCurrent});
+})(window,document);
+
+</script>
+
 <meta name="albert-reminder-build" content="1.2.0-coverage-index1-1-ai-red">
 <script id="albert-ai-brand-core">
 /* Albert AI presentation only. No changes to requests, verification or saved data. */
@@ -1862,330 +1988,14 @@ window.AlbertFluentIconRelease=false;
 </script>
 
 <script id="albert-web-fluent-assets">
-/* Microsoft Fluent System Icons: optional online upgrade with offline SVG fallback.
- * Only fixed public icon paths are fetched. No lesson text, account data or queries are sent.
- * The application remains usable when the icon CDN is blocked.
- */
-(function(){'use strict';
- if(!window.ALBERT_WEB_FLUENT)return;
- const VERSION='1.1.344', MAP={
-  "calendar": [
-    "calendar_ltr",
-    "calendar"
-  ],
-  "book": [
-    "book_open"
-  ],
-  "sync": [
-    "arrow_sync"
-  ],
-  "cards": [
-    "slide_multiple",
-    "document_copy"
-  ],
-  "more": [
-    "more_horizontal"
-  ],
-  "reading": [
-    "document_text"
-  ],
-  "grammar": [
-    "puzzle_piece"
-  ],
-  "edit": [
-    "edit"
-  ],
-  "tasks": [
-    "task_list_square_ltr",
-    "task_list_square"
-  ],
-  "chart": [
-    "data_bar_vertical"
-  ],
-  "note": [
-    "note"
-  ],
-  "mic": [
-    "mic"
-  ],
-  "chat": [
-    "chat"
-  ],
-  "hanzi": [
-    "text_field"
-  ],
-  "headphones": [
-    "headphones"
-  ],
-  "doc": [
-    "document"
-  ],
-  "speaker": [
-    "speaker_2"
-  ],
-  "back": [
-    "chevron_left"
-  ],
-  "chevronR": [
-    "chevron_right"
-  ],
-  "chevronL": [
-    "chevron_left"
-  ],
-  "chevronD": [
-    "chevron_down"
-  ],
-  "search": [
-    "search"
-  ],
-  "flame": [
-    "fire",
-    "flame"
-  ],
-  "timer": [
-    "timer"
-  ],
-  "map": [
-    "map"
-  ],
-  "person": [
-    "person"
-  ],
-  "bulb": [
-    "lightbulb"
-  ],
-  "check": [
-    "checkmark"
-  ],
-  "aiChat": [
-    "chat_sparkle",
-    "chat"
-  ],
-  "bell": [
-    "alert"
-  ],
-  "play": [
-    "play"
-  ],
-  "pause": [
-    "pause"
-  ],
-  "rewind": [
-    "arrow_counterclockwise"
-  ],
-  "globe": [
-    "globe"
-  ],
-  "close": [
-    "dismiss"
-  ],
-  "add": [
-    "add"
-  ],
-  "minus": [
-    "subtract"
-  ],
-  "menu": [
-    "navigation"
-  ],
-  "settings": [
-    "settings"
-  ],
-  "save": [
-    "save"
-  ],
-  "download": [
-    "arrow_download"
-  ],
-  "upload": [
-    "arrow_upload"
-  ],
-  "delete": [
-    "delete"
-  ],
-  "copy": [
-    "copy"
-  ],
-  "eye": [
-    "eye"
-  ],
-  "external": [
-    "open"
-  ],
-  "keyboard": [
-    "keyboard"
-  ],
-  "info": [
-    "info"
-  ],
-  "warning": [
-    "warning"
-  ],
-  "shield": [
-    "shield_checkmark"
-  ],
-  "folder": [
-    "folder"
-  ],
-  "star": [
-    "star"
-  ],
-  "stop": [
-    "stop"
-  ],
-  "signout": [
-    "sign_out"
-  ],
-  "cloud": [
-    "cloud"
-  ],
-  "layout": [
-    "panel_left"
-  ],
-  "filter": [
-    "filter"
-  ],
-  "shuffle": [
-    "arrow_shuffle"
-  ],
-  "return": [
-    "arrow_enter_left"
-  ],
-  "up": [
-    "chevron_up"
-  ],
-  "people": [
-    "people"
-  ],
-  "trophy": [
-    "trophy"
-  ],
-  "target": [
-    "target"
-  ],
-  "heart": [
-    "heart"
-  ],
-  "link": [
-    "link"
-  ],
-  "eyeoff": [
-    "eye_off"
-  ],
-  "speakerMute": [
-    "speaker_mute"
-  ],
-  "lock": [
-    "lock_closed"
-  ],
-  "unlock": [
-    "lock_open"
-  ],
-  "flash": [
-    "flash"
-  ],
-  "block": [
-    "prohibited"
-  ],
-  "handshake": [
-    "handshake",
-    "people"
-  ],
-  "text": [
-    "text_abc_normal",
-    "text_t"
-  ],
-  "pin": [
-    "pin"
-  ],
-  "radio": [
-    "radio",
-    "headphones"
-  ],
-  "clock": [
-    "clock"
-  ],
-  "question": [
-    "question_circle"
-  ],
-  "image": [
-    "image"
-  ],
-  "bookmark": [
-    "bookmark"
-  ],
-  "send": [
-    "send"
-  ],
-  "checkCircle": [
-    "checkmark_circle"
-  ],
-  "arrowRight": [
-    "arrow_right"
-  ],
-  "arrowLeft": [
-    "arrow_left"
-  ],
-  "refresh": [
-    "arrow_clockwise"
-  ],
-  "error": [
-    "error_circle"
-  ],
-  "mail": [
-    "mail"
-  ],
-  "openBook": [
-    "book_open"
-  ],
-  "chevronUp": [
-    "chevron_up"
-  ]
-};
- const icons=window.AlbertFluentIcons, pending=new Map(), failed=new Set(), work=[];
- let running=0, announce=0, dbPromise=null;
- const DB='albert_fluent_svg_assets_v1', KEY='microsoft-'+VERSION;
- function clean(s){
-  if(typeof s!=='string'||s.length>30000||!/<svg[\s>]/i.test(s)||/<(?:script|foreignObject|style|image|use|animate|set)\b|\bon\w+\s*=|(?:href|xlink:href)\s*=/i.test(s))return null;
-  const doc=new DOMParser().parseFromString(s,'image/svg+xml');
-  if(doc.querySelector('parsererror')||doc.documentElement.localName!=='svg')return null;
-  const allowed=new Set(['svg','path','g','rect','circle','ellipse','line','polyline','polygon','title','desc','defs','clipPath']);
-  if([...doc.querySelectorAll('*')].some(n=>!allowed.has(n.localName)))return null;
-  for(const n of doc.querySelectorAll('*'))for(const a of [...n.attributes])if(/^on/i.test(a.name)||/url\(/i.test(a.value))return null;
-  const root=doc.documentElement;root.removeAttribute('class');root.removeAttribute('width');root.removeAttribute('height');root.setAttribute('fill','currentColor');
-  for(const n of doc.querySelectorAll('[fill]')){if(/^(#212121|#000000|#000|black)$/i.test(n.getAttribute('fill')))n.setAttribute('fill','currentColor');}
-  return new XMLSerializer().serializeToString(root);
- }
- function db(){if(!dbPromise)dbPromise=new Promise((res,rej)=>{try{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore('icons');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);r.onblocked=()=>rej(new Error('cache blocked'));}catch(e){rej(e);}});return dbPromise;}
- function loadCache(){return db().then(d=>new Promise((resolve)=>{const r=d.transaction('icons','readonly').objectStore('icons').get(KEY);r.onsuccess=()=>resolve(r.result||{});r.onerror=()=>resolve({});})).catch(()=>({}));}
- let persistTimer=0;
- function save(){clearTimeout(persistTimer);persistTimer=setTimeout(()=>{const result={};for(const k of Object.keys(MAP)){if(icons[k]?.official)result[k]={regular:icons[k].regular,filled:icons[k].filled};}db().then(d=>{const t=d.transaction('icons','readwrite');t.objectStore('icons').put(result,KEY);}).catch(()=>{});},500);}
- function emit(){clearTimeout(announce);announce=setTimeout(()=>window.dispatchEvent(new CustomEvent('albert-fluent-icons-updated')),160);}
- function use(k,p){const r=clean(p?.regular),f=clean(p?.filled);if(!r||!f)return false;icons[k]={regular:r,filled:f,official:true,revision:(icons[k]?.revision||0)+1};emit();return true;}
- const ready=loadCache().then(all=>{for(const k of Object.keys(all)){if(MAP[k])use(k,all[k]);}});
- async function get(url){const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),5000);try{const r=await fetch(url,{signal:ctl.signal,credentials:'omit',referrerPolicy:'no-referrer',cache:'force-cache'});if(!r.ok)return null;return clean(await r.text());}catch(_){return null;}finally{clearTimeout(timer);}}
- async function fetchPair(k){
-  await ready;if(icons[k]?.official)return true;if(navigator.onLine===false)return false;
-  for(const candidate of MAP[k]){
-   // Start with the standard 20px UI artwork; use 24px if that family has no 20px variant.
-   for(const size of [20,24]){
-    const urls=['https://cdn.jsdelivr.net/npm/@fluentui/svg-icons@'+VERSION+'/icons/','https://unpkg.com/@fluentui/svg-icons@'+VERSION+'/icons/'];
-    for(const base of urls){
-     const [regular,filled]=await Promise.all([get(base+candidate+'_'+size+'_regular.svg'),get(base+candidate+'_'+size+'_filled.svg')]);
-     if(regular&&filled){use(k,{regular,filled});save();return true;}
-    }
-   }
-  }return false;
- }
- function pump(){while(running<4&&work.length){const [k,resolve]=work.shift();running++;fetchPair(k).then(ok=>{if(!ok)failed.add(k);resolve(ok);}).catch(()=>{failed.add(k);resolve(false);}).finally(()=>{running--;pending.delete(k);pump();});}}
- function request(k){if(!MAP[k]||icons[k]?.official)return Promise.resolve(Boolean(icons[k]?.official));if(pending.has(k))return pending.get(k);if(failed.has(k)||navigator.onLine===false)return Promise.resolve(false);const p=new Promise(resolve=>work.push([k,resolve]));pending.set(k,p);pump();return p;}
- function status(){const total=Object.keys(MAP).length,officialCount=Object.keys(MAP).filter(k=>icons[k]?.official).length;return {version:VERSION,total,officialCount,fallbackCount:total-officialCount,loading:pending.size};}
- async function loadAll(){await ready;failed.clear();await Promise.all(Object.keys(MAP).map(request));return status();}
- window.AlbertFluentAssets=Object.freeze({request,status,loadAll});
- const warm=()=>{if(navigator.onLine!==false&&!navigator.connection?.saveData)loadAll();};if('requestIdleCallback' in window)requestIdleCallback(warm,{timeout:5000});else setTimeout(warm,2000);
- window.addEventListener('online',()=>{failed.clear();for(const n of document.querySelectorAll('[data-adw-icon]'))request(n.dataset.adwIcon);});
-})();
-
+/* Single embedded Fluent-style SVG set. No CDN upgrade, cache swapping or icon repaint. */
+(function(W){'use strict';
+ const icons=W.AlbertFluentIcons||{};
+ const status=()=>({version:'embedded-stable-2026.10.23',source:'embedded-single-set',total:Object.keys(icons).length,embeddedCount:Object.keys(icons).length,officialCount:0,pending:0,failed:0,onlineUpgrade:false});
+ W.AlbertFluentAssets=Object.freeze({request:()=>Promise.resolve(true),loadAll:()=>Promise.resolve(status()),status,ready:Promise.resolve()});
+ W.AlbertUIIcons=Object.freeze({html(name,filled){const pair=icons[name]||icons.doc;return pair?pair[filled?'filled':'regular'].replace(/<svg\b[^>]*>/,m=>m.replace(/\sclass="[^"]*"/,'').replace(/>$/,' class="af-fixed-fluent" data-af-fixed-icon="'+name+'" aria-hidden="true" focusable="false">')):'';}});
+ W.AlbertFluentIconSource='Single embedded Fluent-style SVG set; no runtime icon replacement';
+})(window);
 </script>
 
 <script id="albert-web-fluent-shadow">
@@ -13026,6 +12836,7 @@ function renderFlashcard() {
   const w = reviewWords[reviewIdx];
   const pct = Math.round((reviewIdx/reviewWords.length)*100);
   const absoluteNo = reviewBatchStart + reviewIdx + 1;
+  if(window.AlbertStableCards.batch(w,reviewIdx,reviewWords.length,absoluteNo,total)) return;
   document.getElementById('review-content').innerHTML = `
     <div class="fc-progress">
       <span style="font-size:12px;color:var(--muted)">${reviewIdx}/${reviewWords.length}</span>
@@ -13048,9 +12859,8 @@ function renderFlashcard() {
       <div class="card-hint">Nhấp để xem pinyin + nghĩa</div>
     </div>
     <div class="card-actions" id="card-actions" style="display:none">
-      <button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="rateCard('again')">😓 Học lại</button>
-      <button class="btn btn-outline amfc-hard" style="border-color:var(--gold);color:var(--gold)" onclick="rateCard('hard')">🤔 Khó</button>
-      <button class="btn btn-teal" onclick="rateCard('known')">😊 Thuộc rồi!</button>
+      <button class="btn btn-outline af-fixed-control" style="border-color:var(--red);color:var(--red)" onclick="rateCard('again')">${window.AlbertUIIcons.html('return')} Học lại</button>
+      <button class="btn btn-teal af-fixed-control" onclick="rateCard('known')">${window.AlbertUIIcons.html('check')} Thuộc rồi</button>
     </div>`;
 }
 
@@ -13059,6 +12869,7 @@ function flipCard() {
   document.getElementById('card-answer').classList.add('show');
   document.getElementById('card-actions').style.display = 'flex';
   document.querySelector('.card-hint').style.display = 'none';
+  window.AlbertDesktopCards.update(document.getElementById('flashcard'));
 }
 
 function rateCard(rating) {
@@ -53145,8 +52956,10 @@ DqgtoQPuB09VgHoPsioRvO8eemQcAAu2ZTZy2KQA
     var sub = appbar.querySelector('span');
     var pageTitle = document.querySelector('.page-content[style*="display:flex"] .topbar-title, .page-content[style*="display: flex"] .topbar-title');
     var activeNav = document.querySelector('.nav-item.active');
-    if(title) title.textContent = pageTitle ? pageTitle.textContent.trim().replace(/\s+/g,' ') : 'HSK Albert';
-    if(sub) sub.textContent = activeNav ? activeNav.textContent.trim().replace(/\s+/g,' ') : 'Menu học tập';
+    var titleText = pageTitle ? pageTitle.textContent.trim().replace(/\s+/g,' ') : 'HSK Albert';
+    if(title && title.textContent !== titleText) title.textContent = titleText;
+    var subText = activeNav ? activeNav.textContent.trim().replace(/\s+/g,' ') : 'Menu học tập';
+    if(sub && sub.textContent !== subText) sub.textContent = subText;
   }
 
   function wrapShowPage(){
@@ -59303,8 +59116,8 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
       });
     });
     var fresh = words.filter(function(w){ return w.status === 'new' || w.status === 'again' || w.status === 'hard'; });
-    if(window.AlbertMobileCards.isMobile()){
-      // Keep the current mobile session stable so Back can revisit a just-rated word.
+    if(window.AlbertMobileCards.isManual()){
+      // Keep the current review session stable on desktop and mobile so Back can revisit a just-rated word.
       // Ratings still use the original STATE/saveState code; no new storage is added.
       var signature = course() + '|' + words.map(function(w){return w.zh;}).join('\u001f');
       if(mobileVocabScope !== signature){
@@ -59360,7 +59173,7 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
     var cls = vocabFlipped ? 'today-vocab-flashcard flipped' : 'today-vocab-flashcard';
     var statusMap = {new:'Từ mới', again:'Học lại', hard:'Khó', known:'Đã thuộc'};
     var statusClass = w.status === 'known' ? 'chip-teal' : (w.status === 'hard' ? 'chip-gold' : (w.status === 'again' ? 'chip-red' : 'chip-blue'));
-    return '<section class="today-focus-card today-focus-vocabulary"><div class="today-focus-head"><div><div class="today-focus-title">📚 ' + (window.AlbertMobileCards.isMobile() ? 'Anki từ vựng' : 'Từ mới · Flashcard 30s/từ') + '</div><div class="today-focus-sub">Dựa theo Anki từ vựng, giới hạn trong nội dung đã học: ' + esc(learnedRangeLabel()) + '</div></div><button class="btn btn-outline" onclick="hskTodayOpenVocabReview()">Mở Anki từ vựng</button></div><div class="today-focus-body"><div class="today-vocab-stage"><div class="' + cls + '" onclick="hskTodayFlipVocab()">' + window.AlbertMobileCards.sides('quick', vocabIndex <= 0, vocabIndex >= deck.length - 1) + '<div class="avca-word-line"><div class="today-vocab-zh">' + esc(w.zh) + '</div>' + window.AlbertCardAudio.button(w.zh,w.py) + '</div><div class="today-vocab-meaning">' + (w.py ? '<div class="today-vocab-py-back">' + esc(w.py) + '</div>' : '') + '<div class="today-vocab-vi">' + esc(w.vi || '—') + '</div>' + (w.type ? '<div class="today-vocab-type">' + esc(w.type) + '</div>' : '') + '</div><div class="today-card-hint">' + (window.AlbertMobileCards.isMobile() ? 'Chạm giữa thẻ để xem nghĩa' : 'Bấm thẻ để lật nghĩa · tự chuyển sau 30 giây') + '</div></div><div class="today-vocab-side"><div class="today-timer-row"><div class="today-timer-ring" id="today-vocab-ring"><span id="today-vocab-seconds">30</span></div><div><div style="font-weight:800">Thẻ ' + (vocabIndex + 1) + '/' + deck.length + '</div><div style="font-size:12px;color:var(--muted)">' + esc(lessonLabel(w.lesson)) + ' · <span class="chip ' + statusClass + '">' + esc(statusMap[w.status] || w.status) + '</span></div></div></div><div class="today-vocab-controls"><button class="btn btn-outline" onclick="hskTodayPrevVocab(event)">← Trước</button><button class="btn btn-primary" onclick="hskTodayNextVocab(event)">Từ tiếp →</button><button class="btn btn-outline" id="today-vocab-pause" onclick="hskTodayToggleVocabTimer(event)">' + (vocabPaused ? 'Tiếp tục' : 'Tạm dừng') + '</button></div><div class="today-vocab-rate"><button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="hskTodayRateVocab(\'again\',event)">Học lại</button><button class="btn btn-outline amfc-hard" style="border-color:var(--gold);color:var(--gold)" onclick="hskTodayRateVocab(\'hard\',event)">Khó</button><button class="btn btn-teal" onclick="hskTodayRateVocab(\'known\',event)">' + (window.AlbertMobileCards.isMobile() ? 'Thuộc rồi' : 'Đã thuộc') + '</button></div><div class="today-vocab-meta">Mỗi thẻ tự đổi sau 30 giây. Bạn vẫn có thể kéo sang từ tiếp theo hoặc đánh dấu trạng thái để đồng bộ với Anki từ vựng.</div></div></div></div></section>';
+    return '<section class="today-focus-card today-focus-vocabulary"><div class="today-focus-head"><div><div class="today-focus-title">📚 ' + (window.AlbertMobileCards.isManual() ? 'Anki từ vựng' : 'Từ mới · Flashcard 30s/từ') + '</div><div class="today-focus-sub">Dựa theo Anki từ vựng, giới hạn trong nội dung đã học: ' + esc(learnedRangeLabel()) + '</div></div><button class="btn btn-outline" onclick="hskTodayOpenVocabReview()">Mở Anki từ vựng</button></div><div class="today-focus-body"><div class="today-vocab-stage"><div class="' + cls + '" onclick="hskTodayFlipVocab()">' + window.AlbertMobileCards.sides('quick', vocabIndex <= 0, vocabIndex >= deck.length - 1) + '<div class="avca-word-line"><div class="today-vocab-zh">' + esc(w.zh) + '</div>' + window.AlbertCardAudio.button(w.zh,w.py) + '</div><div class="today-vocab-meaning">' + (w.py ? '<div class="today-vocab-py-back">' + esc(w.py) + '</div>' : '') + '<div class="today-vocab-vi">' + esc(w.vi || '—') + '</div>' + (w.type ? '<div class="today-vocab-type">' + esc(w.type) + '</div>' : '') + '</div><div class="today-card-hint">' + (window.AlbertMobileCards.isManual() ? 'Bấm giữa thẻ để xem nghĩa' : 'Bấm thẻ để lật nghĩa · tự chuyển sau 30 giây') + '</div></div><div class="today-vocab-side"><div class="today-timer-row"><div class="today-timer-ring" id="today-vocab-ring"><span id="today-vocab-seconds">30</span></div><div><div style="font-weight:800">Thẻ ' + (vocabIndex + 1) + '/' + deck.length + '</div><div style="font-size:12px;color:var(--muted)">' + esc(lessonLabel(w.lesson)) + ' · <span class="chip ' + statusClass + '">' + esc(statusMap[w.status] || w.status) + '</span></div></div></div><div class="today-vocab-controls"><button class="btn btn-outline" onclick="hskTodayPrevVocab(event)">← Trước</button><button class="btn btn-primary" onclick="hskTodayNextVocab(event)">Từ tiếp →</button><button class="btn btn-outline" id="today-vocab-pause" onclick="hskTodayToggleVocabTimer(event)">' + (vocabPaused ? 'Tiếp tục' : 'Tạm dừng') + '</button></div><div class="today-vocab-rate"><button class="btn btn-outline af-fixed-control" style="border-color:var(--red);color:var(--red)" onclick="hskTodayRateVocab(\'again\',event)">' + window.AlbertUIIcons.html('return') + 'Học lại</button><button class="btn btn-teal af-fixed-control" onclick="hskTodayRateVocab(\'known\',event)">' + window.AlbertUIIcons.html('check') + 'Thuộc rồi' + '</button></div><div class="today-vocab-meta">Mỗi thẻ tự đổi sau 30 giây. Bạn vẫn có thể kéo sang từ tiếp theo hoặc đánh dấu trạng thái để đồng bộ với Anki từ vựng.</div></div></div></div></section>';
   }
   function renderTodayFocus(){
     patchNavAndTopbar();
@@ -59372,6 +59185,7 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
     var root = ensureTodayFocusRoot();
     if(!root) return;
     root.innerHTML = renderGrammarTodaySection() + renderVocabTodaySection();
+    window.AlbertDesktopCards.mount(root.querySelector(".today-vocab-flashcard"));
     restartVocabTimer();
   }
   window.hskRenderTodayFocus = renderTodayFocus;
@@ -59385,40 +59199,40 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
     if(vocabTimer) clearInterval(vocabTimer);
     vocabCountdown = 30;
     updateTimerUI();
-    if(window.AlbertMobileCards.isMobile()){ vocabTimer = null; return; }
+    if(window.AlbertMobileCards.isManual()){ vocabTimer = null; return; }
     vocabTimer = setInterval(function(){
       var page = document.getElementById('page-today');
       if(!page || page.style.display === 'none') return;
-      if(vocabPaused || window.AlbertMobileCards.isMobile()) return;
+      if(vocabPaused || window.AlbertMobileCards.isManual()) return;
       vocabCountdown -= 1;
       if(vocabCountdown <= 0){
         nextVocabInternal(1);
       } else updateTimerUI();
     }, 1000);
   }
-  function nextVocabInternal(delta){
-    var deck = buildVocabTodayDeck();
-    if(!deck.length) return;
-    vocabIndex = (vocabIndex + delta + deck.length) % deck.length;
-    vocabFlipped = false;
-    var root = ensureTodayFocusRoot();
-    if(root) root.innerHTML = renderGrammarTodaySection() + renderVocabTodaySection();
-    vocabCountdown = 30;
-    updateTimerUI();
+  function updateVocabOnly(){
+    var deck=buildVocabTodayDeck();if(!deck.length)return;
+    var w=deck[vocabIndex];if(!w)return;
+    if(window.AlbertStableCards.quick(w,vocabIndex,deck.length,vocabFlipped,lessonLabel(w.lesson)))return;
+    var root=ensureTodayFocusRoot();if(!root)return;
+    var old=root.querySelector('.today-focus-vocabulary');
+    var tpl=document.createElement('template');tpl.innerHTML=renderVocabTodaySection();
+    if(old)old.replaceWith(tpl.content.firstElementChild);else root.appendChild(tpl.content);
+    window.AlbertDesktop?.decorate(root.querySelector('.today-focus-vocabulary'));
+    window.AlbertDesktopCards.mount(root.querySelector('.today-vocab-flashcard'));
   }
-
-  window.hskTodayRandomGrammar = function(){
-    grammarSeedBump += 1;
-    var root = ensureTodayFocusRoot();
-    if(root) root.innerHTML = renderGrammarTodaySection() + renderVocabTodaySection();
-    updateTimerUI();
+  function nextVocabInternal(delta){
+    var deck=buildVocabTodayDeck();if(!deck.length)return;
+    vocabIndex=(vocabIndex+delta+deck.length)%deck.length;vocabFlipped=false;
+    updateVocabOnly();
+  }
+  window.hskTodayRandomGrammar=function(){
+    grammarSeedBump+=1;var root=ensureTodayFocusRoot();if(!root)return;
+    var old=root.querySelector('.today-focus-grammar');var tpl=document.createElement('template');tpl.innerHTML=renderGrammarTodaySection();
+    if(old)old.replaceWith(tpl.content.firstElementChild);else root.appendChild(tpl.content);
+    window.AlbertDesktop?.decorate(root.querySelector('.today-focus-grammar'));
   };
-  window.hskTodayFlipVocab = function(){
-    vocabFlipped = !vocabFlipped;
-    var root = ensureTodayFocusRoot();
-    if(root) root.innerHTML = renderGrammarTodaySection() + renderVocabTodaySection();
-    updateTimerUI();
-  };
+  window.hskTodayFlipVocab=function(){vocabFlipped=!vocabFlipped;updateVocabOnly();};
   window.hskTodayNextVocab = function(ev){ if(ev) ev.stopPropagation(); nextVocabInternal(1); };
   window.hskTodayPrevVocab = function(ev){ if(ev) ev.stopPropagation(); nextVocabInternal(-1); };
   window.hskTodayToggleVocabTimer = function(ev){
@@ -59450,7 +59264,7 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
     resize: function(){
       if(vocabTimer){clearInterval(vocabTimer);vocabTimer=null;}
       var page = document.getElementById('page-today');
-      if(page && page.getClientRects().length && document.documentElement.getAttribute('data-albert-mode') === 'today') renderTodayFocus();
+      if(page && page.getClientRects().length && document.documentElement.getAttribute('data-albert-mode') === 'today'){updateVocabOnly();window.AlbertStableCards.holdCurrent();}
     }
   });
   window.hskTodayOpenVocabReview = function(){
@@ -59764,6 +59578,8 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
   function buildVocabSplit(){
     var content = document.getElementById('review-content');
     if(!content) return;
+    // A card update keeps the existing grammar and controls in place.
+    if(content.querySelector(':scope > .review-vocab-split')) return;
 
     content.querySelectorAll('.review-mode-switch').forEach(function(el){ el.remove(); });
 
@@ -59782,6 +59598,7 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
 
     content.appendChild(makeModeSwitch());
     content.appendChild(split);
+    window.AlbertDesktopCards.mount(content.querySelector("#flashcard"));
   }
 
   function patchedRenderFlashcard(){
@@ -60849,7 +60666,7 @@ window.HSK3_COMPLETE_DATA = {"version":"2026.09.10-hsk3-complete","lessons":[{"i
   };
   try{renderReview=window.renderReview;}catch(e){}
   window.h3StartReview=function(all){var pool=all?allWords():allWords().filter(function(w){var s=STATE.knownWords[w.zh];return !s||s==='again'||s==='hard';});if(!pool.length)pool=allWords();var start=Number(STATE.reviewCursor||0)%pool.length;H3_FC.deck=[];for(var i=0;i<Math.min(30,pool.length);i++)H3_FC.deck.push(pool[(start+i)%pool.length]);H3_FC.idx=0;H3_FC.flipped=false;h3RenderCard();};
-  function h3RenderCard(){var c=document.getElementById('review-content');if(!c)return;if(H3_FC.idx>=H3_FC.deck.length){STATE.reviewCursor=(Number(STATE.reviewCursor||0)+H3_FC.deck.length)%Math.max(1,allWords().length);window.saveState();c.innerHTML='<div class="empty-state"><div class="icon">🎉</div><h3>Đã xong '+H3_FC.deck.length+' thẻ</h3><p style="margin:8px 0 18px">Kết quả đã lưu riêng cho HSK 3.</p><button class="btn btn-teal" onclick="renderReview()">Về trang ôn tập</button></div>';return;}var w=H3_FC.deck[H3_FC.idx];c.innerHTML='<div class="h3-flash-wrap"><div class="fc-progress"><span>'+(H3_FC.idx+1)+'/'+H3_FC.deck.length+'</span><div class="fc-progress-bar"><div class="fc-progress-fill" style="width:'+Math.round(H3_FC.idx/H3_FC.deck.length*100)+'%"></div></div></div><div class="h3-flashcard '+(H3_FC.flipped?'flipped':'')+'" onclick="h3FlipCard()">'+window.AlbertMobileCards.sides('hsk3',H3_FC.idx<=0,H3_FC.idx>=H3_FC.deck.length-1)+'<div class="avca-word-line"><div class="h3-fc-zh">'+esc(w.zh)+'</div>'+window.AlbertCardAudio.button(w.zh,w.py)+'</div><div class="h3-fc-hint" style="font-size:12px;color:var(--muted);margin-top:18px">Chạm để xem đáp án</div><div class="h3-fc-back"><div class="h3-fc-py">'+esc(w.py)+'</div><div class="h3-fc-vi">'+esc(w.vi)+'</div><div style="font-size:12px;color:var(--muted);margin-top:8px">Bài '+w.lessonId+' · '+esc(w.type)+'</div></div></div>'+(H3_FC.flipped||window.AlbertMobileCards.isMobile()?'<div class="h3-fc-actions"><button class="btn btn-red" onclick="h3RateCard(\'again\')">Học lại</button><button class="btn btn-gold amfc-hard" onclick="h3RateCard(\'hard\')">Khó</button><button class="btn btn-teal" onclick="h3RateCard(\'known\')">Đã thuộc</button></div>':'')+'</div>';}
+  function h3RenderCard(){var c=document.getElementById('review-content');if(!c)return;if(H3_FC.idx>=H3_FC.deck.length){STATE.reviewCursor=(Number(STATE.reviewCursor||0)+H3_FC.deck.length)%Math.max(1,allWords().length);window.saveState();c.innerHTML='<div class="empty-state"><div class="icon">🎉</div><h3>Đã xong '+H3_FC.deck.length+' thẻ</h3><p style="margin:8px 0 18px">Kết quả đã lưu riêng cho HSK 3.</p><button class="btn btn-teal" onclick="renderReview()">Về trang ôn tập</button></div>';return;}var w=H3_FC.deck[H3_FC.idx];if(window.AlbertStableCards.hsk3(w,H3_FC.idx,H3_FC.deck.length,H3_FC.flipped))return;c.innerHTML='<div class="h3-flash-wrap"><div class="fc-progress"><span>'+(H3_FC.idx+1)+'/'+H3_FC.deck.length+'</span><div class="fc-progress-bar"><div class="fc-progress-fill" style="width:'+Math.round(H3_FC.idx/H3_FC.deck.length*100)+'%"></div></div></div><div class="h3-flashcard '+(H3_FC.flipped?'flipped':'')+'" onclick="h3FlipCard()">'+window.AlbertMobileCards.sides('hsk3',H3_FC.idx<=0,H3_FC.idx>=H3_FC.deck.length-1)+'<div class="avca-word-line"><div class="h3-fc-zh">'+esc(w.zh)+'</div>'+window.AlbertCardAudio.button(w.zh,w.py)+'</div><div class="h3-fc-hint" style="font-size:12px;color:var(--muted);margin-top:18px">Chạm để xem đáp án</div><div class="h3-fc-back"><div class="h3-fc-py">'+esc(w.py)+'</div><div class="h3-fc-vi">'+esc(w.vi)+'</div><div style="font-size:12px;color:var(--muted);margin-top:8px">Bài '+w.lessonId+' · '+esc(w.type)+'</div></div></div>'+(H3_FC.flipped||window.AlbertMobileCards.isManual()?'<div class="h3-fc-actions"><button class="btn btn-red af-fixed-control" onclick="h3RateCard(\'again\')">'+window.AlbertUIIcons.html('return')+' Học lại</button><button class="btn btn-teal af-fixed-control" onclick="h3RateCard(\'known\')">'+window.AlbertUIIcons.html('check')+' Thuộc rồi</button></div>':'')+'</div>';window.AlbertDesktopCards.mount(c.querySelector('.h3-flashcard'));}
   window.AlbertMobileCards.register('hsk3', {move:function(delta){var next=H3_FC.idx+delta;if(next<0||next>=H3_FC.deck.length)return false;H3_FC.idx=next;H3_FC.flipped=false;h3RenderCard();return true;}});
   window.h3FlipCard=function(){H3_FC.flipped=true;h3RenderCard();};window.h3RateCard=function(rate){var w=H3_FC.deck[H3_FC.idx];STATE.knownWords[w.zh]=rate;window.saveState();H3_FC.idx++;H3_FC.flipped=false;h3RenderCard();};
 
@@ -77032,7 +76849,7 @@ if(window.AlbertDesktop || !window.ALBERT_WEB_FLUENT)return;
 const D=document, html=D.documentElement, icons=window.AlbertFluentIcons||{};
 const T={workspace:'KH\u00d4NG GIAN H\u1eccC T\u1eacP',search:'T\u00ecm b\u00e0i h\u1ecdc...',settings:'C\u00e0i \u0111\u1eb7t',shortcuts:'Ph\u00edm t\u1eaft',account:'T\u00e0i kho\u1ea3n',close:'\u0110\u00f3ng',online:'C\u00f3 k\u1ebft n\u1ed1i',offline:'\u0110ang ngo\u1ea1i tuy\u1ebfn',dictionary:'T\u1eeb \u0111i\u1ec3n Trung\u2013Vi\u1ec7t',menu:'Thu g\u1ecdn / m\u1edf menu',nativeOnly:'M\u1ee5c n\u00e0y d\u00f9ng trong app Windows.',notFound:'Ch\u01b0a t\u00ecm th\u1ea5y b\u00e0i ph\u00f9 h\u1ee3p.'};
 let scheduled=0, modal=null, toastTimer=0, lastFocus=null, signature='', zoom=1;
-const roots=new WeakSet(),pendingRoots=new Set();
+const roots=new WeakSet(),pendingRoots=new Set(),iconObservers=new Map();
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function norm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\u0111/g,'d').replace(/\u0110/g,'D').toLowerCase().trim();}
 function svg(name,filled){window.AlbertFluentAssets?.request?.(name);let x=icons[name]||icons.doc;x=x?.sizes?.['20']||x;return x?x[filled?'filled':'regular'].replace(/<svg\b/,'<svg class="adw-svg" data-adw-family="'+name+'" data-adw-filled="'+(filled?'1':'0')+'" aria-hidden="true" focusable="false" '):'';}
@@ -77061,8 +76878,8 @@ function showSettings(){
  b.appendChild(row('keyboard',T.shortcuts,'Các phím tắt chỉ áp dụng khi bạn không đang nhập văn bản.','Xem',showShortcuts));
  b.appendChild(row('info','Giới thiệu ứng dụng','Albert Sáng · App Developer','Mở',showAbout));
  const source=window.AlbertFluentAssets?.status?.()||{};
- b.appendChild(row('image','Biểu tượng Fluent',source.officialCount===source.total?'Đã tải đủ bộ Microsoft Fluent System Icons; có bộ nhớ đệm trên thiết bị.':'SVG theo giao diện Android/Windows đã có sẵn. Bộ Microsoft Fluent System Icons được tải bổ sung khi có mạng.','Tải lại bộ Microsoft',()=>window.AlbertFluentAssets?.loadAll?.().then(r=>{toast('Đã có '+r.officialCount+'/'+r.total+' nhóm icon Microsoft.');showSettings();})));
- const p=el('p',{'class':'adw-caption'},'Bản 21.10.2026 · index 1(1) · AI logo đỏ · AI + Đồng bộ. Albert Web · Fluent 2.0. Không cần cài EXE. Từ điển và nội dung đã nhúng có thể dùng khi trang đang mở; đăng nhập, đồng bộ, chấm bài, tài nguyên và giọng đọc trực tuyến có thể cần Internet.');b.appendChild(p);
+ b.appendChild(row('image','Biểu tượng Fluent','Một bộ SVG nhúng sẵn dùng chung trên desktop và mobile; không thay icon sau khi trang đã hiển thị.'));
+ const p=el('p',{'class':'adw-caption'},'Bản 23.10.2026 · Desktop: thẻ gọn + điều khiển bên phải · Fluent thống nhất. Albert Web · Fluent 2.0. Không cần cài EXE. Từ điển và nội dung đã nhúng có thể dùng khi trang đang mở; đăng nhập, đồng bộ, chấm bài, tài nguyên và giọng đọc trực tuyến có thể cần Internet.');b.appendChild(p);
 }
 
 function showAccount(){
@@ -77122,7 +76939,7 @@ const glyphRE=new RegExp('['+[...glyphChars].map(x=>x.replace(/[\\\]\[\-^]/g,'\\
 function symbolIcon(t){for(const [ch,k] of Object.entries(uiSymbolMap))if(t.includes(ch))return k;return null;}
 function cleanUiText(t){let out=String(t);for(const ch of [...Object.keys(emojiMap),...Object.keys(uiSymbolMap)])out=out.split(ch).join('');return out.replace(/[\uFE0E\uFE0F\u200D]/g,'').trim();}
 function inlineGlyphs(root){
- const w=D.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(t){const p=t.parentElement;if(!p||!p.getClientRects().length||p.closest(protectedContent)||p.closest('[data-adw-icon]'))return NodeFilter.FILTER_REJECT;glyphRE.lastIndex=0;return glyphRE.test(t.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;}}),todo=[];
+ const w=D.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(t){const p=t.parentElement;if(!p||p.closest(protectedContent)||p.closest('[data-adw-icon]'))return NodeFilter.FILTER_REJECT;glyphRE.lastIndex=0;return glyphRE.test(t.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;}}),todo=[];
  while(w.nextNode())todo.push(w.currentNode);
  for(const text of todo){const p=text.parentElement;if(p?.closest('#albert-reminders'))continue;if(!p?.isConnected)continue;const source=text.nodeValue;glyphRE.lastIndex=0;const parts=[...source.matchAll(glyphRE)];if(!parts.length)continue;
   // SELECT/OPTION only support text; remove decorative glyphs while preserving the option/value.
@@ -77166,7 +76983,7 @@ function semantic(n,t){
 const maskCache=new Map();
 function addIcon(n,name){if(!icons[name])name='doc';if(n.dataset.adwIcon!==name)n.dataset.adwIcon=name;window.AlbertFluentAssets?.request?.(name);const strip=svg=>svg.replace(/currentColor/g,'white').replace(/var\([^)]*\)/g,'black');const data=x=>'url("data:image/svg+xml,'+encodeURIComponent(strip(x))+'")';const size=n.classList.contains('adw-inline-icon')?(n.classList.contains('adw-glyph-alone')?24:16):20;const pair=icons[name].sizes?.[String(size)]||icons[name],cacheKey=name+':'+size+':'+(icons[name].revision||0);n.dataset.adwIconSize=String(size);if(!maskCache.has(cacheKey))maskCache.set(cacheKey,{r:data(pair.regular),f:data(pair.filled)});const {r,f}=maskCache.get(cacheKey);if(n.style.getPropertyValue('--adw-ir')!==r)n.style.setProperty('--adw-ir',r);if(n.style.getPropertyValue('--adw-if')!==f)n.style.setProperty('--adw-if',f);}
 function cleanLabel(n){const walk=D.createTreeWalker(n,NodeFilter.SHOW_TEXT);const all=[];while(walk.nextNode())all.push(walk.currentNode);all.forEach(t=>{const p=t.parentElement;if(p?.closest('svg,script,style,textarea,input,[contenteditable=true]'))return;if(p?.closest('.zh,[lang="zh-CN"]')&&!n.matches('button,a.btn,[role=button]'))return;let s=t.nodeValue;for(const e of Object.keys(emojiMap))s=s.split(e).join('');s=s.replace(/\p{Extended_Pictographic}/gu,'').replace(/[\uFE0F\u200D]/g,'');if(n.tagName==='BUTTON'||n.matches('.tab,[role=tab]'))s=s.replace(/^[\s\u2190\u2192\u2039\u203a\u00d7\u2715\u2716]+/,'').replace(/[\s\u2190\u2192\u2039\u203a]+$/,'');if(s!==t.nodeValue)t.nodeValue=s;});}
-function decorate(root){enhanceTables(root);enhanceAudio(root);const q='button,a.btn,a[class*=audio],a[download],[role="button"],.tab,.tab-btn,[role="tab"],.nav-icon,.streak-fire,.stat-card .lbl,.section-card-header,.today-focus-title,h1,h2,h3,h4,summary,.msg-avatar,.gate-icon,.quiz-feedback,.ex-result,.result-badge,.badge';const list=[];if(root instanceof Element&&root.matches(q))list.push(root);if(root.querySelectorAll)list.push(...root.querySelectorAll(q));for(const n of list){if(!n.getClientRects().length||n.matches('.mock4-option,.quiz-option,.mcq-option,[data-wb-option],[data-choice-option]'))continue;if(n.closest('#albert-sync-dialog,#as-update-banner,.atp-content,#albert-reminders,#adw-modal,#adw-side-foot,#adw-side-head,#adw-search,#adw-account,#af-mobile-nav,#af-mobile-menu,.adw-audio,svg,script,style,textarea,input,[contenteditable=true]'))continue;if(n.matches('[data-hsk-edition]')||n.matches('.adw-inline-icon')||n.closest('[data-aab-brand-host],[data-aab-brand],[data-aab-status]'))continue;const text=(n.textContent||'').trim();if(text.length>230)continue;const isHeading=n.matches('h1,h2,h3,h4,.section-card-header,.stat-card .lbl,.streak-fire,.msg-avatar');if(isHeading&&!existingEmoji(text)&&!pict.test(text))continue;const name=semantic(n,text)||(pict.test(text)?'info':null);if(!name)continue;if(!n.hasAttribute('aria-label')&&text.length<130)n.setAttribute('aria-label',text.replace(/[\uFE0F\u200D]/g,''));if(!n.title&&n.matches('button,.tab'))n.title=text||n.getAttribute('aria-label')||name;
+function decorate(root){enhanceTables(root);enhanceAudio(root);const q='button,a.btn,a[class*=audio],a[download],[role="button"],.tab,.tab-btn,[role="tab"],.nav-icon,.streak-fire,.stat-card .lbl,.section-card-header,.today-focus-title,h1,h2,h3,h4,summary,.msg-avatar,.gate-icon,.quiz-feedback,.ex-result,.result-badge,.badge';const list=[];if(root instanceof Element&&root.matches(q))list.push(root);if(root.querySelectorAll)list.push(...root.querySelectorAll(q));for(const n of list){if(n.matches('.mock4-option,.quiz-option,.mcq-option,[data-wb-option],[data-choice-option]'))continue;if(n.closest('#albert-sync-dialog,#as-update-banner,.atp-content,#albert-reminders,#adw-modal,#adw-side-foot,#adw-side-head,#adw-search,#adw-account,#af-mobile-nav,#af-mobile-menu,.adw-audio,svg,script,style,textarea,input,[contenteditable=true]'))continue;if(n.matches('[data-hsk-edition],[data-avca-speak],.amfc-edge,.af-fixed-control')||n.matches('.adw-inline-icon')||n.closest('[data-aab-brand-host],[data-aab-brand],[data-aab-status]'))continue;const text=(n.textContent||'').trim();if(text.length>230)continue;const isHeading=n.matches('h1,h2,h3,h4,.section-card-header,.stat-card .lbl,.streak-fire,.msg-avatar');if(isHeading&&!existingEmoji(text)&&!pict.test(text))continue;const name=semantic(n,text)||(pict.test(text)?'info':null);if(!name)continue;if(!n.hasAttribute('aria-label')&&text.length<130)n.setAttribute('aria-label',cleanUiText(text));if(!n.title&&n.matches('button,.tab'))n.title=text||n.getAttribute('aria-label')||name;
  if(n.querySelector('.nav-icon'))continue;
  addIcon(n,name);cleanLabel(n);if(n.tagName==='A'||n.matches('button,.tab,[role=tab],[role=button]')){for(const t of [...n.childNodes].filter(x=>x.nodeType===3)){let v=t.nodeValue;for(const c of Object.keys(uiSymbolMap))v=v.split(c).join('');if(v!==t.nodeValue)t.nodeValue=v;}}
  // Decorative SVGs from prior layers are retained but visually replaced.
@@ -77210,8 +77027,32 @@ function enhanceAudio(root){
  }
 }
 
-function watch(root){if(roots.has(root))return;roots.add(root);if(root instanceof ShadowRoot){const style=el('style',{'data-adw-style':''});style.textContent=window.AlbertDesktopShadowCSS||'';root.appendChild(style);}decorate(root);new MutationObserver(records=>{let work=false;for(const r of records){if(r.type==='attributes'){work=true;break;}else if(r.type==='characterData'){const p=r.target.parentElement;if(p&&!p.closest('script,style,#adw-status,#adw-toast')){work=true;break;}}else if([...r.addedNodes].some(n=>n.nodeType===1&&!['SCRIPT','STYLE','SVG'].includes(n.nodeName)||n.nodeType===3)){work=true;break;}}if(work)queue(root);}).observe(root,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['aria-label','aria-selected','aria-pressed','open']});}
-function queue(root){pendingRoots.add(root);if(scheduled)return;scheduled=setTimeout(()=>{scheduled=0;const list=[...pendingRoots];pendingRoots.clear();list.forEach(x=>{if(x?.isConnected||x===D.body)decorate(x);});sync();},90);}
+function watch(root){
+ if(roots.has(root))return;roots.add(root);
+ if(root instanceof ShadowRoot){const style=el('style',{'data-adw-style':''});style.textContent=window.AlbertDesktopShadowCSS||'';root.appendChild(style);}
+ decorate(root);
+ const opts={childList:true,subtree:true,characterData:true,characterDataOldValue:true,attributes:true,attributeOldValue:true,attributeFilter:['aria-label','aria-selected','aria-pressed','open']};
+ const observer=new MutationObserver(records=>{
+  for(const r of records){
+   const p=r.target.nodeType===1?r.target:r.target.parentElement;
+   if(!p||p.closest?.('svg,script,style,.adw-inline-icon,#adw-status,#adw-toast'))continue;
+   if(r.type==='attributes'){if(r.oldValue===p.getAttribute(r.attributeName))continue;queue(p);}
+   else if(r.type==='characterData'){if(r.oldValue!==r.target.nodeValue)queue(p);}
+   else for(const n of r.addedNodes){if(n.nodeType===1&&!n.matches('svg,script,style,.adw-inline-icon'))queue(n);else if(n.nodeType===3&&n.nodeValue.trim())queue(p);}
+  }
+ });
+ iconObservers.set(root,{observer,opts});observer.observe(root,opts);
+}
+function queue(root){
+ if(!root)return;pendingRoots.add(root);if(scheduled)return;scheduled=1;
+ queueMicrotask(()=>{
+  scheduled=0;const list=[...pendingRoots];pendingRoots.clear();
+  const top=list.filter(n=>!list.some(p=>p!==n&&p.contains?.(n)));
+  for(const {observer} of iconObservers.values())observer.disconnect();
+  try{for(const n of top)if(n.isConnected||n===D.body)decorate(n);}
+  finally{for(const [root,{observer,opts}] of iconObservers)if(root.isConnected||root===D.body)observer.observe(root,opts);}
+ });
+}
 function buildShell(){const side=D.querySelector('.sidebar'),bar=D.getElementById('albert-menu-appbar');if(!side||!bar)return;
 if(!D.getElementById('adw-side-head')){const head=el('div',{id:'adw-side-head'});head.innerHTML='<span>'+T.workspace+'</span><button type="button" class="adw-iconbtn" id="adw-collapse" aria-label="'+T.menu+'" aria-expanded="'+!html.classList.contains('adw-collapsed')+'" title="'+T.menu+' (Ctrl+B)">'+svg('menu')+'</button>';side.prepend(head);head.querySelector('button').onclick=collapse;const foot=el('div',{id:'adw-side-foot'});[['settings',T.settings,showSettings],['keyboard',T.shortcuts,showShortcuts],['person',T.account,showAccount],['info','Gi\u1edbi thi\u1ec7u \u1ee9ng d\u1ee5ng',showAbout]].forEach(([ico,label,fn])=>{const b=el('button',{type:'button',title:label});b.innerHTML=svg(ico)+'<span>'+label+'</span>';b.onclick=fn;if(fn===showAbout){b.id='adw-about-launcher';b.title='Gi\u1edbi thi\u1ec7u \u1ee9ng d\u1ee5ng (About app)';b.setAttribute('aria-label','Gi\u1edbi thi\u1ec7u \u1ee9ng d\u1ee5ng');b.setAttribute('aria-haspopup','dialog');b.setAttribute('aria-expanded','false');}foot.appendChild(b);});side.appendChild(foot);}
 if(!D.getElementById('adw-search')){const b=el('button',{id:'adw-search',type:'button','aria-label':T.search,title:T.search+' (Ctrl+K)'});b.innerHTML=svg('search')+'<span>'+T.search+'</span><kbd>Ctrl K</kbd>';b.onclick=showSearch;const group=D.getElementById('albert-header-study-tools');bar.insertBefore(b,group||null);const acc=el('button',{type:'button',id:'adw-account','class':'adw-iconbtn',title:T.account,'aria-label':T.account});acc.innerHTML=svg('person');acc.onclick=showAccount;bar.appendChild(acc);}
@@ -77355,9 +77196,9 @@ function hookRenderers(){
 }
 
 function start(){html.classList.remove('albert-tabs','albert-ui');html.classList.add('adw');html.classList.toggle('adw-collapsed',storage('albertWeb.sidebarCollapsed')==='1');const css=D.createElement('style');const mask='url("data:image/svg+xml,'+encodeURIComponent((icons.search?.regular||'').replace(/currentColor/g,'black'))+'")';const closeMask='url("data:image/svg+xml,'+encodeURIComponent((icons.close?.regular||'').replace(/currentColor/g,'#4a4754'))+'")';const lock='url("data:image/svg+xml,'+encodeURIComponent((icons.lock?.regular||'').replace(/currentColor/g,'#7a7568'))+'")';const chev='url("data:image/svg+xml,'+encodeURIComponent((icons.chevronD?.regular||'').replace(/currentColor/g,'#4a4754'))+'")';css.textContent='html.adw{--adw-i-search:'+mask+';--adw-i-chevron:'+chev+';--adw-i-lock:'+lock+';--adw-i-close:'+closeMask+'}';D.head.appendChild(css);buildShell();hookRenderers();watch(D.body);sync();D.addEventListener('keydown',keys);D.addEventListener('change',()=>queue(D.body));D.addEventListener('click',()=>{setTimeout(sync,0);setTimeout(()=>queue(D.body),220);},true);window.addEventListener('online',sync);window.addEventListener('offline',sync);[150,800,2000,3800].forEach(t=>setTimeout(()=>queue(D.body),t));setInterval(sync,1800);window.addEventListener('albert-fluent-icons-updated',refreshOfficialIcons);installResponsive();}
-window.AlbertDesktop=Object.freeze({version:'web-2.3.1-tutor-layout',showAbout,showSettings,showSearch,showAccount,showShortcuts,collapse,decorate,openPage,openLesson,toast,sync,iconCount:Object.keys(icons).length,iconSource:window.AlbertFluentIconSource,requiredIcons:Object.freeze(["calendar", "book", "sync", "cards", "more", "reading", "grammar", "edit", "tasks", "chart", "note", "mic", "chat", "hanzi", "headphones", "doc", "speaker", "back", "chevronR", "chevronL", "chevronD", "search", "flame", "timer", "map", "person", "bulb", "check", "aiChat", "bell", "play", "pause", "rewind", "globe", "close", "add", "minus", "menu", "settings", "save", "download", "upload", "delete", "copy", "eye", "external", "keyboard", "info", "warning", "shield", "folder", "star", "stop", "signout", "cloud", "layout", "filter", "shuffle", "return", "up", "people", "trophy", "target", "heart", "link", "eyeoff", "speakerMute", "lock", "unlock", "flash", "block", "handshake", "text", "pin", "radio", "clock", "question", "image", "bookmark", "send", "checkCircle", "arrowRight", "arrowLeft", "refresh", "error", "mail", "openBook", "chevronUp"])});
+window.AlbertDesktop=Object.freeze({version:'web-2.4.0-stable-icons-cards',showAbout,showSettings,showSearch,showAccount,showShortcuts,collapse,decorate,openPage,openLesson,toast,sync,iconCount:Object.keys(icons).length,iconSource:window.AlbertFluentIconSource,requiredIcons:Object.freeze(["calendar", "book", "sync", "cards", "more", "reading", "grammar", "edit", "tasks", "chart", "note", "mic", "chat", "hanzi", "headphones", "doc", "speaker", "back", "chevronR", "chevronL", "chevronD", "search", "flame", "timer", "map", "person", "bulb", "check", "aiChat", "bell", "play", "pause", "rewind", "globe", "close", "add", "minus", "menu", "settings", "save", "download", "upload", "delete", "copy", "eye", "external", "keyboard", "info", "warning", "shield", "folder", "star", "stop", "signout", "cloud", "layout", "filter", "shuffle", "return", "up", "people", "trophy", "target", "heart", "link", "eyeoff", "speakerMute", "lock", "unlock", "flash", "block", "handshake", "text", "pin", "radio", "clock", "question", "image", "bookmark", "send", "checkCircle", "arrowRight", "arrowLeft", "refresh", "error", "mail", "openBook", "chevronUp"])});
 window.addEventListener('albert-native-message',e=>{const m=e.detail||{};if(m.type==='toast')toast(m.text||'');if(m.type==='content-updated')toast('N\u1ed9i dung \u0111\u00e3 c\u1eadp nh\u1eadt.');});
-if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>setTimeout(start,0));else setTimeout(start,0);
+if(D.body)start();else D.addEventListener('DOMContentLoaded',start,{once:true});
 })();
 
 </script>
@@ -77416,6 +77257,8 @@ html.adw body:is(.hsk30-edition,.hsk303-edition) #hsk303-side [data-hsk303-nav="
  #af-mobile-nav button{flex:1;min-width:0;}
 }
 </style>
+
+
 <style id="albert-completion-nav-style">
 html.adw.af-web #albert-tabbar,html.adw.af-web #mobile-appbar,html.adw.af-web .mobile-appbar{display:none!important}
 html.adw.af-web #hsk-edition-switch button{font-weight:500!important}
@@ -78205,3 +78048,149 @@ if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>setTimeout
 })();
 
 </script>
+
+<style id="albert-card-stability-style">
+/* No width/height changes on flip, no icon fade/morph, no scroll-anchor shifts. */
+html #page-review #review-content #flashcard,
+html #page-review #review-content .h3-flashcard,
+html #page-today #today-focus-root .today-vocab-flashcard {
+ min-height:max(320px,var(--albert-card-height,0px))!important;
+ height:auto!important;overflow-anchor:none;transition:none!important;transform:none!important;
+}
+html #page-review #review-content .review-vocab-split,
+html #page-today #today-focus-root { overflow-anchor:none; }
+html #page-review #flashcard .card-answer,
+html #page-review .h3-flashcard .h3-fc-back,
+html #page-today .today-vocab-flashcard .today-vocab-meaning {
+ display:block!important;min-height:130px;max-height:none!important;
+ height:auto!important;overflow:visible!important;opacity:0!important;visibility:hidden;
+ pointer-events:none;transition:none!important;margin-top:16px!important;
+}
+html #page-review #flashcard .card-answer.show,
+html #page-review .h3-flashcard.flipped .h3-fc-back,
+html #page-today .today-vocab-flashcard.flipped .today-vocab-meaning {
+ opacity:1!important;visibility:visible;pointer-events:auto;
+}
+html #page-today .today-vocab-flashcard.flipped .today-card-hint,
+html #page-review .h3-flashcard.flipped .h3-fc-hint { visibility:hidden!important; }
+html #page-review .h3-flashcard .h3-fc-hint {
+ position:absolute;bottom:12px;left:60px;right:60px;text-align:center;margin:0!important;
+}
+html #page-review #flashcard .card-zh,
+html #page-review .h3-flashcard .h3-fc-zh,
+html #page-today .today-vocab-flashcard .today-vocab-zh {line-height:1.4!important;}
+html .af-fixed-fluent,html .adw-svg,html [data-adw-icon]::before {transition:none!important;animation:none!important;}
+html .af-fixed-fluent {display:inline-block;width:20px;height:20px;flex:none;vertical-align:-3px;}
+html button.af-fixed-control {display:inline-flex;align-items:center;justify-content:center;gap:8px;}
+html button.af-fixed-control::before,html button[data-avca-speak]::before {display:none!important;content:none!important;}
+@media(max-width:900px){
+ html #page-review #review-content #flashcard,
+ html #page-review #review-content .h3-flashcard,
+ html #page-today #today-focus-root .today-vocab-flashcard {min-height:max(300px,var(--albert-card-height,0px))!important;}
+}
+
+</style>
+
+<style id="albert-desktop-vocabulary-layout">/* Desktop-only compact card with a close-by control panel. Mobile remains untouched. */
+.adfc-generated { display:none; }
+@media (min-width:901px) {
+ html #page-review #review-content .review-vocab-split { display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:22px!important; }
+ html #page-review #review-content .review-vocab-flash-host { order:0;min-width:0; }
+ html #page-review #review-content .review-vocab-grammar-host { order:1;min-width:0; }
+ html #page-today #today-focus-root { display:flex!important;flex-direction:column!important;gap:22px!important; }
+ html #page-today #today-focus-root > .today-focus-vocabulary { order:0; }
+ html #page-today #today-focus-root > .today-focus-grammar { order:1; }
+ html #page-today #today-focus-root .today-vocab-stage,
+ html #page-review #review-content [data-adfc-stage="batch"],
+ html #page-review #review-content [data-adfc-stage="hsk3"] {
+   --adfc-panel-width:280px;display:grid!important;grid-template-columns:minmax(0,1fr) var(--adfc-panel-width)!important;
+   gap:12px 22px!important;position:relative;align-items:start!important;
+   width:100%!important;max-width:940px!important;margin:0 auto!important;box-sizing:border-box;min-width:0;
+ }
+ html #page-review #review-content [data-adfc-stage="batch"],
+ html #page-review #review-content [data-adfc-stage="hsk3"] {grid-template-rows:auto auto auto auto minmax(0,1fr)!important;}
+ html #page-review #review-content [data-adfc-stage]::before {
+   content:"";position:absolute;top:0;bottom:0;right:0;width:var(--adfc-panel-width);pointer-events:none;
+   border:1px solid var(--border,#e2ddd2);border-radius:16px;background:var(--paper2,#f4f1eb);box-sizing:border-box;
+ }
+ html #page-today #today-focus-root .today-vocab-stage > .today-vocab-side {
+   display:flex!important;flex-direction:column!important;gap:16px!important;grid-column:2;grid-row:1;
+   padding:24px 18px!important;border:1px solid var(--border,#e2ddd2)!important;border-radius:16px!important;
+   background:var(--paper2,#f4f1eb)!important;min-width:0;box-shadow:none!important;align-self:stretch;
+ }
+ html #page-today #today-focus-root .today-vocab-stage .today-timer-row {order:0;justify-content:flex-start!important;margin:0!important;gap:0!important;}
+ html #page-today #today-focus-root .today-vocab-stage .today-timer-row > div {text-align:left!important;min-width:0;}
+ html #page-today #today-focus-root .today-vocab-stage .today-timer-row > div:last-child > div:first-child {font-size:20px;line-height:1.4;margin-bottom:5px;}
+ html #page-today #today-focus-root .today-vocab-stage .today-timer-row > div:last-child > div:last-child {line-height:1.65;}
+ html #page-today #today-focus-root .today-vocab-stage .today-vocab-flashcard {grid-column:1;grid-row:1;order:0;}
+ html #page-today #today-focus-root .today-vocab-stage .adfc-tools {order:1;}
+ html #page-today #today-focus-root .today-vocab-stage .today-vocab-rate {order:2;}
+ html #page-today #today-focus-root .today-vocab-stage .adfc-help {order:3;margin-top:auto!important;}
+ html #page-today #today-focus-root .today-vocab-stage .today-timer-ring,
+ html #page-today #today-focus-root .today-vocab-stage .today-vocab-controls,
+ html #page-today #today-focus-root .today-vocab-stage .today-vocab-meta {display:none!important;}
+ html #page-review #review-content [data-adfc-stage] > .fc-progress {grid-column:2;grid-row:1;margin:24px 18px 0!important;min-width:0;align-self:start;position:relative;z-index:1;}
+ html #page-review #review-content [data-adfc-stage] > .adfc-counter {display:block;grid-column:2;grid-row:2;position:relative;z-index:1;margin:0 18px!important;color:var(--muted);text-align:left!important;line-height:1.6;font-size:13px;}
+ html #page-review #review-content [data-adfc-stage] > .adfc-tools {grid-column:2;grid-row:3;position:relative;z-index:1;margin:0 18px!important;}
+ html #page-review #review-content [data-adfc-stage] > #card-actions,
+ html #page-review #review-content [data-adfc-stage] > .h3-fc-actions {grid-column:2;grid-row:4;position:relative;z-index:1;}
+ html #page-review #review-content [data-adfc-stage] > .adfc-help {grid-column:2;grid-row:5;position:relative;z-index:1;margin:0 18px 24px!important;}
+ html #page-review #review-content [data-adfc-stage] > #flashcard,
+ html #page-review #review-content [data-adfc-stage] > .h3-flashcard {grid-column:1;grid-row:1 / 6;align-self:stretch;}
+ html #page-review #review-content #flashcard,
+ html #page-review #review-content .h3-flashcard,
+ html #page-today #today-focus-root .today-vocab-flashcard {
+   position:relative!important;width:100%!important;max-width:none!important;min-width:0!important;
+   min-height:max(340px,var(--albert-card-height,0px))!important;height:auto!important;
+   padding:34px 28px 44px!important;margin:0!important;box-sizing:border-box;overflow:hidden;
+   border-radius:20px!important;transition:none!important;transform:none!important;
+ }
+ html #page-review #review-content #flashcard .card-zh,
+ html #page-review #review-content .h3-flashcard .h3-fc-zh,
+ html #page-today #today-focus-root .today-vocab-flashcard .today-vocab-zh {font-size:48px!important;line-height:1.4!important;overflow-wrap:anywhere;}
+ html #page-review #review-content #flashcard .card-vi,
+ html #page-review #review-content .h3-flashcard .h3-fc-vi,
+ html #page-today #today-focus-root .today-vocab-flashcard .today-vocab-vi {font-size:22px!important;line-height:1.5;overflow-wrap:anywhere;}
+ html #page-review #review-content #flashcard .card-py,
+ html #page-review #review-content .h3-flashcard .h3-fc-py,
+ html #page-today #today-focus-root .today-vocab-flashcard .today-vocab-py-back {font-size:17px!important;line-height:1.5;overflow-wrap:anywhere;}
+ html #page-review #review-content #flashcard .card-hint,
+ html #page-review #review-content .h3-flashcard .h3-fc-hint,
+ html #page-today #today-focus-root .today-vocab-flashcard .today-card-hint {left:22px!important;right:22px!important;bottom:14px!important;font-size:12px!important;line-height:1.5;text-align:center;}
+ /* Navigation is grouped at the right; glass touch zones remain mobile-only. */
+ html #page-review #review-content #flashcard .amfc-edge,
+ html #page-review #review-content .h3-flashcard .amfc-edge,
+ html #page-today #today-focus-root .today-vocab-flashcard .amfc-edge {display:none!important;}
+ html #page-review #review-content #card-actions .amfc-hard,
+ html #page-review #review-content .h3-fc-actions .amfc-hard,
+ html #page-today #today-focus-root .today-vocab-rate .amfc-hard {display:none!important;}
+ html #page-review #review-content #card-actions,
+ html #page-review #review-content .h3-fc-actions,
+ html #page-today #today-focus-root .today-vocab-rate {display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin:0!important;padding:0!important;box-sizing:border-box;min-width:0;}
+ html #page-review #review-content [data-adfc-stage] > #card-actions,
+ html #page-review #review-content [data-adfc-stage] > .h3-fc-actions {width:calc(100% - 36px)!important;margin:0 18px!important;}
+ html #page-today #today-focus-root .today-vocab-rate {width:100%!important;}
+ html #page-review #review-content .adfc-tools,
+ html #page-today #today-focus-root .adfc-tools {display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;}
+ html #page-review #review-content #card-actions > button,
+ html #page-review #review-content .h3-fc-actions > button,
+ html #page-today #today-focus-root .today-vocab-rate > button,
+ html #page-review #review-content .adfc-tools > button,
+ html #page-today #today-focus-root .adfc-tools > button {
+   display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;
+   flex:none!important;min-width:0!important;width:100%!important;min-height:44px!important;height:auto!important;
+   margin:0!important;padding:10px 5px!important;font-size:13px!important;line-height:1.35!important;white-space:normal!important;
+   box-sizing:border-box;box-shadow:none!important;transform:none!important;transition:background-color .12s,color .12s!important;
+ }
+ html .adfc-button .af-fixed-fluent {width:18px!important;height:18px!important;flex:0 0 18px!important;}
+ html .adfc-button:disabled {opacity:.45;cursor:default;}
+ html .adfc-button:focus-visible {outline:2px solid var(--red,#c0392b);outline-offset:2px;}
+ html #page-review #review-content .adfc-help,
+ html #page-today #today-focus-root .adfc-help {display:block!important;color:var(--muted);font:11px/1.8 'Segoe UI',sans-serif;}
+ .adfc-help div + div {margin-top:4px;}
+ .adfc-help span {padding:0 3px;}
+ .adfc-help kbd {font:inherit;font-size:10px;display:inline-block;min-width:13px;text-align:center;padding:0 3px;border:1px solid #ddd7cd;border-radius:4px;background:#fff;color:#5c5861;}
+ html #page-review #review-content .review-vocab-grammar-host {width:100%!important;max-width:940px!important;margin:0 auto!important;}
+ html #page-review #review-content .h3-flash-wrap {max-width:940px!important;}
+}
+</style>
