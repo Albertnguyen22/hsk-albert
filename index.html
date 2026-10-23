@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<meta name="albert-sync-build" content="2.0.0-auto-2026.10.23-glass-speaker">
 <meta name="albert-card-audio-build" content="2026.10.23-glass-card-speaker.1">
 <script id="albert-vocabulary-card-audio">
 /* Card speaker UI only. Reuse the existing Chinese speech engine (including the
@@ -323,13 +324,66 @@ function threeWay(base,local,remote){
  }
  return {value:merge(base,local,remote,''),conflicts};
 }
-const api={describe,localKey,payload,restore,meaningful,threeWay,equal,clone,stable,validate};
+/* Automatic, revision-aware merge. Conflicts are archived by the runtime before
+ * resolution, never presented as a mandatory choice to the learner. */
+function autoMerge(base,local,remote,options={}) {
+ const resolved=[];const prefer=options.prefer==='remote'?'remote':'local';
+ const cp=x=>clone(x),isNote=path=>/^study\/note_/.test(options.key||'')||/\/(?:notes|review-next)\/value$/.test(path);
+ function chosen(l,r,path,reason){resolved.push({path,reason});return cp(prefer==='remote'?r:l);}
+ function edit(base,text){let a=0;while(a<base.length&&a<text.length&&base[a]===text[a])a++;let b=base.length,c=text.length;while(b>a&&c>a&&base[b-1]===text[c-1]){b--;c--;}return {start:a,end:b,text:text.slice(a,c)};}
+ function mergeNote(b,l,r){
+  if(typeof b!=='string')return null;
+  const a=edit(b,l),z=edit(b,r);
+  if(a.start===a.end&&z.start===z.end&&a.start===z.start){
+   if(a.start===b.length){const parts=[a.text,z.text].filter(Boolean).sort();return b+parts.join(parts.every(x=>x.startsWith('\n'))?'':'\n');}return null;
+  }
+  if(a.end<=z.start||z.end<=a.start){let out=b;for(const e of [a,z].sort((x,y)=>y.start-x.start||y.end-x.end))out=out.slice(0,e.start)+e.text+out.slice(e.end);return out;}
+  return null;
+ }
+ function rec(b,l,r,path){
+  if(equal(l,r))return cp(l);if(equal(l,b))return cp(r);if(equal(r,b))return cp(l);
+  if(obj(l)&&obj(r)&&(obj(b)||b==null)){
+   // HSK 3.0 field records are atomic: never pair an old value with a new timestamp.
+   if(own(l,'value')&&own(r,'value')&&own(l,'at')&&own(r,'at')&&!equal(l.value,r.value)){
+    const t1=Date.parse(l.at),t2=Date.parse(r.at);const notePath=path+'/value';
+    if(isNote(notePath)&&typeof l.value==='string'&&typeof r.value==='string'){
+     const text=mergeNote(b?.value,l.value,r.value);if(text!==null){resolved.push({path,reason:'non-overlapping-note'});return {...cp(t1>t2?l:r),value:text};}
+    }
+    resolved.push({path,reason:'field-record'});
+    return cp(Number.isFinite(t1)&&Number.isFinite(t2)&&t1!==t2?(t1>t2?l:r):(prefer==='remote'?r:l));
+   }
+   const out={};for(const k of new Set([...Object.keys(b||{}),...Object.keys(l),...Object.keys(r)])){
+    if(unsafe(k))throw Error('UNSAFE_FIELD');const v=rec(b?.[k],l[k],r[k],path+'/'+k.replace(/~/g,'~0').replace(/\//g,'~1'));if(v!==undefined)out[k]=v;
+   }return out;
+  }
+  if(Array.isArray(l)&&Array.isArray(r)&&(Array.isArray(b)||b==null)){
+   const both=[...(b||[]),...l,...r];const id=['id','client_attempt_id'].find(k=>both.length&&both.every(x=>obj(x)&&['string','number'].includes(typeof x[k])));
+   if(id){const map=a=>Object.fromEntries((a||[]).map(x=>[String(x[id]),x]));return Object.values(rec(map(b),map(l),map(r),path)).sort((a,z)=>String(a.created_at||a.at||a[id]).localeCompare(String(z.created_at||z.at||z[id])));}
+   if(/\/(completedLessons|reviewQueue|doneTasks\/[^/]+)$/.test(path)&&both.every(x=>['number','string'].includes(typeof x))){
+    const B=new Set(b||[]),L=new Set(l),R=new Set(r);return [...new Set([...l,...r])].filter(x=>!B.has(x)||L.has(x)&&R.has(x)).sort((a,z)=>typeof a==='number'&&typeof z==='number'?a-z:String(a).localeCompare(String(z)));
+   }
+   if(/\/(quizHistory|history|attempts|logs)$/.test(path)||/study\/hsk_learning_journal|study\/h[34]la_attempts/.test(options.key||'')){
+    const seen=new Set(),out=[];for(const x of [...l,...r]){const k=stable(x);if(!seen.has(k)){seen.add(k);out.push(cp(x));}}return out;
+   }
+   if(Array.isArray(b)&&b.length===l.length&&b.length===r.length)return l.map((x,i)=>rec(b[i],x,r[i],path+'/'+i));
+  }
+  if(isNote(path)&&typeof l==='string'&&typeof r==='string'){
+   const v=mergeNote(b,l,r);if(v!==null){resolved.push({path,reason:'non-overlapping-note'});return v;}
+  }
+  // For older devices lacking a common base, retain positive progress, not empty defaults.
+  if(b===undefined){if((l===''||l===null||l===false)&&r!==undefined&&r!==''&&r!==null&&r!==false)return cp(r);if((r===''||r===null||r===false)&&l!==undefined&&l!==''&&l!==null&&l!==false)return cp(l);}
+  return chosen(l,r,path,'overlapping-edit');
+ }
+ const value=rec(base,local,remote,'');return {value:value===undefined?null:value,conflicts:[],resolved};
+}
+
+const api={autoMerge,describe,localKey,payload,restore,meaningful,threeWay,equal,clone,stable,validate};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;root.AlbertSyncModel=api;
 })(typeof window==='undefined'?globalThis:window);
 
 </script>
 <script id="albert-sync-runtime">
-/* Albert sync runtime v1. One owned cloud store, revision checks, durable local data.
+/* Albert sync runtime 2.0: automatic per-field merge, recoverable alternatives. One owned cloud store, revision checks, durable local data.
  * Loaded BEFORE legacy app code. Authentication itself is never intercepted.
  */
 (function(W){
@@ -346,6 +400,8 @@ const owner=String(sessionOwner());
 let generation=0,switched=false,client=null,busy=null,timer=0,booted=false,pulling=false,applying=false,interacted=false;
 let dataApplied=false;
 let ready=false,lastError='',lastAt='',remoteChanged=false,loadError='',writeCounter=0;
+let serverCount=null,lastStart=0,authToken='',needAnother=false,retryDelay=3000,backupCount=0;
+const appliedKeys=new Set(),stagedRecovery=new Map();
 const meta=new Map(),changed=new Set(),readBases=new Map(),localConflicts=new Map(),deferred=new Set();
 const initialKeys=new Set(),oldKeys=new Set(parse(rawGet(PREFIX+'unclaimed:'+owner),[]));
 const confirmed=()=>rawGet(PREFIX+'confirmed:'+owner)==='1';
@@ -357,6 +413,7 @@ function ownedKeys(){const out=new Set();for(const k of rawKeys()){
  else {const d=M.describe(k);if(d?.scoped&&d.owner===owner)out.add(k);}
  }return [...out];}
 function visibleKeys(){if(visibleCache)return visibleCache;const out=[];for(const k of rawKeys()){if(k.startsWith(PREFIX))continue;const d=M.describe(k);if(d){if(d.scoped&&d.owner===owner)out.push(k);continue;}out.push(k);}for(const k of ownedKeys())if(!out.includes(k))out.push(k);visibleCache=out;return out;}
+const accountKeysBeforeUpgrade=new Set(ownedKeys().map(k=>M.describe(k).canonical));
 // Move pre-update, unscoped study keys into this device's account compartment.
 // Copy succeeds BEFORE removal. Existing alternative data is retained in an archive.
 for(const k of rawKeys()){
@@ -369,9 +426,16 @@ for(const k of ownedKeys())initialKeys.add(M.describe(k).canonical);
 for(const k of rawKeys())if(k.startsWith(PREFIX+'pending-conflict:'+owner+':')){try{localConflicts.set(decodeURIComponent(k.slice((PREFIX+'pending-conflict:'+owner+':').length)),JSON.parse(rawGet(k)));}catch(_){loadError='INVALID_LOCAL_BACKUP';}}
 let emitTimer=0;function emit(){if(emitTimer)return;emitTimer=setTimeout(()=>{emitTimer=0;try{W.dispatchEvent(new CustomEvent('albert-sync-status',{detail:status()}));}catch(_){}},180);}
 function keyFor(c){return M.localKey(c,owner);}
+const tombKey=c=>PREFIX+'deleted:'+owner+':'+encodeURIComponent(c);
 function current(c){const k=keyFor(c);return k?M.payload(rawGet(phy(M.describe(k))),k):null;}
-function put(c,document){dataApplied=true;const k=keyFor(c);if(!k)throw Error('UNKNOWN_DATA_KEY');const d=M.describe(k),old=rawGet(phy(d)),v=M.restore(document,k,old);applying=true;try{if(v===null)rawRemove(phy(d));else rawSet(phy(d),v);}finally{applying=false;}changed.add(c);}
-function queue(){if(!booted||switched||owner==='guest')return;clearTimeout(timer);timer=setTimeout(()=>syncNow().catch(()=>{}),1800);}
+function put(c,document){const k=keyFor(c);if(!k)throw Error('UNKNOWN_DATA_KEY');const d=M.describe(k),old=rawGet(phy(d)),v=M.restore(document,k,old);if(v===old)return;dataApplied=true;appliedKeys.add(c);applying=true;try{if(v===null){rawSet(tombKey(c),'remote');rawRemove(phy(d));}else{rawSet(phy(d),v);rawRemove(tombKey(c));}}finally{applying=false;}changed.add(c);}
+function queue(delay=900){if(!booted||switched||owner==='guest')return;clearTimeout(timer);timer=setTimeout(()=>syncNow().catch(()=>{}),delay);}
+function stageBackup(c,l,r,value,reason){
+ const id=Date.now()+':'+(W.crypto?.randomUUID?.()||Math.random().toString(36).slice(2));
+ const item={id,owner,key:c,at:new Date().toISOString(),reason,local:M.clone(l),remote:M.clone(r),merged:M.clone(value)};
+ // A synchronous backup is made BEFORE replacing a conflicting local record.
+ rawSet(PREFIX+'auto-pending:'+owner+':'+id,JSON.stringify(item));stagedRecovery.set(id,item);
+}
 SP.getItem=function(key){const k=String(key),d=M.describe(k);if(this!==LS||!d)return native.get.call(this,key);if(!allowed(d))return null;const s=rawGet(phy(d))??rawGet(k);if(!applying)try{readBases.set(d.canonical,M.payload(s,k));}catch(_){}return s;};
 SP.setItem=function(key,value){
  const k=String(key),d=M.describe(k);if(this!==LS||!d){visibleCache=null;return native.set.call(this,key,value);}
@@ -379,26 +443,46 @@ SP.setItem=function(key,value){
  const old=rawGet(phy(d)),text=String(value);if(old===text)return;
  let next=M.payload(text,k),actual=M.payload(old,k),base=readBases.has(d.canonical)?readBases.get(d.canonical):actual;
  if(!M.equal(base,actual)&&!M.equal(next,actual)){
-  const merge=M.threeWay(base,next,actual);next=merge.value;
-  if(merge.conflicts.length){const backup={local:next,remote:actual,base,paths:merge.conflicts.map(x=>x.path),source:'in-memory',at:new Date().toISOString()};rawSet(PREFIX+'pending-conflict:'+owner+':'+encodeURIComponent(d.canonical),JSON.stringify(backup));localConflicts.set(d.canonical,backup);}
+  const merge=M.autoMerge(base,next,actual,{key:d.canonical,prefer:'local'});
+  if(merge.resolved.length)stageBackup(d.canonical,next,actual,merge.value,'same-device-edit');
+  next=merge.value;
  }
- const combined=M.restore(next,k,text);rawSet(phy(d),combined);
+ const combined=M.restore(next,k,text);rawSet(phy(d),combined);rawRemove(tombKey(d.canonical));
  readBases.set(d.canonical,next);writeCounter++;
- if(!M.equal(actual,next)){changed.add(d.canonical);queue();emit();}
+ if(!M.equal(actual,next)){changed.add(d.canonical);if(busy)needAnother=true;queue();emit();}
 };
-SP.removeItem=function(key){const k=String(key),d=M.describe(k);if(this!==LS||!d){visibleCache=null;return native.remove.call(this,key);}if(!allowed(d)||switched)throw new DOMException('Account context changed','SecurityError');const existed=rawGet(phy(d))!==null;rawRemove(phy(d));readBases.set(d.canonical,null);if(existed){changed.add(d.canonical);writeCounter++;queue();emit();}};
+SP.removeItem=function(key){const k=String(key),d=M.describe(k);if(this!==LS||!d){visibleCache=null;return native.remove.call(this,key);}if(!allowed(d)||switched)throw new DOMException('Account context changed','SecurityError');const existed=rawGet(phy(d))!==null;if(existed)rawSet(tombKey(d.canonical),'local');rawRemove(phy(d));readBases.set(d.canonical,null);if(existed){changed.add(d.canonical);writeCounter++;if(busy)needAnother=true;queue();emit();}};
 SP.key=function(i){return this===LS?(visibleKeys()[Number(i)]??null):native.key.call(this,i);};
 try{Object.defineProperty(SP,'length',{configurable:true,enumerable:native.length.enumerable,get:function(){return this===LS?visibleKeys().length:native.length.get.call(this);}});}catch(e){loadError='STORAGE_ISOLATION_UNAVAILABLE';}
-let dbPromise=null;
-function db(){if(dbPromise)return dbPromise;dbPromise=new Promise((resolve,reject)=>{const r=indexedDB.open('albert-account-sync-v1',1);r.onupgradeneeded=()=>{const s=r.result.createObjectStore('documents',{keyPath:'id'});s.createIndex('owner','owner');};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error||Error('INDEXEDDB_UNAVAILABLE'));r.onblocked=()=>reject(Error('INDEXEDDB_BLOCKED'));});return dbPromise;}
-async function persist(c,m){const d=await db();await new Promise((resolve,reject)=>{const t=d.transaction('documents','readwrite');t.objectStore('documents').put({...m,id:owner+'|'+c,owner,key:c});t.oncomplete=resolve;t.onerror=()=>reject(t.error);t.onabort=()=>reject(t.error||Error('LOCAL_WRITE_ABORTED'));});meta.set(c,m);}
-async function initMetadata(){const d=await db(),rows=await new Promise((resolve,reject)=>{const t=d.transaction('documents','readonly'),r=t.objectStore('documents').index('owner').getAll(owner);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});for(const r of rows)meta.set(r.key,r);lastAt=rawGet(PREFIX+'last-sync:'+owner)||'';}
-const localReady=initMetadata().catch(e=>{loadError=String(e.message||e);emit();throw e;});localReady.catch(()=>{});
+let dbPromise=null,recoveryPromise=null;
+function openDatabase(name,setup){return new Promise((resolve,reject)=>{let settled=false;const request=indexedDB.open(name,1),timer=setTimeout(()=>{settled=true;reject(Error('INDEXEDDB_TIMEOUT'));},8000);request.onupgradeneeded=()=>setup(request.result);request.onsuccess=()=>{clearTimeout(timer);if(settled){request.result.close();return;}const d=request.result;d.onversionchange=()=>d.close();resolve(d);};request.onerror=()=>{clearTimeout(timer);reject(request.error||Error('INDEXEDDB_UNAVAILABLE'));};request.onblocked=()=>{clearTimeout(timer);settled=true;reject(Error('INDEXEDDB_BLOCKED'));};});}
+function db(){if(!dbPromise)dbPromise=openDatabase('albert-account-sync-v1',d=>{if(!d.objectStoreNames.contains('documents')){const s=d.createObjectStore('documents',{keyPath:'id'});s.createIndex('owner','owner');}}).catch(e=>{dbPromise=null;throw e;});return dbPromise;}
+function recoveryDb(){if(!recoveryPromise)recoveryPromise=openDatabase('albert-sync-recovery-v2',d=>{const s=d.createObjectStore('backups',{keyPath:'id'});s.createIndex('owner','owner');}).catch(e=>{recoveryPromise=null;throw e;});return recoveryPromise;}
+function transact(d,store,mode,action){return new Promise((resolve,reject)=>{const t=d.transaction(store,mode);let result;const timer=setTimeout(()=>{try{t.abort();}catch(_){}reject(Error('LOCAL_WRITE_TIMEOUT'));},8000);try{const q=action(t.objectStore(store));if(q)q.onsuccess=()=>result=q.result;}catch(e){clearTimeout(timer);t.abort();reject(e);return;}t.oncomplete=()=>{clearTimeout(timer);resolve(result);};t.onerror=t.onabort=()=>{clearTimeout(timer);reject(t.error||Error('LOCAL_WRITE_ABORTED'));};});}
+async function persist(c,m){const d=await db();await transact(d,'documents','readwrite',s=>s.put({...m,id:owner+'|'+c,owner,key:c}));meta.set(c,m);}
+async function archive(item){const d=await recoveryDb();const record={...M.clone(item),id:item.id||owner+':'+Date.now()+':'+(W.crypto?.randomUUID?.()||Math.random()),owner,at:item.at||new Date().toISOString()};await transact(d,'backups','readwrite',s=>s.put(record));backupCount++;return record;}
+async function recovery(){await localReady;return (await transact(await recoveryDb(),'backups','readonly',s=>s.index('owner').getAll(owner))).sort((a,b)=>String(b.at).localeCompare(String(a.at)));}
+async function initMetadata(){const rows=await transact(await db(),'documents','readonly',s=>s.index('owner').getAll(owner));for(const r of rows){if(!meta.has(r.key)||Number(r.revision)>=Number(meta.get(r.key).revision))meta.set(r.key,r);const k=keyFor(r.key);if(k&&r.base!=null&&rawGet(phy(M.describe(k)))===null&&!rawGet(tombKey(r.key))){put(r.key,r.base);}}lastAt=rawGet(PREFIX+'last-sync:'+owner)||'';}
+async function initialize(){
+ await initMetadata();
+ const records=await transact(await recoveryDb(),'backups','readonly',s=>s.index('owner').getAll(owner));backupCount=records.length;
+ for(const k of rawKeys())if(k.startsWith(PREFIX+'auto-pending:'+owner+':')){const item=parse(rawGet(k));if(item?.owner===owner)stagedRecovery.set(item.id,item);}
+ if(owner!=='guest'&&rawGet(PREFIX+'auto-upgrade:'+owner)!=='2'){
+  const documents=[];for(const c of keys()){const p=current(c);if(p!==null)documents.push({key:c,document:p});}
+  if(documents.length||[...meta.values()].some(m=>m.conflict))await archive({id:owner+':before-auto-v2',reason:'before-auto-upgrade',documents,legacyConflicts:[...meta].filter(([k,m])=>m.conflict||m.previousConflict).map(([key,m])=>({key,conflict:m.conflict||m.previousConflict}))});
+  // Previously account-compartmented records belong to this same account. Truly
+  // unscoped or guest data from a fresh migration still needs one ownership action.
+  for(const c of accountKeysBeforeUpgrade)oldKeys.delete(c);
+  rawSet(PREFIX+'unclaimed:'+owner,JSON.stringify([...oldKeys]));
+  rawSet(PREFIX+'auto-upgrade:'+owner,'2');
+ }
+}
+const localReady=initialize().catch(e=>{loadError=String(e.message||e);emit();throw e;});localReady.catch(()=>{});
 function keys(){return [...new Set([...ownedKeys().map(k=>M.describe(k).canonical),...meta.keys(),...changed])];}
 function blocked(c){return oldKeys.has(c)&&!confirmed();}
-function status(){let pending=0,conflicts=localConflicts.size,unclaimed=0;for(const c of keys())try{if(blocked(c)){unclaimed++;continue;}const m=meta.get(c),p=current(c);if(m?.conflict)conflicts++;else if(!m){if(M.meaningful(p))pending++;}else if(!M.equal(m.base,p))pending++;}catch(_){pending++;}
-return {version:'1.0.0',owner,loggedIn:owner!=='guest',ready,busy:!!busy,pending,conflicts,unclaimed,lastAt,error:loadError||lastError,remoteChanged,waiting:deferred.size,online:navigator.onLine!==false,documents:meta.size,switched};}
-function message(){const s=status();if(s.switched)return 'ACCOUNT_CHANGED';if(s.error)return s.error;if(!s.loggedIn)return 'SIGN_IN_REQUIRED';if(!s.online)return 'OFFLINE';if(s.busy)return 'SYNCING';if(s.conflicts)return 'CONFLICTS';if(s.unclaimed)return 'CONFIRM_OLD_DATA';if(s.waiting)return 'REMOTE_DEFERRED';if(s.pending)return 'PENDING';return s.ready?'SYNCED':'NOT_CONNECTED';}
+function status(){let pending=0,unclaimed=0;for(const c of keys())try{if(blocked(c)){unclaimed++;continue;}const m=meta.get(c),p=current(c);if(m?.conflict||localConflicts.has(c))pending++;else if(!m){if(M.meaningful(p))pending++;}else if(!M.equal(m.base,p))pending++;}catch(_){pending++;}
+return {version:'2.0.0',automatic:true,owner,loggedIn:owner!=='guest',ready,busy:!!busy,pending,conflicts:0,unclaimed,lastAt,error:loadError||lastError,remoteChanged,waiting:deferred.size,online:navigator.onLine!==false,documents:serverCount,tracked:meta.size,backups:backupCount,switched};}
+function message(){const s=status();if(s.switched)return 'ACCOUNT_CHANGED';if(s.error)return s.error;if(!s.loggedIn)return 'SIGN_IN_REQUIRED';if(!s.online)return 'OFFLINE';if(s.busy)return 'SYNCING';if(s.pending)return 'PENDING';return s.ready?'SYNCED':'NOT_CONNECTED';}
 function timed(p,ms=20000){let t;return Promise.race([p,new Promise((_,r)=>{t=setTimeout(()=>r(Error('NETWORK_TIMEOUT')),ms);})]).finally(()=>clearTimeout(t));}
 async function identity(){const sdk=W.hskSupabase;if(!sdk?.auth)throw Error('SUPABASE_NOT_READY');const r=await timed(sdk.auth.getSession());if(r.error)throw r.error;const id=r.data?.session?.user?.id;if(!id)throw Error('SIGN_IN_REQUIRED');if(String(id)!==owner||switched)throw Error('ACCOUNT_CHANGED');return r.data.session;}
 function transport(session){
@@ -408,7 +492,7 @@ function transport(session){
  // cannot swap the Authorization header halfway through an in-flight write.
  const headers={'apikey':key,'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json'};
  async function request(path,method='GET',body){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),20000);
-  try{const r=await fetch(base+'/rest/v1/'+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),signal:ctrl.signal,cache:'no-store'});const data=await r.json();return r.ok?{data,error:null}:{data:null,error:{code:data?.code||('HTTP_'+r.status),message:data?.message||'SYNC_REQUEST_REJECTED'}};}finally{clearTimeout(timer);}
+  try{const r=await fetch(base+'/rest/v1/'+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),signal:ctrl.signal,cache:'no-store'});const text=await r.text();let data;try{data=JSON.parse(text);}catch(_){throw Error('INVALID_SERVER_RESPONSE');}return r.ok?{data,error:null}:{data:null,error:{code:data?.code||('HTTP_'+r.status),message:data?.message||'SYNC_REQUEST_REJECTED'}};}finally{clearTimeout(timer);}
  }
  return {from(table){if(table!==TABLE)throw Error('UNEXPECTED_SYNC_TABLE');const params=new URLSearchParams(),q={
   select:v=>{params.set('select',v);return q;},eq:(k,v)=>{params.set(k,'eq.'+v);return q;},gt:(k,v)=>{params.set(k,'gt.'+v);return q;},
@@ -421,26 +505,34 @@ function transport(session){
 
 function check(g){if(switched||generation!==g)throw Error('ACCOUNT_CHANGED');}
 function serverDoc(row){if(!row||!keyFor(row.doc_key)||!Number.isSafeInteger(Number(row.revision))||Number(row.revision)<1)throw Error('INVALID_SERVER_RECORD');if(row.deleted)return null;const p=row.document;if(!p||!['json','text'].includes(p.format))throw Error('INVALID_SERVER_DOCUMENT');M.validate(p);return p;}
-async function conflict(c,m,l,r,paths,source='cloud'){
- const rec={...(m||{}),...(m?.conflict?{previousConflict:M.clone(m.conflict)}:{}),conflict:{local:M.clone(l),remote:M.clone(r),paths,source,at:new Date().toISOString()}};
- await persist(c,rec);emit();
+async function resolveAutomatically(c,base,l,r,prefer,reason){const result=M.autoMerge(base,l,r,{key:c,prefer});if(result.resolved.length)await archive({key:c,reason,local:l,remote:r,merged:result.value,paths:result.resolved});return result.value;}
+async function flushOldConflicts(){
+ for(const [id,item]of stagedRecovery){await archive(item);stagedRecovery.delete(id);rawRemove(PREFIX+'auto-pending:'+owner+':'+id);}
+ for(const [c,x]of localConflicts){
+  const l=current(c),value=await resolveAutomatically(c,x.base,l,x.remote,'local','upgrade-local-conflict');
+  if(!M.equal(l,value))put(c,value);await archive({key:c,reason:'previous-conflict',local:x.local,remote:x.remote});
+  localConflicts.delete(c);rawRemove(PREFIX+'pending-conflict:'+owner+':'+encodeURIComponent(c));
+ }
+ for(const [c,m]of [...meta])if(m.conflict&&!blocked(c)){
+  const l=current(c),r=m.conflict.remote,value=await resolveAutomatically(c,undefined,l,r,'remote','upgrade-cloud-conflict');
+  await archive({key:c,reason:'previous-conflict',local:m.conflict.local,remote:r});
+  if(!M.equal(l,value))put(c,value);await persist(c,{...m,conflict:null,previousConflict:null});
+ }
 }
 async function incorporate(row,g){
  check(g);const c=row.doc_key;if(!keyFor(c))return;const remote=serverDoc(row),m=meta.get(c),local=current(c);
- if(blocked(c))return;
- if(m&&Number(m.revision)===Number(row.revision))return;
- if(m?.conflict){if(M.equal(local,remote)){await persist(c,{revision:Number(row.revision),base:remote,updated_at:row.updated_at,conflict:null,previousConflict:m.conflict});}else{await conflict(c,{...m,revision:Number(row.revision),base:remote},local,remote,m.conflict.paths,m.conflict.source);}return;}
- let focus=document.activeElement;while(focus?.shadowRoot?.activeElement)focus=focus.shadowRoot.activeElement;
- if(!M.equal(local,remote)&&focus?.matches?.('textarea,input,[contenteditable=true]')&&!focus.closest('#albert-sync-dialog')){deferred.add(c);remoteChanged=true;return;}deferred.delete(c);
+ if(blocked(c))return;if(m&&Number(m.revision)===Number(row.revision))return;
  let merged;
- if(M.equal(local,remote))merged={value:local,conflicts:[]};
+ if(M.equal(local,remote))merged=local;
  else if(!m){
-  // New devices must not upload startup defaults over an existing cloud document.
-  if(!M.meaningful(local))merged={value:remote,conflicts:[]};
-  else merged=M.threeWay(undefined,local,remote);
- }else merged=M.threeWay(m.base,local,remote);
- if(merged.conflicts.length){await conflict(c,{...m,revision:Number(row.revision),base:remote},local,remote,merged.conflicts.map(x=>x.path));return;}
- if(!M.equal(merged.value,local)){put(c,merged.value);remoteChanged=true;}
+  if(!M.meaningful(local))merged=remote;
+  else merged=await resolveAutomatically(c,undefined,local,remote,'remote','first-connection');
+ }else merged=await resolveAutomatically(c,m.base,local,remote,'local','concurrent-edit');
+ check(g);
+ // A user may have typed while IndexedDB saved the recovery snapshot. Rebase that
+ // new edit rather than overwriting it with the snapshot that started this request.
+ const live=current(c);if(!M.equal(live,local))merged=await resolveAutomatically(c,local,live,merged,'local','edit-during-sync');
+ if(!M.equal(merged,current(c))){put(c,merged);remoteChanged=true;}
  await persist(c,{revision:Number(row.revision),base:remote,updated_at:row.updated_at,conflict:null});check(g);
 }
 async function pull(g){
@@ -450,54 +542,63 @@ async function pull(g){
   const rows=r.data||[];const need=rows.filter(x=>keyFor(x.doc_key)&&!blocked(x.doc_key)&&Number(meta.get(x.doc_key)?.revision)!==Number(x.revision));
   for(let i=0;i<need.length;i+=8){const ids=need.slice(i,i+8).map(x=>x.doc_key);const res=await timed(client.from(TABLE).select('doc_key,document,deleted,revision,updated_at').eq('user_id',owner).in('doc_key',ids));check(g);if(res.error)throw res.error;if(!Array.isArray(res.data)||res.data.length!==ids.length)throw Error('INCOMPLETE_SERVER_PAGE');for(const row of res.data)await incorporate(row,g);}
   count+=rows.length;if(rows.length<200)break;after=rows[rows.length-1].doc_key;if(count>30000)throw Error('TOO_MANY_DOCUMENTS');
- }return count;
+ }serverCount=count;return count;
 }
 async function push(g){
- let batch=[],bytes=0;
+ let batch=[],bytes=0,conflicted=false;
  async function send(){if(!batch.length)return;const sent=batch;batch=[];bytes=0;check(g);const res=await timed(client.rpc('albert_sync_apply_v1',{p_changes:sent}));check(g);if(res.error)throw res.error;const receipt=res.data;if(!Array.isArray(receipt)||receipt.length!==sent.length)throw Error('INVALID_SERVER_RECEIPT');
- for(const row of receipt){const c=row.doc_key,item=sent.find(x=>x.doc_key===c);if(!item)throw Error('INVALID_SERVER_RECEIPT');if(row.status==='conflict'){await incorporate(row,g);continue;}if(row.status!=='saved')throw Error('SAVE_NOT_CONFIRMED');const remote=serverDoc(row);if(!M.equal(remote,item.deleted?null:item.document))throw Error('SAVE_NOT_CONFIRMED');await persist(c,{revision:Number(row.revision),base:remote,updated_at:row.updated_at,conflict:null});changed.delete(c);}
+  for(const row of receipt){const c=row.doc_key,item=sent.find(x=>x.doc_key===c);if(!item)throw Error('INVALID_SERVER_RECEIPT');if(row.status==='conflict'){conflicted=true;await incorporate(row,g);continue;}if(row.status!=='saved')throw Error('SAVE_NOT_CONFIRMED');const remote=serverDoc(row);if(!M.equal(remote,item.deleted?null:item.document))throw Error('SAVE_NOT_CONFIRMED');const isNew=Number(item.expected_revision)===0;await persist(c,{revision:Number(row.revision),base:remote,updated_at:row.updated_at,conflict:null});if(isNew&&serverCount!=null)serverCount++;if(M.equal(current(c),remote))changed.delete(c);else needAnother=true;}
  }
  for(const c of keys()){
-  check(g);if(blocked(c)||localConflicts.has(c)||deferred.has(c))continue;let m=meta.get(c);if(m?.conflict)continue;const p=current(c);if(!m&&!M.meaningful(p))continue;if(m&&M.equal(m.base,p))continue;
-  // The base is durable before any network mutation, including a lost response.
-  if(!m){m={revision:0,base:null};await persist(c,m);}
+  check(g);if(blocked(c))continue;let m=meta.get(c);let p=current(c);if(!m&&!M.meaningful(p))continue;if(m&&M.equal(m.base,p)){changed.delete(c);continue;}
+  if(!m){m={revision:0,base:null};await persist(c,m);p=current(c);}
   const item={doc_key:c,expected_revision:Number(m.revision)||0,document:p,deleted:p===null},size=new TextEncoder().encode(JSON.stringify(item)).length;
   if(size>8000000)throw Error('DOCUMENT_TOO_LARGE');if(batch.length>=12||bytes+size>8000000)await send();batch.push(item);bytes+=size;
- }await send();
+ }await send();return conflicted;
 }
 async function syncNow(options={}){
- if(busy)return busy.then(()=>status());if(owner==='guest')return status();if(navigator.onLine===false){lastError='OFFLINE';emit();return status();}
- const g=generation;busy=(async()=>{await localReady;if(loadError)throw Error(loadError);const session=await identity();check(g);client=transport(session);lastError='';emit();
- for(const [c,x]of localConflicts){await conflict(c,meta.get(c)||{revision:0,base:null},x.local,x.remote,x.paths,x.source);localConflicts.delete(c);rawRemove(PREFIX+'pending-conflict:'+owner+':'+encodeURIComponent(c));}
- if(options.pull!==false)await pull(g);ready=true;
- await push(g);check(g);lastAt=new Date().toISOString();rawSet(PREFIX+'last-sync:'+owner,lastAt);
- notifyApplied();return status();
- })().catch(e=>{lastError=String(e.code||e.message||e);if(/42P01|PGRST20[25]|does not exist|schema cache/i.test(lastError+' '+(e.message||'')))lastError='SETUP_REQUIRED';emit();return status();}).finally(()=>{busy=null;emit();});emit();return busy.then(()=>status());
+ if(busy){needAnother=true;return busy.then(()=>status());}if(owner==='guest'||switched)return status();if(navigator.onLine===false){lastError='OFFLINE';emit();return status();}
+ const g=generation;lastStart=Date.now();needAnother=false;clearTimeout(timer);
+ const work=async()=>{
+  await localReady;if(loadError)throw Error(loadError);await initMetadata();
+  const session=await identity();check(g);authToken=session.access_token;client=transport(session);lastError='';emit();
+  await flushOldConflicts();await pull(g);ready=true;
+  for(let i=0;i<4;i++){const retry=await push(g);check(g);if(!retry)break;if(i===3)needAnother=true;}
+  lastAt=new Date().toISOString();rawSet(PREFIX+'last-sync:'+owner,lastAt);retryDelay=3000;notifyApplied();
+ };
+ busy=(async()=>{
+  if(W.navigator?.locks?.request){let acquired=false;await W.navigator.locks.request('albert-sync:'+owner,{ifAvailable:true},async lock=>{if(!lock)return;acquired=true;await work();});if(!acquired)needAnother=true;}
+  else await work();
+ })().catch(e=>{lastError=String(e.code||e.message||e);if(/42P01|PGRST20[25]|does not exist|schema cache/i.test(lastError+' '+(e.message||'')))lastError='SETUP_REQUIRED';emit();}).finally(()=>{busy=null;notifyApplied();emit();if(!switched&&navigator.onLine!==false){if(lastError&&!/SETUP_REQUIRED|ACCOUNT_CHANGED|SIGN_IN_REQUIRED|STORAGE|INDEXEDDB/.test(lastError)){queue(retryDelay);retryDelay=Math.min(60000,retryDelay*2);}else if(needAnother&&!lastError){needAnother=false;queue(1200);}}});emit();await busy;return status();
 }
-function notifyApplied(){if(!dataApplied)return;dataApplied=false;try{W.dispatchEvent(new CustomEvent('albert-sync-applied'));}catch(_){} }
-async function resolveConflict(c,choice){if(!['local','remote'].includes(choice))throw Error('INVALID_CHOICE');await localReady;const m=meta.get(c);if(!m?.conflict)throw Error('NO_CONFLICT');const saved=M.clone(m.conflict);const p=choice==='remote'?saved.remote:saved.local;
- await persist(c,{...m,conflict:null,previousConflict:saved});put(c,p);readBases.set(c,p);remoteChanged=true;emit();await syncNow();return status();}
-async function confirmOld(){if(owner==='guest')throw Error('SIGN_IN_REQUIRED');rawSet(PREFIX+'confirmed:'+owner,'1');emit();return syncNow();}
-async function exportData(){await localReady.catch(()=>{});const documents=[];for(const c of keys()){const p=current(c);if(p!==null)documents.push({key:c,document:p});}return {format:'Albert-User-Sync-Backup',version:1,owner,exported_at:new Date().toISOString(),documents,pendingConflicts:[...localConflicts].map(([key,value])=>({key,...value})),archives:rawKeys().filter(k=>k.startsWith(PREFIX+'archive:'+owner+':')).map(key=>({key,raw:rawGet(key)})),conflicts:[...meta].filter(([k,m])=>m.conflict||m.previousConflict).map(([key,m])=>({key,conflict:m.conflict||m.previousConflict}))};}
+function notifyApplied(){if(!dataApplied)return;dataApplied=false;const keys=[...appliedKeys];appliedKeys.clear();try{W.dispatchEvent(new CustomEvent('albert-sync-applied',{detail:{keys}}));}catch(_){} }
+async function resolveConflict(){await syncNow();return status();}
+async function confirmOld(){if(owner==='guest')throw Error('SIGN_IN_REQUIRED');await localReady;await archive({reason:'before-legacy-import',documents:[...oldKeys].map(key=>({key,document:current(key)}))});rawSet(PREFIX+'confirmed:'+owner,'1');emit();return syncNow();}
+async function exportData(){await localReady.catch(()=>{});const documents=[];for(const c of keys()){const p=current(c);if(p!==null)documents.push({key:c,document:p});}let snapshots=[];try{snapshots=await recovery();}catch(_){}return {format:'Albert-User-Sync-Backup',version:1,owner,exported_at:new Date().toISOString(),documents,recovery:snapshots,pendingConflicts:[...localConflicts].map(([key,value])=>({key,...value})),archives:rawKeys().filter(k=>k.startsWith(PREFIX+'archive:'+owner+':')).map(key=>({key,raw:rawGet(key)})),conflicts:[...meta].filter(([k,m])=>m.conflict||m.previousConflict).map(([key,m])=>({key,conflict:m.conflict||m.previousConflict}))};}
 async function importData(data){await localReady;if(!data||data.format!=='Albert-User-Sync-Backup'||data.version!==1||!Array.isArray(data.documents)||data.documents.length>30000)throw Error('INVALID_BACKUP');M.validate(data);let count=0;
  for(const d of data.documents){if(!d||!keyFor(d.key))throw Error('UNKNOWN_DATA_KEY');const p=d.document;if(!p||!['json','text'].includes(p.format)||!Object.prototype.hasOwnProperty.call(p,'value')||p.format==='text'&&typeof p.value!=='string')throw Error('INVALID_BACKUP');if(new TextEncoder().encode(JSON.stringify(p)).length>8000000)throw Error('DOCUMENT_TOO_LARGE');}
- for(const d of data.documents){const local=current(d.key),r=!M.meaningful(local)?{value:d.document,conflicts:[]}:M.threeWay(undefined,local,d.document);if(r.conflicts.length&&M.meaningful(local)){await conflict(d.key,meta.get(d.key)||{revision:0,base:null},local,d.document,r.conflicts.map(x=>x.path),'backup');}else{put(d.key,r.value);readBases.set(d.key,r.value);}count++;}remoteChanged=true;emit();return count;
+ if(data.owner&&data.owner!==owner)throw Error('BACKUP_ACCOUNT_MISMATCH');
+ for(const d of data.documents){const local=current(d.key),value=!M.meaningful(local)?M.clone(d.document):await resolveAutomatically(d.key,undefined,local,d.document,'local','backup-import');put(d.key,value);count++;}remoteChanged=true;notifyApplied();queue();emit();return count;
 }
 async function importGuest(){if(owner==='guest')throw Error('SIGN_IN_REQUIRED');const documents=[];for(const k of rawKeys()){let original=k;const gp=PREFIX+'data:guest:';if(k.startsWith(gp)){try{original=decodeURIComponent(k.slice(gp.length));}catch(_){continue;}}const d=M.describe(original);if(!d||(!(k.startsWith(gp))&&d.owner!=='guest'))continue;const document=M.payload(rawGet(k),original);if(document)documents.push({key:d.canonical,document});}return importData({format:'Albert-User-Sync-Backup',version:1,documents});}
+async function restoreRecovery(id,side='local'){
+ await localReady;const row=await transact(await recoveryDb(),'backups','readonly',s=>s.get(id));if(!row||row.owner!==owner||!keyFor(row.key)||!['local','remote'].includes(side)||!Object.prototype.hasOwnProperty.call(row,side))throw Error('INVALID_RECOVERY');
+ await archive({key:row.key,reason:'before-manual-restore',local:current(row.key),remote:row[side]});put(row.key,M.clone(row[side]));readBases.set(row.key,current(row.key));notifyApplied();await syncNow();return status();
+}
 function recordAnswer(l,type,q,answer,correct){const key='albert_saved_answer_v1:'+Number(l)+':'+String(type).replace(/[^a-zA-Z0-9:_.-]/g,'_')+':'+String(q).replace(/[^a-zA-Z0-9:_.-]/g,'_');LS.setItem(key,JSON.stringify({answer:String(answer??''),is_correct:correct==null?null:!!correct}));return Promise.resolve();}
 function transition(id){if(String(id||'guest')===owner||switched)return;switched=true;generation++;clearTimeout(timer);try{const draft=document.getElementById('ai-input')?.value;if(draft)sessionStorage.setItem('albert-sync-draft:'+owner,draft);}catch(_){}emit();setTimeout(()=>location.reload(),80);}
 function touch(e){if(e.isTrusted)interacted=true;}
 ['pointerdown','keydown'].forEach(t=>document.addEventListener(t,touch,{capture:true,passive:true}));
-W.addEventListener('storage',e=>{visibleCache=null;if(e.key===AUTH){transition(sessionOwner());return;}if(e.key?.startsWith(PREFIX+'data:'+owner+':')){remoteChanged=true;emit();}});
-function boot(){if(booted)return;booted=true;const sdk=W.hskSupabase;if(sdk?.auth?.onAuthStateChange){sdk.auth.onAuthStateChange((ev,s)=>{const id=s?.user?.id||'guest';if(id!==owner){transition(id);return;}setTimeout(()=>syncNow(),0);});}
- setTimeout(()=>syncNow(),1200);setInterval(()=>{if(!document.hidden&&owner!=='guest')syncNow();},60000);
- W.addEventListener('online',()=>{lastError='';syncNow();});W.addEventListener('offline',()=>{lastError='OFFLINE';emit();});
- W.addEventListener('focus',()=>{if(!busy)syncNow();});document.addEventListener('focusout',()=>{if(deferred.size)setTimeout(()=>syncNow(),350);});document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncNow();else if(changed.size)syncNow({pull:false});});emit();}
-W.AlbertSync={version:'1.0.0',owner,status,message,syncNow,poke:queue,confirmOld,resolveConflict,exportData,importData,importGuest,recordAnswer,keys,current,ready:localReady,
- conflicts:()=>[...meta].filter(([k,m])=>m.conflict).map(([key,m])=>({key,...m.conflict})),
- acknowledgeApplied:()=>{remoteChanged=false;emit();},
- reload:()=>{location.reload();},
- _legacyImport:null
+W.addEventListener('storage',e=>{visibleCache=null;if(e.key===AUTH){transition(sessionOwner());return;}if(e.key?.startsWith(PREFIX+'data:'+owner+':')||M.describe(e.key)?.owner===owner){const k=e.key.startsWith(PREFIX+'data:'+owner+':')?decodeURIComponent(e.key.slice((PREFIX+'data:'+owner+':').length)):e.key;const d=M.describe(k);if(d){appliedKeys.add(d.canonical);dataApplied=true;}notifyApplied();queue(1500);}});
+function wake(){if(!busy&&Date.now()-lastStart>2000)syncNow();}
+function boot(){if(booted)return;booted=true;const sdk=W.hskSupabase;if(sdk?.auth?.onAuthStateChange){sdk.auth.onAuthStateChange((ev,s)=>{const id=s?.user?.id||'guest';if(id!==owner){transition(id);return;}const token=s?.access_token||'';if(token!==authToken){authToken=token;setTimeout(wake,0);}});}
+ setTimeout(wake,600);setInterval(()=>{if(!document.hidden&&owner!=='guest')wake();},15000);
+ W.addEventListener('online',()=>{lastError='';queue(100);});W.addEventListener('offline',()=>{lastError='OFFLINE';emit();});
+ W.addEventListener('focus',wake);W.addEventListener('pageshow',wake);document.addEventListener('visibilitychange',()=>{if(!document.hidden)wake();else if(changed.size)queue(0);});emit();}
+W.AlbertSync={version:'2.0.0',owner,status,message,syncNow,poke:queue,confirmOld,resolveConflict,exportData,importData,importGuest,recordAnswer,keys,current,ready:localReady,
+ conflicts:()=>[],recovery,restoreRecovery,
+ observe:key=>{const d=M.describe(key);if(d)readBases.set(d.canonical,current(d.canonical));},
+ acknowledgeApplied:()=>{remoteChanged=false;emit();},reload:()=>{location.reload();},_legacyImport:null
 };
 W.ALBERT_UNIFIED_SYNC=true;
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,800),{once:true});else setTimeout(boot,800);
@@ -77426,94 +77527,77 @@ A.importLegacyCloud=importLegacyCloud;
 })(window);
 
 </script>
-<script id="albert-sync-ui">
-/* Fluent account-sync controls. No session token, password, API key or media export. */
+<script id="albert-sync-ui">/* Automatic account sync: passive status; recovery tools are optional. */
 (function(W,D){
-'use strict';
-const A=W.AlbertSync,M=W.AlbertSyncModel;
-let modal=null,lastFocus=null,opening=false,actionBusy=false,uiReady=false;
-const T={
- title:'\u0110\u1ed3ng b\u1ed9 d\u1eef li\u1ec7u',close:'\u0110\u00f3ng',now:'\u0110\u1ed3ng b\u1ed9 ngay',
- lead:'Ghi ch\u00e9p, b\u00e0i l\u00e0m v\u00e0 ti\u1ebfn \u0111\u1ed9 theo c\u00f9ng t\u00e0i kho\u1ea3n tr\u00ean c\u00e1c thi\u1ebft b\u1ecb.',
- saved:'\u0110\u00e3 l\u01b0u tr\u00ean thi\u1ebft b\u1ecb',synced:'\u0110\u00e3 \u0111\u1ed1i chi\u1ebfu v\u1edbi m\u00e1y ch\u1ee7',
- offline:'Ngo\u1ea1i tuy\u1ebfn \u00b7 gi\u1eef d\u1eef li\u1ec7u tr\u00ean m\u00e1y',pending:'\u0110ang ch\u1edd g\u1eedi thay \u0111\u1ed5i',
- conflict:'C\u1ea7n ch\u1ecdn b\u1ea3n d\u1eef li\u1ec7u',setup:'Ch\u01b0a thi\u1ebft l\u1eadp b\u1ed9 \u0111\u1ed3ng b\u1ed9 m\u1edbi',
- setupHelp:'Ch\u1ee7 app c\u1ea7n ch\u1ea1y file CAI_DAT_SUPABASE.sql trong SQL Editor c\u1ee7a d\u1ef1 \u00e1n Supabase hi\u1ec7n t\u1ea1i. Ch\u01b0a th\u1ef1c hi\u1ec7n b\u01b0\u1edbc n\u00e0y th\u00ec d\u1eef li\u1ec7u m\u1edbi ch\u1ec9 l\u01b0u tr\u00ean m\u00e1y.',
- noLogin:'\u0110\u0103ng nh\u1eadp \u0111\u1ec3 \u0111\u1ed3ng b\u1ed9',syncing:'\u0110ang \u0111\u1ed1i chi\u1ebfu v\u00e0 l\u01b0u thay \u0111\u1ed5i\u2026',
- unclaimed:'C\u1ea7n x\u00e1c nh\u1eadn d\u1eef li\u1ec7u c\u0169 tr\u00ean m\u00e1y',notYet:'Ch\u01b0a k\u1ebft n\u1ed1i b\u1ed9 \u0111\u1ed3ng b\u1ed9',
- failure:'Ch\u01b0a \u0111\u1ed3ng b\u1ed9 \u0111\u01b0\u1ee3c',refresh:'C\u1eadp nh\u1eadt m\u00e0n h\u00ecnh',
- export:'Xu\u1ea5t b\u1ea3n sao l\u01b0u',import:'Nh\u1eadp b\u1ea3n sao l\u01b0u',legacy:'Nh\u1eadp d\u1eef li\u1ec7u Supabase c\u0169',
- confirm:'\u0110\u00e2y l\u00e0 d\u1eef li\u1ec7u c\u1ee7a t\u00f4i',guestImport:'Nh\u1eadp d\u1eef li\u1ec7u kh\u00e1ch tr\u00ean m\u00e1y',
- local:'B\u1ea3n tr\u00ean thi\u1ebft b\u1ecb n\u00e0y',remote:'B\u1ea3n \u0111\u1ebfn t\u1eeb m\u00e1y ch\u1ee7 / sao l\u01b0u',
- useLocal:'Gi\u1eef b\u1ea3n tr\u00ean m\u00e1y',useRemote:'D\u00f9ng b\u1ea3n nh\u1eadn v\u1ec1',
- newData:'C\u00f3 d\u1eef li\u1ec7u m\u1edbi. C\u00e1c \u00f4 \u0111ang g\u00f5 kh\u00f4ng b\u1ecb ghi \u0111\u00e8; h\u00e3y r\u1eddi \u00f4 nh\u1eadp, \u0111\u1ed3ng b\u1ed9 l\u1ea1i r\u1ed3i c\u1eadp nh\u1eadt m\u00e0n h\u00ecnh khi thu\u1eadn ti\u1ec7n.'
-};
-const el=(tag,cls,text)=>{const e=D.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;};
-const sameText=(e,s)=>{if(e&&e.textContent!==String(s))e.textContent=String(s);};
-function icon(name){const s=el('span','as-icon');s.setAttribute('aria-hidden','true');s.innerHTML=W.AlbertFluentIcons?.[name]?.regular||'';return s;}
-function titleStatus(s=A.status()){if(s.switched)return 'T\u00e0i kho\u1ea3n \u0111\u00e3 \u0111\u1ed5i; \u0111ang t\u1ea3i l\u1ea1i';if(!s.loggedIn)return T.noLogin;if(!s.online)return T.offline;if(s.error)return s.error==='SETUP_REQUIRED'?T.setup:T.failure;if(s.busy)return T.syncing;if(s.conflicts)return T.conflict;if(s.unclaimed)return T.unclaimed;if(s.waiting)return 'Ch\u1edd r\u1eddi \u00f4 nh\u1eadp \u0111\u1ec3 nh\u1eadn d\u1eef li\u1ec7u m\u1edbi';if(s.pending)return T.pending;return s.ready?T.synced:T.notYet;}
-A.summaryText=()=>T.saved+' \u00b7 '+titleStatus();
-function button(text,fn,primary=false,name){const b=el('button','as-btn'+(primary?' primary':''));b.type='button';if(name)b.appendChild(icon(name));b.appendChild(el('span','',text));b.onclick=fn;return b;}
-function block(title,text){const e=el('section','as-card');e.append(el('h3','',title));if(text)e.append(el('p','as-muted',text));return e;}
-function out(text,error=false){const e=modal?.querySelector('[data-as-result]');if(e){sameText(e,text);e.classList.toggle('as-error',error);}}
-async function run(fn){if(actionBusy)return;actionBusy=true;paint();try{await fn();}catch(e){out(String(e.message||e),true);}finally{actionBusy=false;paint();}}
-function close(){modal?.close();}
-function describe(c){let k=String(c).replace(/^study\//,'').replace(/@user/g,'');if(k.startsWith('note_'))return 'Ghi ch\u00e9p \u00b7 '+k.replace(/_/g,' ');if(k.includes('course_state'))return 'Ti\u1ebfn \u0111\u1ed9 / b\u00e0i l\u00e0m \u00b7 '+k;if(k.includes('hsk30'))return 'B\u00e0i l\u00e0m HSK 3.0 \u00b7 '+k;if(k.includes('mock'))return 'Thi th\u1eed \u00b7 '+k;if(k.includes('grammar_review'))return '\u00d4n t\u1eadp ng\u1eef ph\u00e1p';return k;}
-function pretty(p){if(p===null)return '(\u0110\u00e3 x\u00f3a)';return p.format==='text'?p.value:JSON.stringify(p.value,null,2);}
-function download(data){const text=JSON.stringify(data,null,2),blob=new Blob([text],{type:'application/json'}),url=URL.createObjectURL(blob);const a=el('a');a.href=url;a.download='HSK-Albert-Sao-Luu-'+new Date().toISOString().slice(0,10)+'.json';D.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
-function open(){if(opening)return;opening=true;try{
- lastFocus=D.activeElement;D.getElementById('adw-modal')?.close?.();W.AlbertDesktop?.sync?.();
- if(!modal){modal=el('dialog');modal.id='albert-sync-dialog';modal.setAttribute('aria-labelledby','as-title');D.body.appendChild(modal);modal.addEventListener('close',()=>{if(lastFocus?.isConnected)lastFocus.focus({preventScroll:true});});modal.addEventListener('click',e=>{if(e.target===modal){const b=modal.getBoundingClientRect();if(e.clientX<b.left||e.clientX>b.right||e.clientY<b.top||e.clientY>b.bottom)close();}});}
- modal.replaceChildren();const head=el('header','as-head');const h=el('h2','',T.title);h.id='as-title';const x=button(T.close,close,false,'close');x.classList.add('as-close');head.append(icon('cloud'),h,x);modal.append(head);
- const body=el('div','as-body');modal.append(body);body.append(el('p','as-lead',T.lead));
- const status=block('Tr\u1ea1ng th\u00e1i');status.append(el('strong','as-status'));const meta=el('p','as-muted');meta.dataset.asMeta='';status.append(meta);const detail=el('p','as-error');detail.dataset.asError='';status.append(detail);const stats=el('div','as-stats');stats.innerHTML='<span><b data-as-pending>0</b> ch\u1edd g\u1eedi</span><span><b data-as-conflicts>0</b> c\u1ea7n ki\u1ec3m tra</span><span><b data-as-docs>0</b> m\u1ee5c tr\u00ean m\u00e1y ch\u1ee7</span>';status.append(stats);
- const actions=el('div','as-actions');const now=button(T.now,()=>run(async()=>{await A.syncNow();out(titleStatus());}),true,'sync');now.dataset.asNetwork='';actions.append(now,button(T.export,()=>run(async()=>{download(await A.exportData());out('\u0110\u00e3 t\u1ea1o b\u1ea3n sao l\u01b0u. File c\u00f3 n\u1ed9i dung h\u1ecdc c\u00e1 nh\u00e2n; h\u00e3y gi\u1eef ri\u00eang.');}),false,'download'));status.append(actions);body.append(status);
- const newBox=block('D\u1eef li\u1ec7u m\u1edbi',T.newData);newBox.dataset.asNew='';newBox.append(button(T.refresh,()=>{if(W.confirm('T\u1ea3i l\u1ea1i trang \u0111\u1ec3 n\u1ea1p d\u1eef li\u1ec7u m\u1edbi? B\u00e0i l\u00e0m \u0111\u00e3 l\u01b0u v\u1eabn \u0111\u01b0\u1ee3c gi\u1eef. N\u1ed9i dung \u00f4 chat ch\u01b0a g\u1eedi s\u1ebd \u0111\u01b0\u1ee3c gi\u1eef tr\u00ean tab n\u00e0y.')){const v=D.getElementById('ai-input')?.value;if(v)sessionStorage.setItem('albert-sync-draft:'+A.owner,v);location.reload();}},false,'refresh'));body.append(newBox);
- const old=block('D\u1eef li\u1ec7u tr\u01b0\u1edbc khi c\u1eadp nh\u1eadt','C\u00e1c b\u1ea3n c\u0169 ch\u01b0a g\u1eafn t\u00e0i kho\u1ea3n r\u00f5 r\u00e0ng. H\u00e3y xu\u1ea5t sao l\u01b0u tr\u01b0\u1edbc; ch\u1ec9 x\u00e1c nh\u1eadn n\u1ebfu \u0111\u00e2y l\u00e0 d\u1eef li\u1ec7u c\u1ee7a b\u1ea1n, kh\u00f4ng ph\u1ea3i ng\u01b0\u1eddi d\u00f9ng tr\u01b0\u1edbc tr\u00ean m\u00e1y n\u00e0y.');old.dataset.asOld='';old.append(button(T.confirm,()=>run(async()=>{if(!W.confirm('G\u1eafn d\u1eef li\u1ec7u c\u0169 tr\u00ean m\u00e1y n\u00e0y v\u00e0o t\u00e0i kho\u1ea3n \u0111ang \u0111\u0103ng nh\u1eadp?'))return;await A.confirmOld();out(titleStatus());}),false,'person'));body.append(old);
- const tools=el('details','as-card');tools.append(el('summary','','Chuy\u1ec3n d\u1eef li\u1ec7u c\u0169 v\u00e0 sao l\u01b0u'));tools.append(el('p','as-muted','Nh\u1eadp c\u00e1c b\u1ea3n l\u01b0u t\u1eeb thi\u1ebft b\u1ecb kh\u00e1c ho\u1eb7c t\u1eeb b\u1ed9 \u0111\u1ed3ng b\u1ed9 c\u0169. Khi c\u00f9ng m\u1ed9t m\u1ee5c c\u00f3 hai n\u1ed9i dung kh\u00e1c nhau, app gi\u1eef l\u1ea1i c\u1ea3 hai \u0111\u1ec3 b\u1ea1n ch\u1ecdn. Kh\u00f4ng x\u00f3a b\u1ea3ng d\u1eef li\u1ec7u c\u0169.'));
- const ta=el('div','as-actions');const file=el('input');file.type='file';file.accept='.json,application/json';file.hidden=true;file.addEventListener('change',()=>run(async()=>{const f=file.files[0];if(!f)return;if(f.size>100*1024*1024)throw Error('File l\u1edbn h\u01a1n 100 MB.');const data=JSON.parse(await f.text());if(!W.confirm('Nh\u1eadp b\u1ea3n sao l\u01b0u n\u00e0y v\u00e0o t\u00e0i kho\u1ea3n \u0111ang m\u1edf? Ch\u1ec9 nh\u1eadp file c\u1ee7a ch\u00ednh b\u1ea1n.'))return;const n=await A.importData(data);await A.syncNow();out('\u0110\u00e3 \u0111\u1ecdc '+n+' m\u1ee5c. '+titleStatus());}));tools.append(file);
- ta.append(button(T.import,()=>file.click(),false,'upload'));
- const leg=button(T.legacy,()=>run(async()=>{if(!W.confirm('\u0110\u1ecdc d\u1eef li\u1ec7u thu\u1ed9c t\u00e0i kho\u1ea3n c\u1ee7a b\u1ea1n t\u1eeb c\u00e1c b\u1ea3ng Supabase c\u0169? Thao t\u00e1c n\u00e0y kh\u00f4ng x\u00f3a b\u1ea3n g\u1ed1c.'))return;const r=await A.importLegacyCloud();out('\u0110\u00e3 \u0111\u1ecdc '+r.documents+' m\u1ee5c t\u1eeb '+r.rows+' d\u00f2ng c\u0169.'+(r.warnings.length?' M\u1ed9t s\u1ed1 b\u1ea3ng ph\u1ee5 ch\u01b0a \u0111\u1ecdc \u0111\u01b0\u1ee3c: '+r.warnings.join('; '):'')+' '+titleStatus());}),false,'cloud');leg.dataset.asNetwork='';ta.append(leg);
- const guest=button(T.guestImport,()=>run(async()=>{if(!W.confirm('B\u1ea1n x\u00e1c nh\u1eadn d\u1eef li\u1ec7u \u0111\u00e3 h\u1ecdc khi ch\u01b0a \u0111\u0103ng nh\u1eadp tr\u00ean m\u00e1y n\u00e0y l\u00e0 c\u1ee7a b\u1ea1n?'))return;const n=await A.importGuest();await A.syncNow();out('\u0110\u00e3 \u0111\u1ecdc '+n+' m\u1ee5c kh\u00e1ch. '+titleStatus());}),false,'person');guest.dataset.asSigned='';ta.append(guest);tools.append(ta);body.append(tools);
- const conflicts=block(T.conflict,'Kh\u00f4ng t\u1ef1 ch\u1ecdn b\u1ea3n theo gi\u1edd thi\u1ebft b\u1ecb. Xu\u1ea5t sao l\u01b0u \u0111\u1ec3 gi\u1eef l\u1ea1i c\u1ea3 hai, r\u1ed3i ch\u1ecdn b\u1ea3n ph\u00f9 h\u1ee3p cho t\u1eebng m\u1ee5c.');conflicts.dataset.asConflictBox='';const list=el('div');list.dataset.asList='';conflicts.append(list);body.append(conflicts);
- const note=el('p','as-muted','Quy\u1ec1n th\u00f4ng b\u00e1o, k\u1ebft n\u1ed1i Web Push, gi\u1ecdng \u0111\u1ecdc, file t\u1ea3i v\u1ec1, b\u1ed1 c\u1ee5c v\u00e0 \u0111\u1ed3ng h\u1ed3 \u0111\u1ec1 thi \u0111ang ch\u1ea1y l\u00e0 c\u00e0i \u0111\u1eb7t ri\u00eang c\u1ee7a m\u1ed7i thi\u1ebft b\u1ecb. L\u1ecbch s\u1eed tr\u00f2 chuy\u1ec7n AI ch\u01b0a c\u00f3 b\u1ed9 l\u01b0u trong b\u1ea3n n\u00e0y, n\u00ean kh\u00f4ng n\u1eb1m trong d\u1eef li\u1ec7u \u0111\u1ed3ng b\u1ed9. C\u1ea3 hai thi\u1ebft b\u1ecb c\u1ea7n d\u00f9ng b\u1ea3n app c\u00f3 b\u1ed9 \u0111\u1ed3ng b\u1ed9 m\u1edbi n\u00e0y.');body.append(note);const result=el('p','as-result');result.dataset.asResult='';result.setAttribute('role','status');body.append(result);
- if(!modal.open)modal.showModal();paint(true);
- }finally{opening=false;}}
-let conflictSig='';
-function paint(force=false){const s=A.status();sameText(D.querySelector('#as-launcher small'),titleStatus(s));const banner=D.getElementById('as-update-banner');if(banner)banner.hidden=!s.remoteChanged;
- if(!modal?.open)return;const status=modal.querySelector('.as-status');sameText(status,titleStatus(s));status?.setAttribute('data-state',s.error?'error':s.conflicts?'warn':'normal');
- const email=W.hskCurrentUser?.email|| (s.loggedIn?'T\u00e0i kho\u1ea3n \u0111\u00e3 \u0111\u0103ng nh\u1eadp':'Kh\u00e1ch');sameText(modal.querySelector('[data-as-meta]'),email+' \u00b7 '+(s.lastAt?'L\u1ea7n \u0111\u1ed1i chi\u1ebfu g\u1ea7n nh\u1ea5t: '+new Date(s.lastAt).toLocaleString('vi-VN'):'Ch\u01b0a c\u00f3 l\u1ea7n \u0111\u1ed1i chi\u1ebfu th\u00e0nh c\u00f4ng.'));
- sameText(modal.querySelector('[data-as-error]'),s.error==='SETUP_REQUIRED'?T.setupHelp:s.error?'M\u00e3 l\u1ed7i: '+s.error+' \u00b7 B\u1ea3n l\u01b0u tr\u00ean m\u00e1y kh\u00f4ng b\u1ecb x\u00f3a.':'');
- for(const [k,v]of [['pending',s.pending],['conflicts',s.conflicts],['docs',s.documents]])sameText(modal.querySelector('[data-as-'+k+']'),v);
- modal.querySelector('[data-as-old]').hidden=!s.unclaimed||!s.loggedIn;modal.querySelector('[data-as-new]').hidden=!s.remoteChanged;
- modal.querySelectorAll('[data-as-network]').forEach(b=>b.disabled=actionBusy||s.busy||!s.loggedIn||!s.online||s.switched);modal.querySelectorAll('[data-as-signed]').forEach(b=>b.disabled=actionBusy||!s.loggedIn||s.switched);
- const all=A.conflicts(),sig=JSON.stringify(all.map(c=>[c.key,c.at]));modal.querySelector('[data-as-conflict-box]').hidden=!all.length;
- if(force||sig!==conflictSig){conflictSig=sig;const list=modal.querySelector('[data-as-list]');list.replaceChildren();for(const c of all){const d=el('details','as-conflict');d.append(el('summary','',describe(c.key)));const grid=el('div','as-versions');for(const [title,p]of [[T.local,c.local],[T.remote,c.remote]]){const v=el('div');v.append(el('h4','',title));const pre=el('pre','',pretty(p));pre.tabIndex=0;v.append(pre);grid.append(v);}d.append(grid);const actions=el('div','as-actions');actions.append(button(T.useLocal,()=>run(async()=>{await A.resolveConflict(c.key,'local');out(titleStatus());}),false,'save'),button(T.useRemote,()=>run(async()=>{await A.resolveConflict(c.key,'remote');out(titleStatus());}),false,'download'));d.append(actions);list.append(d);}}
+'use strict';const A=W.AlbertSync,M=W.AlbertSyncModel;if(!A)return;
+let modal=null,lastFocus=null,working=false,installed=false,hydrateTimer=0,composing=false;const pendingKeys=new Set();
+const T={title:'\u0110\u1ed3ng b\u1ed9 d\u1eef li\u1ec7u',close:'\u0110\u00f3ng',now:'\u0110\u1ed3ng b\u1ed9 ngay',backup:'Xu\u1ea5t b\u1ea3n sao l\u01b0u',auto:'T\u1ef1 \u0111\u1ed9ng \u0111\u1ed3ng b\u1ed9 \u00b7 2.0',lead:'C\u00f9ng t\u00e0i kho\u1ea3n, b\u1ea1n ch\u1ec9 c\u1ea7n h\u1ecdc. App t\u1ef1 l\u01b0u v\u00e0 nh\u1eadn thay \u0111\u1ed5i gi\u1eefa c\u00e1c thi\u1ebft b\u1ecb.',synced:'\u0110\u00e3 \u0111\u1ed3ng b\u1ed9',syncing:'\u0110ang \u0111\u1ed3ng b\u1ed9\u2026',pending:'\u0110\u00e3 l\u01b0u tr\u00ean m\u00e1y \u00b7 \u0110ang ch\u1edd g\u1eedi',offline:'\u0110\u00e3 l\u01b0u tr\u00ean m\u00e1y \u00b7 S\u1ebd g\u1eedi khi c\u00f3 m\u1ea1ng',login:'\u0110\u0103ng nh\u1eadp \u0111\u1ec3 \u0111\u1ed3ng b\u1ed9',error:'Ch\u01b0a k\u1ebft n\u1ed1i \u0111\u01b0\u1ee3c \u00b7 D\u1eef li\u1ec7u v\u1eabn \u1edf tr\u00ean m\u00e1y',history:'L\u1ecbch s\u1eed d\u1ef1 ph\u00f2ng',advanced:'Sao l\u01b0u v\u00e0 d\u1eef li\u1ec7u c\u0169'};
+function el(tag,cls,text){const e=D.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+function icon(name){const e=el('span','as-icon');e.setAttribute('aria-hidden','true');e.innerHTML=W.AlbertFluentIcons?.[name]?.regular||'';return e;}
+function same(e,text){if(e&&e.textContent!==String(text))e.textContent=String(text);}
+function button(label,fn,primary=false,name){const b=el('button','as-btn'+(primary?' primary':''));b.type='button';if(name)b.append(icon(name));b.append(el('span','',label));b.onclick=fn;return b;}
+function status(s=A.status()){if(s.switched)return '\u0110ang chuy\u1ec3n t\u00e0i kho\u1ea3n\u2026';if(!s.loggedIn)return T.login;if(!s.online)return T.offline;if(s.error)return s.error==='SETUP_REQUIRED'?'Ch\u01b0a c\u00f3 b\u1ea3ng \u0111\u1ed3ng b\u1ed9 tr\u00ean m\u00e1y ch\u1ee7':T.error;if(s.busy)return T.syncing;if(s.pending)return T.pending;return s.ready?T.synced:'\u0110ang k\u1ebft n\u1ed1i t\u00e0i kho\u1ea3n\u2026';}
+function result(text){same(modal?.querySelector('[data-as-result]'),text);}
+async function run(fn){if(working)return;working=true;paint();try{await fn();}catch(e){result(String(e.message||e));}finally{working=false;paint();}}
+function download(data,name='HSK-Albert-Sao-Luu'){const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=el('a');a.href=url;a.download=name+'-'+new Date().toISOString().slice(0,10)+'.json';D.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
+function card(title,text){const x=el('section','as-card');x.append(el('h3','',title));if(text)x.append(el('p','as-muted',text));return x;}
+function describe(key){const k=String(key||'').replace(/^study\//,'').replace(/@user/g,'');if(k.startsWith('note_'))return 'Ghi ch\u00e9p \u00b7 '+k.replace(/_/g,' ');if(k.includes('course_state'))return 'Ti\u1ebfn \u0111\u1ed9 h\u1ecdc';if(k.includes('hsk30'))return 'B\u00e0i l\u00e0m HSK 3.0';if(k.includes('mock'))return 'B\u00e0i thi th\u1eed';return k||'B\u1ea3n sao tr\u01b0\u1edbc khi c\u1eadp nh\u1eadt';}
+function pretty(p){if(p===null||p===undefined)return '(tr\u1ed1ng)';return p.format==='text'?p.value:JSON.stringify(p.value??p,null,2);}
+async function history(box){box.replaceChildren();const rows=await A.recovery();if(!rows.length){box.append(el('p','as-muted','Ch\u01b0a c\u00f3 b\u1ea3n d\u1ef1 ph\u00f2ng.'));return;}
+ for(const r of rows.slice(0,40)){
+  const d=el('details','as-conflict');d.append(el('summary','',describe(r.key)+' \u00b7 '+new Date(r.at).toLocaleString('vi-VN')));
+  d.append(el('p','as-muted','B\u1ea3n n\u00e0y \u0111\u00e3 \u0111\u01b0\u1ee3c gi\u1eef l\u1ea1i t\u1ef1 \u0111\u1ed9ng. Kh\u00f4ng c\u1ea7n thao t\u00e1c \u0111\u1ec3 ti\u1ebfp t\u1ee5c h\u1ecdc.'));
+  if(r.key){const grid=el('div','as-versions');for(const [side,label]of [['local','B\u1ea3n tr\u00ean thi\u1ebft b\u1ecb khi g\u1ed9p'],['remote','B\u1ea3n nh\u1eadn v\u1ec1 khi g\u1ed9p']])if(Object.prototype.hasOwnProperty.call(r,side)){const c=el('div');c.append(el('h4','',label),el('pre','',pretty(r[side])));c.append(button('Kh\u00f4i ph\u1ee5c b\u1ea3n n\u00e0y',()=>run(async()=>{if(!W.confirm('Kh\u00f4i ph\u1ee5c n\u1ed9i dung n\u00e0y? B\u1ea3n hi\u1ec7n t\u1ea1i s\u1ebd \u0111\u01b0\u1ee3c sao l\u01b0u tr\u01b0\u1edbc.'))return;await A.restoreRecovery(r.id,side);result(status());}),false,'refresh'));grid.append(c);}d.append(grid);}
+  d.append(button('T\u1ea3i b\u1ea3n d\u1ef1 ph\u00f2ng',()=>download(r,'HSK-Albert-Du-Phong'),false,'download'));box.append(d);
+ }
+ if(rows.length>40)box.append(el('p','as-muted','Hi\u1ec3n th\u1ecb 40 b\u1ea3n g\u1ea7n nh\u1ea5t. Xu\u1ea5t b\u1ea3n sao l\u01b0u \u0111\u1ec3 l\u1ea5y to\u00e0n b\u1ed9 l\u1ecbch s\u1eed.'));
 }
-function hydrate(){
- // Refresh data holders, not navigation. Preserve the active lesson and draft inputs.
- try{const c=String(W.CURRENT_COURSE||'hsk5'),k=c==='hsk4'?'hsk_albert_course_state_v4_hsk4':'hsk_albert_course_state_v3_'+c;const v=JSON.parse(localStorage.getItem(k)||'null');if(v&&typeof STATE!=='undefined'){const lesson=STATE.currentLesson;Object.assign(STATE,v);STATE.currentLesson=lesson;W.updateStreak?.();}}catch(_){}
- W.AlbertHSK30?.refreshFromSync?.();W.AlbertHSK303?.refreshFromSync?.();
- const page=[...D.querySelectorAll('.page-content')].find(n=>getComputedStyle(n).display!=='none');
- if(page?.id==='page-streak')try{W.renderStreak?.();}catch(_){}
- if(page?.id==='page-lessons'&&D.getElementById('lesson-detail-view')?.style.display==='none')try{W.renderLessonList?.();}catch(_){}
- paint();
+function open(){lastFocus=D.activeElement;D.getElementById('adw-modal')?.close?.();if(!modal){modal=el('dialog');modal.id='albert-sync-dialog';modal.setAttribute('aria-labelledby','as-title');D.body.append(modal);modal.addEventListener('close',()=>lastFocus?.isConnected&&lastFocus.focus({preventScroll:true}));}
+ modal.replaceChildren();const head=el('header','as-head'),title=el('h2','',T.title);title.id='as-title';head.append(icon('cloud'),title,button(T.close,()=>modal.close(),false,'close'));modal.append(head);
+ const body=el('div','as-body');body.append(el('span','as-auto',T.auto),el('p','as-lead',T.lead));modal.append(body);
+ const state=card('Tr\u1ea1ng th\u00e1i');const live=el('strong','as-status');live.setAttribute('role','status');state.append(live);const info=el('p','as-muted');info.dataset.asMeta='';state.append(info);const error=el('p','as-error');error.dataset.asError='';state.append(error);
+ const stats=el('div','as-stats');for(const [key,label]of [['pending','ch\u1edd g\u1eedi'],['docs','m\u1ee5c \u0111\u00e3 \u0111\u1ed1i chi\u1ebfu'],['backups','b\u1ea3n d\u1ef1 ph\u00f2ng tr\u00ean m\u00e1y']]){const x=el('span'),n=el('b','','0');n.dataset.asCount=key;x.append(n,D.createTextNode(label));stats.append(x);}state.append(stats);
+ const actions=el('div','as-actions');const now=button(T.now,()=>run(async()=>{await A.syncNow();result(status());}),true,'sync');now.dataset.asNetwork='';actions.append(now,button(T.backup,()=>run(async()=>{download(await A.exportData());result('\u0110\u00e3 xu\u1ea5t b\u1ea3n sao l\u01b0u. H\u00e3y gi\u1eef file ri\u00eang.');}),false,'download'));state.append(actions);body.append(state);
+ body.append(card('Kh\u00f4ng c\u1ea7n ch\u1ecdn b\u1ea3n d\u1eef li\u1ec7u','App t\u1ef1 g\u1ed9p nh\u1eefng ph\u1ea7n kh\u00e1c nhau. N\u1ebfu c\u00f9ng m\u1ed9t \u00f4 b\u1ecb s\u1eeda tr\u00f9ng, app t\u1ef1 x\u1eed l\u00fd v\u00e0 l\u01b0u b\u1ea3n d\u1ef1 ph\u00f2ng. Kh\u00f4ng ng\u1eaft b\u00e0i \u0111ang h\u1ecdc, kh\u00f4ng t\u1ef1 t\u1ea3i l\u1ea1i trang.'));
+ const hist=el('details','as-card');hist.append(el('summary','',T.history));const list=el('div');hist.append(list);hist.addEventListener('toggle',()=>{if(hist.open)history(list).catch(e=>result(String(e.message||e)));});body.append(hist);
+ const adv=el('details','as-card');adv.append(el('summary','',T.advanced));adv.append(el('p','as-muted','Ch\u1ec9 d\u00f9ng khi chuy\u1ec3n d\u1eef li\u1ec7u c\u0169. D\u1eef li\u1ec7u kh\u00e1ch ho\u1eb7c t\u00e0i kho\u1ea3n kh\u00e1c kh\u00f4ng t\u1ef1 \u0111\u01b0\u1ee3c nh\u1eadp.'));
+ const old=el('div');old.dataset.asOld='';old.append(el('p','as-muted','C\u00f3 d\u1eef li\u1ec7u c\u0169 ch\u01b0a r\u00f5 ch\u1ee7 s\u1edf h\u1eefu. X\u00e1c nh\u1eadn m\u1ed9t l\u1ea7n n\u1ebfu \u0111\u00e2y l\u00e0 d\u1eef li\u1ec7u c\u1ee7a b\u1ea1n.'),button('Nh\u1eadp d\u1eef li\u1ec7u c\u0169 c\u1ee7a t\u00f4i',()=>run(async()=>{if(W.confirm('G\u1eafn d\u1eef li\u1ec7u c\u0169 tr\u00ean m\u00e1y n\u00e0y v\u00e0o t\u00e0i kho\u1ea3n c\u1ee7a b\u1ea1n?'))await A.confirmOld();}),false,'person'));adv.append(old);
+ const file=el('input');file.type='file';file.accept='.json,application/json';file.hidden=true;file.onchange=()=>run(async()=>{const f=file.files[0];if(!f)return;if(f.size>100*1024*1024)throw Error('File vu\u1ee3t qu\u00e1 100 MB');const data=JSON.parse(await f.text());if(!W.confirm('Nh\u1eadp b\u1ea3n sao l\u01b0u c\u1ee7a b\u1ea1n?'))return;await A.importData(data);await A.syncNow();result(status());});adv.append(file);
+ const tools=el('div','as-actions');tools.append(button('Nh\u1eadp b\u1ea3n sao l\u01b0u',()=>file.click(),false,'upload'),button('Nh\u1eadp d\u1eef li\u1ec7u Supabase c\u0169',()=>run(async()=>{if(!W.confirm('\u0110\u1ecdc c\u00e1c b\u1ea3n l\u01b0u c\u0169 thu\u1ed9c t\u00e0i kho\u1ea3n c\u1ee7a b\u1ea1n?'))return;await A.importLegacyCloud();result(status());}),false,'cloud'),button('Nh\u1eadp d\u1eef li\u1ec7u kh\u00e1ch',()=>run(async()=>{if(!W.confirm('D\u1eef li\u1ec7u h\u1ecdc khi ch\u01b0a \u0111\u0103ng nh\u1eadp tr\u00ean m\u00e1y n\u00e0y l\u00e0 c\u1ee7a b\u1ea1n?'))return;await A.importGuest();await A.syncNow();}),false,'person'));adv.append(tools);body.append(adv);
+ body.append(el('p','as-muted','Quy\u1ec1n th\u00f4ng b\u00e1o, gi\u1ecdng \u0111\u1ecdc, file t\u1ea3i v\u1ec1 v\u00e0 \u0111\u1ed3ng h\u1ed3 thi gi\u1eef ri\u00eang tr\u00ean t\u1eebng thi\u1ebft b\u1ecb. L\u1ecbch s\u1eed tr\u00f2 chuy\u1ec7n AI ch\u01b0a c\u00f3 trong ph\u1ea1m vi n\u00e0y. C\u1ea3 hai thi\u1ebft b\u1ecb c\u1ea7n d\u00f9ng b\u1ea3n \u0111\u1ed3ng b\u1ed9 2.0.'));
+ const out=el('p','as-result');out.dataset.asResult='';body.append(out);if(!modal.open)modal.showModal();paint();
 }
-function install(){if(!D.getElementById('as-css')){const s=el('style');s.id='as-css';s.textContent=`
-#albert-sync-dialog{padding:0;border:1px solid #e2ddd2;border-radius:12px;width:min(780px,calc(100vw - 28px));max-height:calc(100dvh - 40px);color:#1a1a2e;background:#faf8f3;box-shadow:0 18px 64px #0003;font:14px/1.65 'Segoe UI','Be Vietnam Pro',sans-serif;overflow:hidden;margin:auto}
-#albert-sync-dialog[open]{display:flex;flex-direction:column}#albert-sync-dialog::backdrop{background:#16151b55}.as-head{display:flex;gap:10px;align-items:center;background:#fff;padding:15px 20px;border-bottom:1px solid #e2ddd2;flex:none}.as-head h2{font-size:19px;margin:0;flex:1}.as-body{padding:18px 22px;overflow:auto;overscroll-behavior:contain;min-height:0}.as-lead{margin:0 0 16px;color:#4a4754}.as-card{background:#fff;border:1px solid #e2ddd2;border-radius:8px;padding:16px;margin:0 0 14px}.as-card[hidden],#as-update-banner[hidden]{display:none!important}.as-card h3{font-size:15px;margin:0 0 8px}.as-status{display:block;font-size:18px;color:#0f7b6c;line-height:1.4}.as-status[data-state=error],.as-error{color:#a93226}.as-status[data-state=warn]{color:#8a5900}.as-muted{font-size:13px;color:#706b61;margin:8px 0;overflow-wrap:anywhere}.as-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px 0}.as-stats span{background:#faf8f3;padding:9px;border-radius:6px;font-size:12px}.as-stats b{display:block;font-size:21px;color:#1a1a2e}.as-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.as-btn{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:8px 12px;border:1px solid #d6d0c5;border-radius:6px;background:#fff;color:#39363f;font:600 13px/1.4 inherit;cursor:pointer}.as-btn:hover{background:#f6f3ed}.as-btn.primary{background:#c0392b;border-color:#c0392b;color:#fff}.as-btn:disabled{opacity:.55;cursor:default}.as-btn:focus-visible,summary:focus-visible{outline:2px solid #c0392b;outline-offset:2px}.as-icon{display:inline-flex;align-items:center;justify-content:center;flex:none;width:20px;height:20px}.as-icon svg{width:20px;height:20px}.as-close{padding:7px;font-size:12px}.as-versions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.as-versions>div{min-width:0}.as-versions h4{margin:0;font-size:12px}.as-versions pre{max-height:230px;overflow:auto;white-space:pre-wrap;word-break:break-word;background:#faf8f3;border:1px solid #e2ddd2;padding:10px;font:13px/1.6 inherit}.as-conflict{padding:12px 0;border-bottom:1px solid #e2ddd2}.as-card summary{font-weight:600;cursor:pointer;overflow-wrap:anywhere}.as-result{white-space:pre-wrap;font-size:13px}
-#as-launcher{display:flex!important;align-items:center;gap:9px;width:100%;text-align:left;min-height:40px;background:transparent;border:0;color:#4a4754;padding:8px 10px;font:13px/1.4 inherit;cursor:pointer;border-radius:6px}#as-launcher:hover{background:#fbeeec;color:#c0392b}#as-launcher .as-launch-label{min-width:0;flex:1}#as-launcher small{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:10px;font-weight:400;color:#7a7568}html.adw-collapsed #as-launcher .as-launch-label{display:none}#as-update-banner{position:fixed;bottom:32px;right:18px;z-index:1000060;background:#fff;border:1px solid #d6d0c5;border-radius:8px;padding:10px 12px;box-shadow:0 4px 18px #0002;display:flex;gap:10px;align-items:center;max-width:calc(100vw - 28px);font:12px/1.5 'Segoe UI',sans-serif}
-@media(max-width:760px){.as-body{padding:14px}.as-head{padding:12px 14px}.as-head h2{font-size:17px}.as-versions{grid-template-columns:1fr}.as-stats{gap:6px}.as-stats span{padding:8px;font-size:11px}.as-btn{min-height:42px}#as-update-banner{bottom:82px;right:12px}}`;
- D.head.appendChild(s);}
- const foot=D.getElementById('adw-side-foot');if(foot&&!D.getElementById('as-launcher')){const b=button('',open,false,'cloud');b.id='as-launcher';b.title=T.title;b.setAttribute('aria-label',T.title);b.setAttribute('aria-haspopup','dialog');b.lastChild.remove();const text=el('span','as-launch-label',T.title);text.append(el('small','',titleStatus()));b.append(text);foot.insertBefore(b,foot.firstChild);}
- if(!D.getElementById('as-update-banner')){const b=el('aside');b.id='as-update-banner';b.hidden=true;b.append(el('span','','\u0110\u00e3 nh\u1eadn thay \u0111\u1ed5i t\u1eeb thi\u1ebft b\u1ecb kh\u00e1c.'),button('Xem',open),button('\u0110\u1ec3 sau',()=>{A.acknowledgeApplied();b.hidden=true;}));D.body.append(b);}
- if(!uiReady){uiReady=true;W.addEventListener('albert-sync-status',()=>paint());W.addEventListener('albert-sync-applied',hydrate);try{const draft=sessionStorage.getItem('albert-sync-draft:'+A.owner),input=D.getElementById('ai-input');if(draft&&input&&!input.value){input.value=draft;sessionStorage.removeItem('albert-sync-draft:'+A.owner);}}catch(_){} }
- paint();
+function paint(){const s=A.status();same(D.querySelector('#as-launcher small'),status(s));if(!modal?.open)return;same(modal.querySelector('.as-status'),status(s));modal.querySelector('.as-status')?.setAttribute('data-state',s.error?'error':'normal');same(modal.querySelector('[data-as-meta]'),(W.hskCurrentUser?.email||'')+(s.lastAt?' \u00b7 '+new Date(s.lastAt).toLocaleString('vi-VN'):''));same(modal.querySelector('[data-as-error]'),s.error==='SETUP_REQUIRED'?'C\u1ea7n c\u00e0i b\u1ea3ng Supabase m\u1ed9t l\u1ea7n. Kh\u00f4ng x\u00f3a d\u1eef li\u1ec7u tr\u00ean m\u00e1y.':s.error?'M\u00e3: '+s.error:'');for(const [key,n]of [['pending',s.pending],['docs',s.documents??'\u2014'],['backups',s.backups]])same(modal.querySelector('[data-as-count="'+key+'"]'),n);modal.querySelector('[data-as-old]').hidden=!s.unclaimed||!s.loggedIn;modal.querySelectorAll('[data-as-network]').forEach(b=>b.disabled=working||s.busy||!s.loggedIn||!s.online||s.switched);}
+function active(){let e=D.activeElement;while(e?.shadowRoot?.activeElement)e=e.shadowRoot.activeElement;return e;}
+function editActive(e){return e&&e.matches?.('textarea,input:not([type=button]):not([type=submit]),[contenteditable=true]')&&!e.closest?.('#albert-sync-dialog');}
+function applyInput(e,key){if(!e||!M.describe(key))return;const raw=localStorage.getItem(key),value=raw===null?'':raw;if(e===active()||composing){pendingKeys.add('dom');return;}if(e.type==='checkbox')e.checked=value==='true';else if(e.type==='radio')e.checked=e.value===value;else if(e.value!==value)e.value=value;A.observe(key);}
+function hydrate(event){for(const k of event?.detail?.keys||[])pendingKeys.add(k);clearTimeout(hydrateTimer);hydrateTimer=setTimeout(apply,80);}
+function apply(){if(!pendingKeys.size)return;const ks=[...pendingKeys];pendingKeys.clear();const domOnly=ks.includes('dom');const changed=(prefix)=>domOnly||ks.some(k=>k.includes(prefix));
+ try{const c=String(W.CURRENT_COURSE||'hsk5'),key=c==='hsk4'?'hsk_albert_course_state_v4_hsk4':'hsk_albert_course_state_v3_'+c;if(changed(key)){const v=JSON.parse(localStorage.getItem(key)||'null');if(v&&typeof STATE!=='undefined'){const lesson=STATE.currentLesson;Object.assign(STATE,v);STATE.currentLesson=lesson;A.observe(key);W.updateStreak?.();}}}catch(_){}
+ const course=String(W.CURRENT_COURSE||'hsk5');
+ for(const e of D.querySelectorAll('#lesson-note,#h4-lesson-note')){const lid=Number(e.dataset.lessonId||D.getElementById('lesson-selector')?.value||0);if(lid>0)applyInput(e,'note_'+course+'_lesson_'+lid);}
+ D.querySelectorAll('[data-hsk-cloud-key]').forEach(e=>{const key='hsk_cloud_cache__'+e.dataset.hskCloudKey;if(changed(key))applyInput(e,key);});
+ D.querySelectorAll('[data-h4x-save]').forEach(e=>{const id=e.dataset.h4xSave||e.id;for(const prefix of ['h4x:'+String(W.HSK4_STUDY_DATA?.storageVersion||'2026.09.17-hsk4-grammar-exercises-usage-ai-v1')+':','h4x:','h4exact:','h4x_local_','hsk4_exact_'])if(changed(prefix+id)&&localStorage.getItem(prefix+id)!=null)applyInput(e,prefix+id);});
+ D.querySelectorAll('[id^="h3f-"]').forEach(e=>{if(e.matches('input,textarea,select')&&changed('h3f:v4:'+e.id))applyInput(e,'h3f:v4:'+e.id);});
+ if(changed('albert_hsk30_hsk2_v1__'))W.AlbertHSK30?.refreshFromSync?.();if(changed('albert_hsk303_hsk3_v1__'))W.AlbertHSK303?.refreshFromSync?.();
+ if(editActive(active())||composing)pendingKeys.add('dom');
+ const page=[...D.querySelectorAll('.page-content')].find(n=>n.getClientRects().length&&getComputedStyle(n).display!=='none');
+ if(W.__albertMainDestination?.()==='streak'&&ks.some(k=>k.includes('albert_web_streak_v1')))try{W.__albertOpenStreak?.();}catch(_){}
+ else if(page?.id==='page-streak')try{W.renderStreak?.();}catch(_){}
+ if(page?.id==='page-lessons'&&D.getElementById('lesson-detail-view')?.style.display==='none'&&!editActive(active()))try{const sc=D.getElementById('lesson-list-view')?.scrollTop||0;W.renderLessonList?.();const list=D.getElementById('lesson-list-view');if(list)list.scrollTop=sc;}catch(_){}
+ if(page?.id==='page-mock'&&ks.some(k=>k.includes('mock'))&&!editActive(active()))try{const sc=D.getElementById('mock-content')?.scrollTop||0;W.showPage?.('mock');D.getElementById('mock-content')?.scrollTo(0,sc);}catch(_){}
+ A.acknowledgeApplied();paint();
 }
-A.open=open;
-if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>setTimeout(install,700),{once:true});else setTimeout(install,700);[1700,3500].forEach(t=>setTimeout(install,t));
+function install(){if(installed)return;installed=true;const st=el('style');st.id='as-css';st.textContent=CSS;D.head.append(st);D.getElementById('as-update-banner')?.remove();
+ function launcher(){const foot=D.getElementById('adw-side-foot');if(foot&&!D.getElementById('as-launcher')){const b=button('',open,false,'cloud');b.id='as-launcher';b.setAttribute('aria-label',T.title);b.lastChild.remove();const t=el('span','as-launch-label',T.title);t.append(el('small','',status()));b.append(t);foot.insertBefore(b,foot.firstChild);}}
+ launcher();setTimeout(launcher,1500);setTimeout(launcher,3500);
+ W.addEventListener('albert-sync-status',paint);W.addEventListener('albert-sync-applied',hydrate);D.addEventListener('focusout',()=>{if(pendingKeys.size)hydrate();},true);D.addEventListener('compositionstart',()=>{composing=true;},true);D.addEventListener('compositionend',()=>{composing=false;if(pendingKeys.size)hydrate();},true);
+ A.ready.then(()=>hydrate({detail:{keys:A.keys()}})).catch(()=>{});paint();
+}
+const CSS="\n#albert-sync-dialog{padding:0;border:1px solid #e2ddd2;border-radius:12px;width:min(780px,calc(100vw - 28px));max-height:calc(100dvh - 40px);color:#1a1a2e;background:#faf8f3;box-shadow:0 18px 64px #0003;font:14px/1.65 'Segoe UI','Be Vietnam Pro',sans-serif;overflow:hidden;margin:auto}\n#albert-sync-dialog[open]{display:flex;flex-direction:column}#albert-sync-dialog::backdrop{background:#16151b55}.as-head{display:flex;gap:10px;align-items:center;background:#fff;padding:15px 20px;border-bottom:1px solid #e2ddd2;flex:none}.as-head h2{font-size:19px;margin:0;flex:1}.as-body{padding:18px 22px;overflow:auto;overscroll-behavior:contain;min-height:0}.as-lead{margin:0 0 16px;color:#4a4754}.as-card{background:#fff;border:1px solid #e2ddd2;border-radius:8px;padding:16px;margin:0 0 14px}.as-card[hidden],#as-update-banner[hidden]{display:none!important}.as-card h3{font-size:15px;margin:0 0 8px}.as-status{display:block;font-size:18px;color:#0f7b6c;line-height:1.4}.as-status[data-state=error],.as-error{color:#a93226}.as-status[data-state=warn]{color:#8a5900}.as-muted{font-size:13px;color:#706b61;margin:8px 0;overflow-wrap:anywhere}.as-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px 0}.as-stats span{background:#faf8f3;padding:9px;border-radius:6px;font-size:12px}.as-stats b{display:block;font-size:21px;color:#1a1a2e}.as-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.as-btn{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:8px 12px;border:1px solid #d6d0c5;border-radius:6px;background:#fff;color:#39363f;font:600 13px/1.4 inherit;cursor:pointer}.as-btn:hover{background:#f6f3ed}.as-btn.primary{background:#c0392b;border-color:#c0392b;color:#fff}.as-btn:disabled{opacity:.55;cursor:default}.as-btn:focus-visible,summary:focus-visible{outline:2px solid #c0392b;outline-offset:2px}.as-icon{display:inline-flex;align-items:center;justify-content:center;flex:none;width:20px;height:20px}.as-icon svg{width:20px;height:20px}.as-close{padding:7px;font-size:12px}.as-versions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.as-versions>div{min-width:0}.as-versions h4{margin:0;font-size:12px}.as-versions pre{max-height:230px;overflow:auto;white-space:pre-wrap;word-break:break-word;background:#faf8f3;border:1px solid #e2ddd2;padding:10px;font:13px/1.6 inherit}.as-conflict{padding:12px 0;border-bottom:1px solid #e2ddd2}.as-card summary{font-weight:600;cursor:pointer;overflow-wrap:anywhere}.as-result{white-space:pre-wrap;font-size:13px}\n#as-launcher{display:flex!important;align-items:center;gap:9px;width:100%;text-align:left;min-height:40px;background:transparent;border:0;color:#4a4754;padding:8px 10px;font:13px/1.4 inherit;cursor:pointer;border-radius:6px}#as-launcher:hover{background:#fbeeec;color:#c0392b}#as-launcher .as-launch-label{min-width:0;flex:1}#as-launcher small{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:10px;font-weight:400;color:#7a7568}html.adw-collapsed #as-launcher .as-launch-label{display:none}#as-update-banner{position:fixed;bottom:32px;right:18px;z-index:1000060;background:#fff;border:1px solid #d6d0c5;border-radius:8px;padding:10px 12px;box-shadow:0 4px 18px #0002;display:flex;gap:10px;align-items:center;max-width:calc(100vw - 28px);font:12px/1.5 'Segoe UI',sans-serif}\n@media(max-width:760px){.as-body{padding:14px}.as-head{padding:12px 14px}.as-head h2{font-size:17px}.as-versions{grid-template-columns:1fr}.as-stats{gap:6px}.as-stats span{padding:8px;font-size:11px}.as-btn{min-height:42px}#as-update-banner{bottom:82px;right:12px}}\n.as-auto{display:inline-block;background:#e8f5f1;color:#0f7b6c;border-radius:6px;padding:5px 9px;font-weight:600;font-size:12px;margin-bottom:10px}.as-card pre{max-height:220px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}.as-versions .as-btn{margin-bottom:10px}#as-update-banner{display:none!important}";
+A.open=open;A.summaryText=()=>status();A.refreshView=()=>hydrate({detail:{keys:A.keys()}});
+if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>setTimeout(install,700),{once:true});else setTimeout(install,700);
 })(window,document);
-
 </script>
 </body>
 </html>
