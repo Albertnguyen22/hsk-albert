@@ -2,6 +2,54 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<meta name="albert-mobile-cards-build" content="2026.10.23-index3-1-mobile-cards">
+<script id="albert-mobile-vocabulary-controls">
+/* Mobile vocabulary cards only. No change to the course, account or reminder stores. */
+(function (W, D) {
+  'use strict';
+  if (W.AlbertMobileCards) return;
+  var media = W.matchMedia('(max-width: 900px)');
+  var engines = Object.create(null);
+  function escape(s) { return String(s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function sides(engine, atStart, atEnd) {
+    function edge(direction, label, blocked) {
+      return '<button type="button" class="amfc-edge amfc-edge-' + (direction < 0 ? 'left' : 'right') + '" data-amfc-engine="' + escape(engine) + '" data-amfc-move="' + direction + '" aria-label="' + label + '" aria-disabled="' + !!blocked + '"' + (blocked ? ' tabindex="-1"' : '') + '></button>';
+    }
+    return edge(-1, 'T\u1eeb tr\u01b0\u1edbc', atStart) + edge(1, 'T\u1eeb ti\u1ebfp theo', atEnd);
+  }
+  engines.batch = {
+    move: function (delta) {
+      if (typeof reviewWords === 'undefined' || typeof reviewIdx === 'undefined' || !reviewWords.length) return false;
+      var next = reviewIdx + delta;
+      if (next < 0 || next >= reviewWords.length) return false;
+      // Browsing does not rate a card or mark the batch complete.
+      reviewIdx = next;
+      cardFlipped = false;
+      W.renderFlashcard();
+      return true;
+    }
+  };
+  D.addEventListener('click', function (ev) {
+    var button = ev.target && ev.target.closest && ev.target.closest('[data-amfc-move]');
+    if (!button || !media.matches) return;
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    if (button.getAttribute('aria-disabled') === 'true') return;
+    var engine = engines[button.getAttribute('data-amfc-engine')];
+    if (engine && engine.move) engine.move(Number(button.getAttribute('data-amfc-move')) < 0 ? -1 : 1);
+  }, true);
+  W.AlbertMobileCards = {
+    version: '2026.10.23-index3-1-mobile-cards',
+    isMobile: function () { return media.matches; },
+    sides: sides,
+    register: function (name, controller) { engines[name] = controller; }
+  };
+  function changed() { Object.keys(engines).forEach(function (name) { if (engines[name].resize) engines[name].resize(); }); }
+  if (media.addEventListener) media.addEventListener('change', changed);
+  else if (media.addListener) media.addListener(changed);
+})(window, document);
+
+</script>
 <meta name="albert-reminder-build" content="1.2.0-coverage-index1-1-ai-red">
 <script id="albert-ai-brand-core">
 /* Albert AI presentation only. No changes to requests, verification or saved data. */
@@ -2420,23 +2468,83 @@ html[data-albert-mode="ai"] #page-today>.ai-panel .ai-input-row{flex:0 0 auto!im
 
 <meta name="albert-build" content="2026.10.21-index1-ai-sync.1">
 <script id="albert-build-provenance">window.AlbertBuild=Object.freeze({"version":"2026.10.21-index1-ai-sync.1","baseFile":"index 1.html","baseSha256":"2a9d72a9e2d4493c0034f8fb8249313061740f26230580aa8f88dba6fcfbe85d","features":["tutor-layout-1.0","account-sync-v1"],"mergePolicy":"uploaded-source-with-targeted-deltas"});</script>
+<style id="albert-mobile-vocabulary-layout">
+/* index 3(1).html: mobile vocabulary first, grammar retained below. */
+.amfc-edge { display:none !important; }
+@media (max-width:900px) {
+  #page-review .review-vocab-split { display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:18px!important; }
+  #page-review .review-vocab-flash-host { order:0;min-width:0; }
+  #page-review .review-vocab-grammar-host { order:1;min-width:0; }
+  #today-focus-root { display:flex!important;flex-direction:column!important;gap:18px!important; }
+  #today-focus-root > .today-focus-vocabulary { order:0; }
+  #today-focus-root > .today-focus-grammar { order:1; }
+  #page-today .today-vocab-stage { display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important; }
+  #page-today .today-vocab-stage > .today-vocab-side { display:contents!important; }
+  #page-today .today-vocab-stage .today-timer-row { order:0;justify-content:center;margin:0!important;gap:0!important; }
+  #page-today .today-vocab-stage .today-timer-row > div { text-align:center; }
+  #page-today .today-vocab-stage .today-vocab-flashcard { order:1; }
+  #page-today .today-vocab-stage .today-vocab-rate { order:2; }
+  #page-today .today-vocab-stage .today-timer-ring,
+  #page-today .today-vocab-stage .today-vocab-controls,
+  #page-today .today-vocab-stage .today-vocab-meta { display:none!important; }
+  #page-review #card-actions .amfc-hard,
+  #page-review .h3-fc-actions .amfc-hard,
+  #page-today .today-vocab-rate .amfc-hard { display:none!important; }
+  #page-review #card-actions,
+  #page-review .h3-fc-actions,
+  #page-today .today-vocab-rate {
+    display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;width:100%!important;margin:10px 0 0!important;padding:0!important;
+    box-sizing:border-box;
+  }
+  #page-review #card-actions > button:not(.amfc-hard),
+  #page-review .h3-fc-actions > button:not(.amfc-hard),
+  #page-today .today-vocab-rate > button:not(.amfc-hard) {
+    flex:none!important;min-width:0!important;width:100%!important;min-height:46px!important;
+    margin:0!important;padding:10px 6px!important;font-size:14px!important;white-space:nowrap;
+    justify-content:center!important;box-sizing:border-box;
+  }
+  #page-review #flashcard,
+  #page-review .h3-flashcard,
+  #page-today .today-vocab-flashcard {
+    position:relative!important;width:100%!important;max-width:none!important;min-width:0!important;
+    min-height:260px!important;padding:26px 60px 42px!important;margin:0!important;
+    box-sizing:border-box;overflow:hidden;touch-action:pan-y;
+  }
+  #page-review #flashcard:hover,
+  #page-review .h3-flashcard:hover,
+  #page-today .today-vocab-flashcard:hover { transform:none!important; }
+  #page-review #flashcard .card-zh,
+  #page-review .h3-flashcard .h3-fc-zh,
+  #page-today .today-vocab-flashcard .today-vocab-zh { font-size:clamp(30px,9vw,44px)!important;line-height:1.4!important;overflow-wrap:anywhere; }
+  #page-review #flashcard .card-vi,
+  #page-review .h3-flashcard .h3-fc-vi,
+  #page-today .today-vocab-flashcard .today-vocab-vi { font-size:20px!important;line-height:1.5;overflow-wrap:anywhere; }
+  #page-review #flashcard .card-py,
+  #page-review .h3-flashcard .h3-fc-py,
+  #page-today .today-vocab-flashcard .today-vocab-py-back { font-size:16px!important;line-height:1.5;overflow-wrap:anywhere; }
+  #page-review #flashcard .card-hint,
+  #page-today .today-vocab-flashcard .today-card-hint { left:58px!important;right:58px!important;bottom:12px!important;font-size:11px!important;line-height:1.4;text-align:center; }
+  #page-review #flashcard .amfc-edge,
+  #page-review .h3-flashcard .amfc-edge,
+  #page-today .today-vocab-flashcard .amfc-edge {
+    display:block!important;position:absolute!important;top:24px!important;bottom:24px!important;
+    width:44px!important;min-width:44px!important;max-width:44px!important;height:auto!important;
+    min-height:80px!important;margin:0!important;padding:0!important;border:1px solid #cec6b8!important;
+    border-radius:9px!important;background:#e6dfd3!important;color:transparent!important;
+    box-shadow:none!important;z-index:2;cursor:pointer;touch-action:pan-y;
+    -webkit-tap-highlight-color:transparent;appearance:none;
+  }
+  #page-review .amfc-edge-left,#page-today .amfc-edge-left { left:8px!important;right:auto!important; }
+  #page-review .amfc-edge-right,#page-today .amfc-edge-right { right:8px!important;left:auto!important; }
+  #page-review .amfc-edge::before,#page-review .amfc-edge::after,#page-today .amfc-edge::before,#page-today .amfc-edge::after { content:none!important;display:none!important; }
+  #page-review .amfc-edge > *,#page-today .amfc-edge > * {display:none!important;}
+  #page-review .amfc-edge:active,#page-today .amfc-edge:active { background:#d6cdbd!important; }
+  #page-review .amfc-edge:focus-visible,#page-today .amfc-edge:focus-visible { outline:2px solid #c0392b;outline-offset:2px; }
+  #page-review .amfc-edge[aria-disabled="true"],#page-today .amfc-edge[aria-disabled="true"] { opacity:.4!important;cursor:default; }
+  #page-review #flashcard > div:first-of-type { min-width:0;max-width:100%;flex-wrap:wrap; }
+}
 
-<style id="albert-index3-vocab-two-actions">
-/* Vocabulary ratings only. Grammar, saved ratings and card behavior are unchanged. */
-html body #page-review #card-actions.albert-vocab-two-actions {
-  flex-wrap: nowrap !important;
-  gap: 10px !important;
-}
-html body #page-review #card-actions.albert-vocab-two-actions > button {
-  flex: 1 1 calc(50% - 5px) !important;
-  width: auto !important;
-  min-width: 0 !important;
-  max-width: none !important;
-  min-height: 44px;
-  margin: 0 !important;
-  grid-column: auto !important;
-  box-sizing: border-box;
-}
 </style>
 </head>
 <body>
@@ -12742,6 +12850,7 @@ function renderFlashcard() {
     </div>
     <div style="text-align:center;font-size:12px;color:var(--muted);margin:-4px 0 10px">Từ số ${absoluteNo}/${total} · Bài ${w.lessonId}</div>
     <div class="flashcard" id="flashcard" onclick="flipCard()">
+      ${window.AlbertMobileCards.sides('batch', reviewIdx <= 0, reviewIdx >= reviewWords.length - 1)}
       <div style="display:flex;align-items:center;gap:10px;justify-content:center">
         <div class="card-zh">${w.zh}</div>
         <button class="speak-btn" id="spk-fc" style="width:34px;height:34px;font-size:18px" onclick="event.stopPropagation();speakWord('${w.zh}','')" title="Nghe phát âm">🔊</button>
@@ -12754,8 +12863,9 @@ function renderFlashcard() {
       </div>
       <div class="card-hint">Nhấp để xem pinyin + nghĩa</div>
     </div>
-    <div class="card-actions albert-vocab-two-actions" id="card-actions" style="display:none">
+    <div class="card-actions" id="card-actions" style="display:none">
       <button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="rateCard('again')">😓 Học lại</button>
+      <button class="btn btn-outline amfc-hard" style="border-color:var(--gold);color:var(--gold)" onclick="rateCard('hard')">🤔 Khó</button>
       <button class="btn btn-teal" onclick="rateCard('known')">😊 Thuộc rồi!</button>
     </div>`;
 }
@@ -58893,6 +59003,7 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
   var vocabCountdown = 30;
   var vocabPaused = false;
   var vocabIndex = 0;
+  var mobileVocabKeys = null, mobileVocabScope = null;
   var vocabFlipped = false;
   var grammarSeedBump = 0;
 
@@ -59008,6 +59119,18 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
       });
     });
     var fresh = words.filter(function(w){ return w.status === 'new' || w.status === 'again' || w.status === 'hard'; });
+    if(window.AlbertMobileCards.isMobile()){
+      // Keep the current mobile session stable so Back can revisit a just-rated word.
+      // Ratings still use the original STATE/saveState code; no new storage is added.
+      var signature = course() + '|' + words.map(function(w){return w.zh;}).join('\u001f');
+      if(mobileVocabScope !== signature){
+        mobileVocabScope = signature;
+        mobileVocabKeys = (fresh.length ? fresh : words).map(function(w){return w.zh;});
+        vocabIndex = 0; vocabFlipped = false;
+      }
+      var byWord = new Map(words.map(function(w){return [w.zh,w];}));
+      return mobileVocabKeys.map(function(key){return byWord.get(key);}).filter(Boolean);
+    }
     return fresh.length ? fresh : words;
   }
   function patchNavAndTopbar(){
@@ -59034,11 +59157,11 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
   function renderGrammarTodaySection(){
     var deck = buildGrammarTodayDeck();
     if(!deck.length){
-      return '<section class="today-focus-card"><div class="today-focus-head"><div><div class="today-focus-title">🧩 Ngữ pháp hôm nay</div><div class="today-focus-sub">Chưa có dữ liệu ngữ pháp trong phạm vi đã học.</div></div></div><div class="today-focus-body">Hãy học hoặc đánh dấu hoàn thành ít nhất một bài để mở ôn ngữ pháp hôm nay.</div></section>';
+      return '<section class="today-focus-card today-focus-grammar"><div class="today-focus-head"><div><div class="today-focus-title">🧩 Ngữ pháp hôm nay</div><div class="today-focus-sub">Chưa có dữ liệu ngữ pháp trong phạm vi đã học.</div></div></div><div class="today-focus-body">Hãy học hoặc đánh dấu hoàn thành ít nhất một bài để mở ôn ngữ pháp hôm nay.</div></section>';
     }
     var seed = seedNum(course() + '::grammar::' + todayKey() + '::' + learnedLessonLimit() + '::' + grammarSeedBump);
     var cards = seededShuffle(deck, seed).slice(0, Math.min(3, deck.length));
-    return '<section class="today-focus-card"><div class="today-focus-head"><div><div class="today-focus-title">🧩 Ngữ pháp hôm nay</div><div class="today-focus-sub">Random trong nội dung đã học: ' + esc(learnedRangeLabel()) + '</div></div><button class="btn btn-outline" onclick="hskTodayRandomGrammar()">Đổi ngữ pháp</button></div><div class="today-focus-body"><div class="today-grammar-list">' + cards.map(function(c){
+    return '<section class="today-focus-card today-focus-grammar"><div class="today-focus-head"><div><div class="today-focus-title">🧩 Ngữ pháp hôm nay</div><div class="today-focus-sub">Random trong nội dung đã học: ' + esc(learnedRangeLabel()) + '</div></div><button class="btn btn-outline" onclick="hskTodayRandomGrammar()">Đổi ngữ pháp</button></div><div class="today-focus-body"><div class="today-grammar-list">' + cards.map(function(c){
       var ex = c.example;
       return '<article class="today-grammar-item"><div class="today-grammar-top"><div class="today-grammar-pattern">' + esc(c.pattern) + '</div><div class="today-grammar-lesson">' + esc(lessonLabel(c.lesson)) + '</div></div><div class="today-grammar-use">' + esc(shortText(c.summary, 230)) + '</div>' + (ex ? '<div class="today-grammar-example"><div class="zh">' + esc(ex.zh) + '</div>' + (ex.vi ? '<div class="vi">' + esc(ex.vi) + '</div>' : '') + '</div>' : '') + (c.tip ? '<div class="today-grammar-use" style="margin-top:8px;color:var(--muted)"><b>Lưu ý:</b> ' + esc(shortText(c.tip, 180)) + '</div>' : '') + '<div class="today-focus-actions"><button class="btn btn-outline" onclick="showPage(\'lessons\');setTimeout(function(){loadLesson(' + JSON.stringify(c.lesson.id) + ');},80)">Mở bài này</button><button class="btn btn-teal" onclick="window.hskReviewSetMode&&window.hskReviewSetMode(\'grammar\');showPage(\'review\')">Ôn Anki ngữ pháp</button></div></article>';
     }).join('') + '</div></div></section>';
@@ -59046,14 +59169,14 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
   function renderVocabTodaySection(){
     var deck = buildVocabTodayDeck();
     if(!deck.length){
-      return '<section class="today-focus-card"><div class="today-focus-head"><div><div class="today-focus-title">📚 Từ mới Anki</div><div class="today-focus-sub">Chưa có từ vựng trong phạm vi đã học.</div></div></div><div class="today-focus-body">Hãy học hoặc đánh dấu hoàn thành bài đầu tiên để bắt đầu flashcard từ mới.</div></section>';
+      return '<section class="today-focus-card today-focus-vocabulary"><div class="today-focus-head"><div><div class="today-focus-title">📚 Từ mới Anki</div><div class="today-focus-sub">Chưa có từ vựng trong phạm vi đã học.</div></div></div><div class="today-focus-body">Hãy học hoặc đánh dấu hoàn thành bài đầu tiên để bắt đầu flashcard từ mới.</div></section>';
     }
     if(vocabIndex < 0 || vocabIndex >= deck.length) vocabIndex = seedNum(course() + '::vocab::' + todayKey() + '::' + learnedLessonLimit()) % deck.length;
     var w = deck[vocabIndex];
     var cls = vocabFlipped ? 'today-vocab-flashcard flipped' : 'today-vocab-flashcard';
     var statusMap = {new:'Từ mới', again:'Học lại', hard:'Khó', known:'Đã thuộc'};
     var statusClass = w.status === 'known' ? 'chip-teal' : (w.status === 'hard' ? 'chip-gold' : (w.status === 'again' ? 'chip-red' : 'chip-blue'));
-    return '<section class="today-focus-card"><div class="today-focus-head"><div><div class="today-focus-title">📚 Từ mới · Flashcard 30s/từ</div><div class="today-focus-sub">Dựa theo Anki từ vựng, giới hạn trong nội dung đã học: ' + esc(learnedRangeLabel()) + '</div></div><button class="btn btn-outline" onclick="hskTodayOpenVocabReview()">Mở Anki từ vựng</button></div><div class="today-focus-body"><div class="today-vocab-stage"><div class="' + cls + '" onclick="hskTodayFlipVocab()"><div class="today-vocab-zh">' + esc(w.zh) + '</div><div class="today-vocab-meaning">' + (w.py ? '<div class="today-vocab-py-back">' + esc(w.py) + '</div>' : '') + '<div class="today-vocab-vi">' + esc(w.vi || '—') + '</div>' + (w.type ? '<div class="today-vocab-type">' + esc(w.type) + '</div>' : '') + '</div><div class="today-card-hint">Bấm thẻ để lật nghĩa · tự chuyển sau 30 giây</div></div><div class="today-vocab-side"><div class="today-timer-row"><div class="today-timer-ring" id="today-vocab-ring"><span id="today-vocab-seconds">30</span></div><div><div style="font-weight:800">Thẻ ' + (vocabIndex + 1) + '/' + deck.length + '</div><div style="font-size:12px;color:var(--muted)">' + esc(lessonLabel(w.lesson)) + ' · <span class="chip ' + statusClass + '">' + esc(statusMap[w.status] || w.status) + '</span></div></div></div><div class="today-vocab-controls"><button class="btn btn-outline" onclick="hskTodayPrevVocab(event)">← Trước</button><button class="btn btn-primary" onclick="hskTodayNextVocab(event)">Từ tiếp →</button><button class="btn btn-outline" id="today-vocab-pause" onclick="hskTodayToggleVocabTimer(event)">' + (vocabPaused ? 'Tiếp tục' : 'Tạm dừng') + '</button></div><div class="today-vocab-rate"><button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="hskTodayRateVocab(\'again\',event)">Học lại</button><button class="btn btn-outline" style="border-color:var(--gold);color:var(--gold)" onclick="hskTodayRateVocab(\'hard\',event)">Khó</button><button class="btn btn-teal" onclick="hskTodayRateVocab(\'known\',event)">Đã thuộc</button></div><div class="today-vocab-meta">Mỗi thẻ tự đổi sau 30 giây. Bạn vẫn có thể kéo sang từ tiếp theo hoặc đánh dấu trạng thái để đồng bộ với Anki từ vựng.</div></div></div></div></section>';
+    return '<section class="today-focus-card today-focus-vocabulary"><div class="today-focus-head"><div><div class="today-focus-title">📚 ' + (window.AlbertMobileCards.isMobile() ? 'Anki từ vựng' : 'Từ mới · Flashcard 30s/từ') + '</div><div class="today-focus-sub">Dựa theo Anki từ vựng, giới hạn trong nội dung đã học: ' + esc(learnedRangeLabel()) + '</div></div><button class="btn btn-outline" onclick="hskTodayOpenVocabReview()">Mở Anki từ vựng</button></div><div class="today-focus-body"><div class="today-vocab-stage"><div class="' + cls + '" onclick="hskTodayFlipVocab()">' + window.AlbertMobileCards.sides('quick', vocabIndex <= 0, vocabIndex >= deck.length - 1) + '<div class="today-vocab-zh">' + esc(w.zh) + '</div><div class="today-vocab-meaning">' + (w.py ? '<div class="today-vocab-py-back">' + esc(w.py) + '</div>' : '') + '<div class="today-vocab-vi">' + esc(w.vi || '—') + '</div>' + (w.type ? '<div class="today-vocab-type">' + esc(w.type) + '</div>' : '') + '</div><div class="today-card-hint">' + (window.AlbertMobileCards.isMobile() ? 'Chạm giữa thẻ để xem nghĩa' : 'Bấm thẻ để lật nghĩa · tự chuyển sau 30 giây') + '</div></div><div class="today-vocab-side"><div class="today-timer-row"><div class="today-timer-ring" id="today-vocab-ring"><span id="today-vocab-seconds">30</span></div><div><div style="font-weight:800">Thẻ ' + (vocabIndex + 1) + '/' + deck.length + '</div><div style="font-size:12px;color:var(--muted)">' + esc(lessonLabel(w.lesson)) + ' · <span class="chip ' + statusClass + '">' + esc(statusMap[w.status] || w.status) + '</span></div></div></div><div class="today-vocab-controls"><button class="btn btn-outline" onclick="hskTodayPrevVocab(event)">← Trước</button><button class="btn btn-primary" onclick="hskTodayNextVocab(event)">Từ tiếp →</button><button class="btn btn-outline" id="today-vocab-pause" onclick="hskTodayToggleVocabTimer(event)">' + (vocabPaused ? 'Tiếp tục' : 'Tạm dừng') + '</button></div><div class="today-vocab-rate"><button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="hskTodayRateVocab(\'again\',event)">Học lại</button><button class="btn btn-outline amfc-hard" style="border-color:var(--gold);color:var(--gold)" onclick="hskTodayRateVocab(\'hard\',event)">Khó</button><button class="btn btn-teal" onclick="hskTodayRateVocab(\'known\',event)">' + (window.AlbertMobileCards.isMobile() ? 'Thuộc rồi' : 'Đã thuộc') + '</button></div><div class="today-vocab-meta">Mỗi thẻ tự đổi sau 30 giây. Bạn vẫn có thể kéo sang từ tiếp theo hoặc đánh dấu trạng thái để đồng bộ với Anki từ vựng.</div></div></div></div></section>';
   }
   function renderTodayFocus(){
     patchNavAndTopbar();
@@ -59078,10 +59201,11 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
     if(vocabTimer) clearInterval(vocabTimer);
     vocabCountdown = 30;
     updateTimerUI();
+    if(window.AlbertMobileCards.isMobile()){ vocabTimer = null; return; }
     vocabTimer = setInterval(function(){
       var page = document.getElementById('page-today');
       if(!page || page.style.display === 'none') return;
-      if(vocabPaused) return;
+      if(vocabPaused || window.AlbertMobileCards.isMobile()) return;
       vocabCountdown -= 1;
       if(vocabCountdown <= 0){
         nextVocabInternal(1);
@@ -59132,6 +59256,19 @@ window.HSK5_JING_FIXED_OPTIONS = {"11": {"1": {"A": "式不了", "B": "马上戒
     }
     nextVocabInternal(1);
   };
+  window.AlbertMobileCards.register('quick', {
+    move: function(delta){
+      var deck = buildVocabTodayDeck(), next = vocabIndex + delta;
+      if(next < 0 || next >= deck.length) return false;
+      nextVocabInternal(delta);
+      return true;
+    },
+    resize: function(){
+      if(vocabTimer){clearInterval(vocabTimer);vocabTimer=null;}
+      var page = document.getElementById('page-today');
+      if(page && page.getClientRects().length && document.documentElement.getAttribute('data-albert-mode') === 'today') renderTodayFocus();
+    }
+  });
   window.hskTodayOpenVocabReview = function(){
     try { localStorage.setItem('hsk_albert_review_mode','vocab'); } catch(e) {}
     if(typeof hskReviewSetMode === 'function') hskReviewSetMode('vocab');
@@ -60528,7 +60665,8 @@ window.HSK3_COMPLETE_DATA = {"version":"2026.09.10-hsk3-complete","lessons":[{"i
   };
   try{renderReview=window.renderReview;}catch(e){}
   window.h3StartReview=function(all){var pool=all?allWords():allWords().filter(function(w){var s=STATE.knownWords[w.zh];return !s||s==='again'||s==='hard';});if(!pool.length)pool=allWords();var start=Number(STATE.reviewCursor||0)%pool.length;H3_FC.deck=[];for(var i=0;i<Math.min(30,pool.length);i++)H3_FC.deck.push(pool[(start+i)%pool.length]);H3_FC.idx=0;H3_FC.flipped=false;h3RenderCard();};
-  function h3RenderCard(){var c=document.getElementById('review-content');if(!c)return;if(H3_FC.idx>=H3_FC.deck.length){STATE.reviewCursor=(Number(STATE.reviewCursor||0)+H3_FC.deck.length)%Math.max(1,allWords().length);window.saveState();c.innerHTML='<div class="empty-state"><div class="icon">🎉</div><h3>Đã xong '+H3_FC.deck.length+' thẻ</h3><p style="margin:8px 0 18px">Kết quả đã lưu riêng cho HSK 3.</p><button class="btn btn-teal" onclick="renderReview()">Về trang ôn tập</button></div>';return;}var w=H3_FC.deck[H3_FC.idx];c.innerHTML='<div class="h3-flash-wrap"><div class="fc-progress"><span>'+(H3_FC.idx+1)+'/'+H3_FC.deck.length+'</span><div class="fc-progress-bar"><div class="fc-progress-fill" style="width:'+Math.round(H3_FC.idx/H3_FC.deck.length*100)+'%"></div></div></div><div class="h3-flashcard '+(H3_FC.flipped?'flipped':'')+'" onclick="h3FlipCard()"><div class="h3-fc-zh">'+esc(w.zh)+'</div><div class="h3-fc-hint" style="font-size:12px;color:var(--muted);margin-top:18px">Chạm để xem đáp án</div><div class="h3-fc-back"><div class="h3-fc-py">'+esc(w.py)+'</div><div class="h3-fc-vi">'+esc(w.vi)+'</div><div style="font-size:12px;color:var(--muted);margin-top:8px">Bài '+w.lessonId+' · '+esc(w.type)+'</div></div></div>'+(H3_FC.flipped?'<div class="h3-fc-actions"><button class="btn btn-red" onclick="h3RateCard(\'again\')">Học lại</button><button class="btn btn-gold" onclick="h3RateCard(\'hard\')">Khó</button><button class="btn btn-teal" onclick="h3RateCard(\'known\')">Đã thuộc</button></div>':'')+'</div>';}
+  function h3RenderCard(){var c=document.getElementById('review-content');if(!c)return;if(H3_FC.idx>=H3_FC.deck.length){STATE.reviewCursor=(Number(STATE.reviewCursor||0)+H3_FC.deck.length)%Math.max(1,allWords().length);window.saveState();c.innerHTML='<div class="empty-state"><div class="icon">🎉</div><h3>Đã xong '+H3_FC.deck.length+' thẻ</h3><p style="margin:8px 0 18px">Kết quả đã lưu riêng cho HSK 3.</p><button class="btn btn-teal" onclick="renderReview()">Về trang ôn tập</button></div>';return;}var w=H3_FC.deck[H3_FC.idx];c.innerHTML='<div class="h3-flash-wrap"><div class="fc-progress"><span>'+(H3_FC.idx+1)+'/'+H3_FC.deck.length+'</span><div class="fc-progress-bar"><div class="fc-progress-fill" style="width:'+Math.round(H3_FC.idx/H3_FC.deck.length*100)+'%"></div></div></div><div class="h3-flashcard '+(H3_FC.flipped?'flipped':'')+'" onclick="h3FlipCard()">'+window.AlbertMobileCards.sides('hsk3',H3_FC.idx<=0,H3_FC.idx>=H3_FC.deck.length-1)+'<div class="h3-fc-zh">'+esc(w.zh)+'</div><div class="h3-fc-hint" style="font-size:12px;color:var(--muted);margin-top:18px">Chạm để xem đáp án</div><div class="h3-fc-back"><div class="h3-fc-py">'+esc(w.py)+'</div><div class="h3-fc-vi">'+esc(w.vi)+'</div><div style="font-size:12px;color:var(--muted);margin-top:8px">Bài '+w.lessonId+' · '+esc(w.type)+'</div></div></div>'+(H3_FC.flipped||window.AlbertMobileCards.isMobile()?'<div class="h3-fc-actions"><button class="btn btn-red" onclick="h3RateCard(\'again\')">Học lại</button><button class="btn btn-gold amfc-hard" onclick="h3RateCard(\'hard\')">Khó</button><button class="btn btn-teal" onclick="h3RateCard(\'known\')">Đã thuộc</button></div>':'')+'</div>';}
+  window.AlbertMobileCards.register('hsk3', {move:function(delta){var next=H3_FC.idx+delta;if(next<0||next>=H3_FC.deck.length)return false;H3_FC.idx=next;H3_FC.flipped=false;h3RenderCard();return true;}});
   window.h3FlipCard=function(){H3_FC.flipped=true;h3RenderCard();};window.h3RateCard=function(rate){var w=H3_FC.deck[H3_FC.idx];STATE.knownWords[w.zh]=rate;window.saveState();H3_FC.idx++;H3_FC.flipped=false;h3RenderCard();};
 
   window.renderQuiz = function(){
@@ -77085,11 +77223,6 @@ html.adw body:is(.hsk30-edition,.hsk303-edition) #hsk303-side [data-hsk303-nav="
  #page-review .review-vocab-split{grid-template-columns:minmax(0,1fr)!important;}
  html[data-albert-mode="today"] #page-today .today-vocab-flashcard{min-height:280px!important;}
  #page-review .flashcard{min-height:280px!important;padding:28px 20px!important;}
- /* index 3.html: mobile order only; retain the existing card actions and grammar. */
- #page-review .review-vocab-split > .review-vocab-flash-host{grid-column:1!important;grid-row:1!important;}
- #page-review .review-vocab-split > .review-vocab-grammar-host{grid-column:1!important;grid-row:2!important;}
- html[data-albert-mode="today"] #today-focus-root > .today-focus-card:first-child{order:2!important;}
- html[data-albert-mode="today"] #today-focus-root > .today-focus-card:nth-child(2){order:1!important;}
 }
 @media(max-width:760px){
  #page-streak .albert-streak-logo{width:34px!important;height:34px!important;flex-basis:34px;}
