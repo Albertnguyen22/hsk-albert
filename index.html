@@ -78,7 +78,11 @@ window.AlbertFluentIcons={"calendar":{"regular":"<svg xmlns=\"http://www.w3.org/
     return '<button type="button" class="speak-btn avca-speak" data-avca-speak="' + escape(text) + '" data-avca-pinyin="' + escape(pinyin) + '"' + (id ? ' id="' + escape(id) + '"' : '') + ' aria-label="' + escape(label) + '" title="Nghe ph\u00e1t \u00e2m" data-adw-icon="speaker">' + svg + '</button>';
   }
   D.addEventListener('click', function (ev) {
-    var target = ev.target && (ev.target.nodeType === 1 ? ev.target : ev.target.parentElement);
+    // Nút loa có thể nằm trong khung tách biệt (shadow DOM) của phần HSK 3.0: ở cấp trang, ev.target chỉ là cái khung,
+ // nên lấy phần tử thật được chạm qua composedPath().
+ var path = typeof ev.composedPath === 'function' ? ev.composedPath() : [];
+ var first = path.length ? path[0] : ev.target;
+ var target = first && (first.nodeType === 1 ? first : first.parentElement);
     var control = target && target.closest && target.closest('[data-avca-speak]');
     if (!control) return;
     // Capture before the card's click handler, including taps on the SVG path.
