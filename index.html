@@ -69265,7 +69265,7 @@ async function toggleAudio(b){
  stopAudio();const ticket=playSerial,box=a.closest('.audio'),error=box.querySelector('.audioerr');
  b.disabled=true;b.setAttribute('aria-busy','true');error.textContent='';
  try{
-   if(!a.getAttribute('src'))a.src=await mediaURL(Number(a.dataset.pack),a.dataset.audioSource);
+   if(!a.getAttribute('src')){if(window.__albertUnlockAudio)window.__albertUnlockAudio(a);a.src=await mediaURL(Number(a.dataset.pack),a.dataset.audioSource);}
    if(ticket!==playSerial||!a.isConnected||edition!=='3.0'||a.closest('details:not([open])'))return;
    a.playbackRate=Number(box.querySelector('[data-audio-rate]').value)||1;
    if(a.ended)a.currentTime=0;
@@ -72142,7 +72142,7 @@ async function toggleAudio(b){
  stopAudio();const ticket=playSerial,box=a.closest('.audio'),error=box.querySelector('.audioerr');
  b.disabled=true;b.setAttribute('aria-busy','true');error.textContent='';
  try{
-   if(!a.getAttribute('src'))a.src=await mediaURL(Number(a.dataset.pack),a.dataset.audioSource);
+   if(!a.getAttribute('src')){if(window.__albertUnlockAudio)window.__albertUnlockAudio(a);a.src=await mediaURL(Number(a.dataset.pack),a.dataset.audioSource);}
    if(ticket!==playSerial||!a.isConnected||edition!=='3.0'||a.closest('details:not([open])'))return;
    a.playbackRate=Number(box.querySelector('[data-audio-rate]').value)||1;
    if(a.ended)a.currentTime=0;
@@ -77587,6 +77587,27 @@ if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>setTimeout
     fitColumns(B.row);
   }
   setInterval(tick, 400);
+})();
+
+</script>
+<!-- HSK Albert: mở khoá trình phát MP3 ngay lúc chạm (app Android) -->
+<script id="albert-audio-unlock">
+/* HSK Albert — phát MP3 trong app Android: WebView chỉ cho phát âm thanh ngay trong lúc người dùng chạm.
+ * Phần Textbook HSK 3.0 phải nạp và giải mã gói MP3 trước khi phát, nên lúc gọi play() lượt chạm đã hết hiệu lực
+ * → bị từ chối ("Chưa phát được…"). Cách sửa: ngay lúc chạm, cho chính trình phát đó phát một đoạn câm rất ngắn
+ * để "mở khoá"; khi gói nạp xong, phát MP3 thật trên cùng trình phát. Trên trình duyệt máy tính không ảnh hưởng. */
+(function () {
+  'use strict';
+  if (window.__albertUnlockAudio) return;
+  var SILENT = 'data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+  window.__albertUnlockAudio = function (a) {
+    try {
+      if (!a || a.getAttribute('src')) return;
+      a.src = SILENT;
+      var p = a.play();
+      if (p && typeof p.catch === 'function') p.catch(function () { /* bị thay src ngay sau đó: bình thường */ });
+    } catch (e) { /* ignore */ }
+  };
 })();
 
 </script>
