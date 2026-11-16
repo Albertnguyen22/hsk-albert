@@ -75820,6 +75820,22 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
         gw.appendChild(row('bell', 'Widget và nhắc học', 'Từ vựng, ngữ pháp, giáo trình, bao lâu nhắc một lần', function () { openWordSheet(); }));
         sheet.appendChild(gw);
       }
+      // Web điện thoại: nút Nhắc học và Đồng bộ của web chỉ nằm ở thanh bên máy tính → đưa vào đây.
+      if (!window.AlbertNative && (window.AlbertReminders || window.AlbertSync)) {
+        sheet.appendChild(el('h3', null, 'Nhắc học và đồng bộ'));
+        var gw2 = el('div', { 'class': 'group' });
+        if (window.AlbertReminders && typeof window.AlbertReminders.open === 'function') {
+          gw2.appendChild(row('bell', 'Nhắc học', 'Thông báo nhắc từ vựng và ngữ pháp, giống bản máy tính và app', function () {
+            closeSheet(true); setTimeout(function () { try { window.AlbertReminders.open(); } catch (e) { /* ignore */ } }, 200);
+          }));
+        }
+        if (window.AlbertSync && typeof window.AlbertSync.open === 'function') {
+          gw2.appendChild(row('sync', 'Đồng bộ dữ liệu', 'Ghi chép, bài làm và tiến độ theo cùng tài khoản', function () {
+            closeSheet(true); setTimeout(function () { try { window.AlbertSync.open(); } catch (e) { /* ignore */ } }, 200);
+          }));
+        }
+        sheet.appendChild(gw2);
+      }
       sheet.appendChild(el('h3', null, 'Tài khoản'));
       var g2 = el('div', { 'class': 'group' });
       g2.appendChild(row('person', 'Đăng nhập và đồng bộ', 'Lưu tiến độ trên mọi thiết bị', function () { closeSheet(); closeAI(); openAccount(); }));
@@ -76119,8 +76135,11 @@ body #albert-menu-appbar #albert-menu-app-name span{display:none!important}
     setTimeout(function () { t.classList.remove('show'); setTimeout(function () { t.remove(); }, 300); }, 3500);
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(start, 0); });
-  else setTimeout(start, 0);
+  // Trang dùng bố cục mới (khung adw: thanh dưới đáy + menu ☰ có Nhắc học, Đồng bộ) → khối giao diện cũ này đứng ngoài.
+  function albertNewShell() { return document.documentElement.classList.contains('adw') || !!document.querySelector('.af-sidebar, #af-sidebar, #adw-side-foot, .adw-side-foot'); }
+  function albertBoot() { setTimeout(function () { if (albertNewShell()) return; start(); }, 400); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', albertBoot);
+  else albertBoot();
 })();
 
 </script>
@@ -77405,6 +77424,167 @@ const CSS="\n#albert-sync-dialog{padding:0;border:1px solid #e2ddd2;border-radiu
 A.open=open;A.summaryText=()=>status();A.refreshView=()=>hydrate({detail:{keys:A.keys()}});
 if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>setTimeout(install,700),{once:true});else setTimeout(install,700);
 })(window,document);
+</script>
+<!-- HSK Albert: ôn từ vựng theo vòng, không lặp từ đã ôn -->
+<script id="albert-review-pass">
+/* HSK Albert — ôn từ vựng theo vòng (không lặp lại từ đã ôn hôm trước):
+ * 1) Lưu vị trí sau từng thẻ: lần sau ôn tiếp ngay từ từ kế tiếp.
+ * 2) Ôn hết một vòng toàn bộ từ; từ bấm "Học lại" được ghi vào danh sách "chưa thuộc".
+ * 3) Hết vòng: ôn lại các từ chưa thuộc của vòng đó; hết sạch thì bắt đầu vòng mới từ đầu.
+ * Tiến độ lưu theo từng giáo trình trong STATE (đồng bộ cùng tiến độ học). */
+(function () {
+  'use strict';
+  if (window.__albertReviewPass) return;
+  window.__albertReviewPass = true;
+
+  function courseId() { var s = document.getElementById('course-selector'); return (s && s.value) || 'default'; }
+  function pass() {
+    /* global STATE */
+    if (typeof STATE === 'undefined' || !STATE) return { mode: 'all', list: [], cursor: 0, retryNext: [], round: 1 };
+    STATE.reviewPasses = STATE.reviewPasses || {};
+    var id = courseId(), P = STATE.reviewPasses[id];
+    if (!P) {   // lần đầu dùng cách ôn mới: giáo trình đầu tiên tiếp tục từ vị trí cũ của web, các giáo trình khác bắt đầu từ đầu
+      var first = !Object.keys(STATE.reviewPasses).length, c = parseInt(STATE.reviewCursor, 10);
+      P = STATE.reviewPasses[id] = { mode: 'all', list: [], cursor: first && Number.isFinite(c) && c > 0 ? c : 0, retryNext: [], round: 1 };
+    }
+    P.list = P.list || []; P.retryNext = P.retryNext || []; P.round = P.round || 1;
+    return P;
+  }
+  function passWords(P) {
+    var all = window.getAllReviewWords();
+    if (P.mode !== 'retry' || !P.list.length) return all;
+    var byKey = {}; all.forEach(function (w) { byKey[String(w.zh || '').trim()] = w; });
+    return P.list.map(function (k) { return byKey[k]; }).filter(Boolean);
+  }
+  function endOfRound(P) {   // chỉ đếm vòng khi bắt đầu một vòng ôn toàn bộ
+    if (P.retryNext.length) { P.mode = 'retry'; P.list = P.retryNext.slice(); }
+    else { P.mode = 'all'; P.list = []; P.round++; }
+    P.retryNext = []; P.cursor = 0;
+  }
+
+  function install() {
+    if (typeof window.rateCard !== 'function' || typeof window.prepareReviewBatch !== 'function' || typeof window.getAllReviewWords !== 'function') return false;
+    if (window.rateCard.__albertPass) return true;
+    var origHeader = window.updateReviewHeader;
+
+    window.prepareReviewBatch = function (opts) {
+      opts = opts || {};
+      var P = pass();
+      if (opts.restartFromBeginning) { P.mode = 'all'; P.list = []; P.retryNext = []; P.cursor = 0; }
+      var words = passWords(P);
+      if (!words.length && P.mode === 'retry') { endOfRound(P); words = passWords(P); }
+      var total = words.length, size = window.getReviewBatchSize();
+      if (!total) { reviewWords = []; reviewIdx = 0; cardFlipped = false; reviewBatchStart = 0; window.updateReviewHeader(0); return; }   // eslint-disable-line no-global-assign
+      if (P.cursor >= total || P.cursor < 0) P.cursor = 0;
+      reviewBatchStart = P.cursor;                                                   // eslint-disable-line no-global-assign
+      reviewWords = words.slice(P.cursor, Math.min(P.cursor + size, total));         // eslint-disable-line no-global-assign
+      reviewIdx = 0; cardFlipped = false;                                            // eslint-disable-line no-global-assign
+      STATE.reviewCursor = P.cursor;
+      window.saveState();
+      window.updateReviewHeader(total);
+    };
+
+    window.rateCard = function (rating) {
+      var w = reviewWords[reviewIdx];
+      if (!w) return;
+      STATE.knownWords[w.zh] = rating;
+      var P = pass(), key = String(w.zh || '').trim(), i = P.retryNext.indexOf(key);
+      if (rating === 'known') { if (i >= 0) P.retryNext.splice(i, 1); }
+      else if (i < 0) P.retryNext.push(key);                    // chưa thuộc: để dành, ôn lại sau khi hết vòng
+      reviewIdx++;                                               // eslint-disable-line no-global-assign
+      P.cursor = reviewBatchStart + reviewIdx;                   // lưu vị trí sau từng thẻ
+      if (P.cursor >= passWords(P).length) endOfRound(P);
+      STATE.reviewCursor = P.cursor;
+      window.saveState();
+      if (typeof window.updateStreak === 'function') window.updateStreak();
+      cardFlipped = false;                                       // eslint-disable-line no-global-assign
+      window.renderFlashcard();
+    };
+    window.rateCard.__albertPass = true;
+
+    window.updateReviewHeader = function (total) {
+      if (typeof origHeader === 'function') origHeader(total);
+      var sub = document.getElementById('review-sub'), P = pass();
+      if (sub && reviewWords.length) {
+        var tag = P.mode === 'retry' ? 'Ôn lại từ chưa thuộc' : 'Vòng ' + P.round;
+        sub.textContent = tag + ' · ' + sub.textContent + (P.retryNext.length ? ' · ' + P.retryNext.length + ' từ chờ ôn lại' : '');
+      }
+    };
+
+    window.restartReviewFromBeginning = function () {
+      var P = pass(); P.mode = 'all'; P.list = []; P.retryNext = []; P.cursor = 0; P.round = 1;
+      STATE.reviewCursor = 0; window.saveState();
+      window.prepareReviewBatch({ restartFromBeginning: true });
+      window.renderFlashcard();
+    };
+    return true;
+  }
+  if (!install()) {
+    var tries = 0, t = setInterval(function () { if (install() || ++tries > 60) clearInterval(t); }, 500);
+  }
+})();
+
+</script>
+<!-- HSK Albert: web điện thoại — nút "Thêm" mở menu (Nhắc học, Đồng bộ, Cài đặt) -->
+<script id="albert-mobile-more">
+/* HSK Albert — web điện thoại: thanh dưới đáy của bố cục mới không có nút mở menu ☰,
+ * nên không vào được Nhắc học, Đồng bộ dữ liệu, Cài đặt… → thêm nút "Thêm" ở cuối thanh, chạm để mở menu. */
+(function () {
+  'use strict';
+  if (window.__albertMobileMore) return;
+  window.__albertMobileMore = true;
+  var MASK = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round'><path d='M4 7h16M4 12h16M4 17h16'/></svg>\") center / contain no-repeat";
+  // Biểu tượng ba gạch vẽ bằng CSS (không phải SVG) để đoạn tự gắn biểu tượng của web không viết đè; màu theo chữ của nút.
+  var ICON = '<span data-albert-ico="menu" aria-hidden="true" style="display:inline-block;width:24px;height:24px;background:currentColor;-webkit-mask:' + MASK.replace(/"/g, '&quot;') + ';mask:' + MASK.replace(/"/g, '&quot;') + '"></span>';
+  var fixes = 0;
+  function bar() {
+    var btns = Array.prototype.filter.call(document.querySelectorAll('button'), function (b) {
+      var r = b.getBoundingClientRect(); return r.width > 0 && r.top > innerHeight - 130 && /Bài học|Streak/.test(b.textContent);
+    });
+    var a = btns.filter(function (b) { return /Bài học/.test(b.textContent); })[0];
+    var z = btns.filter(function (b) { return /Streak/.test(b.textContent); })[0];
+    return a && z && a.parentElement === z.parentElement ? { row: a.parentElement, tpl: z } : null;
+  }
+  function opener() { return document.getElementById('adw-collapse') || document.querySelector('.adw-collapse'); }
+  function fitColumns(row) {   // thanh chia sẵn 4 cột → chia lại theo số nút đang hiện để nút "Thêm" không bị đẩy xuống dòng
+    var n = Array.prototype.filter.call(row.children, function (x) { return getComputedStyle(x).display !== 'none'; }).length;
+    var want = 'repeat(' + n + ', minmax(0, 1fr))';
+    if (getComputedStyle(row).display.indexOf('grid') >= 0 && row.style.getPropertyValue('grid-template-columns') !== want) row.style.setProperty('grid-template-columns', want, 'important');
+  }
+  function tick() {
+    var cur = document.getElementById('albert-more-btn');
+    if (cur) {
+      // web tự gắn biểu tượng theo chữ trên nút ("Thêm" → dấu +): bỏ biểu tượng đó, chỉ giữ biểu tượng ba gạch
+      Array.prototype.forEach.call(cur.querySelectorAll('svg'), function (x) { x.remove(); });   // bỏ mọi biểu tượng web tự gắn
+      var slot = cur.querySelector('.af-nav-icon');
+      if (slot && !slot.querySelector('[data-albert-ico]') && fixes < 50) { fixes++; slot.innerHTML = ICON; }   // giữ biểu tượng ba gạch
+      fitColumns(cur.parentElement);
+      return;
+    }
+    var B = bar(), o = opener();
+    if (!B || !o) return;
+    var c = B.tpl.cloneNode(true);
+    c.id = 'albert-more-btn';
+    c.removeAttribute('onclick'); c.removeAttribute('aria-current'); c.removeAttribute('aria-selected');
+    Array.prototype.slice.call(c.attributes).forEach(function (at) { if (/^data-/.test(at.name)) c.removeAttribute(at.name); });
+    ['active', 'is-active', 'on', 'selected', 'current'].forEach(function (k) { c.classList.remove(k); });
+    // nút gốc có hai biểu tượng (thường / đang chọn) → bỏ hết, chỉ đặt một biểu tượng ba gạch
+    var slot0 = c.querySelector('.af-nav-icon');
+    Array.prototype.forEach.call(c.querySelectorAll('svg'), function (x) { x.remove(); });
+    if (slot0) slot0.innerHTML = ICON;
+    else c.insertAdjacentHTML('afterbegin', ICON);
+    var done = false;
+    Array.prototype.slice.call(c.querySelectorAll('*')).concat([c]).forEach(function (e) {
+      Array.prototype.forEach.call(e.childNodes, function (n) { if (!done && n.nodeType === 3 && /Streak/.test(n.nodeValue)) { n.nodeValue = n.nodeValue.replace(/Streak\s*&\s*Lịch|Streak/, 'Thêm'); done = true; } });
+    });
+    c.setAttribute('aria-label', 'Thêm: Nhắc học, Đồng bộ, Cài đặt');
+    c.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); var x = opener(); if (x) x.click(); }, true);
+    B.row.appendChild(c);
+    fitColumns(B.row);
+  }
+  setInterval(tick, 400);
+})();
+
 </script>
 </body>
 </html>
